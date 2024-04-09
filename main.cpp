@@ -1,78 +1,20 @@
-#include <mutex>
-#include <semaphore>
-#include <queue>
-#include <thread>
 #include <iostream>
+#include <vector>
+#include "src/DataFrame.h"
 using namespace std;
-
-mutex m;
-queue<int> q;
-queue<int> q2;
-mutex m2;
-mutex m0;
-std::counting_semaphore<10> emptySemaphore(10);
-std::counting_semaphore<10> fullSemaphore(0);
-std::counting_semaphore<10> emptySemaphore2(10);
-std::counting_semaphore<10> fullSemaphore2(0);
-
-void producer() {
-    for(int i=0; i<1000; i++) {
-        emptySemaphore.acquire();
-        m.lock();
-        q.push(i);
-        m.unlock();
-        fullSemaphore.release();
-    }
-}
-
-void consumer() {
-    while(true) {
-        fullSemaphore.acquire();
-        m.lock();
-        int i = q.front();
-
-        q.pop();
-        m.unlock();
-        emptySemaphore.release();
-        m0.lock();
-        cout << "Consumed: " << i << endl;
-        m0.unlock();
-        emptySemaphore2.acquire();
-        m2.lock();
-        q2.push((i+1)*1000);
-        m2.unlock();
-        fullSemaphore2.release();
-    }
-}
-
-void consumer2() {
-    while(true) {
-        fullSemaphore2.acquire();
-        m2.lock();
-        int i = q2.front();
-        q2.pop();
-        m2.unlock();
-        emptySemaphore2.release();
-        m0.lock();
-        cout << "Consumed2: " << i << endl;
-        m0.unlock();
-    }
-}
 int main() {
-    vector <thread> threads;
-    vector <thread> threads2;
-    thread t1(producer);
-    for (int i=0; i<10; i++) {
-        threads.push_back(thread(consumer));
-        threads2.push_back(thread(consumer2));
+    DataFrame<int> df;
+    vector<int> v = {1, 2, 3, 4, 5};
+    df.add_column("column1", v);
+    vector<int> v2 = df.get_column("column1");
+    for (int i : v2) {
+        cout << i << endl;
+    }
+    df.add_column("column2", {6, 7, 8, 9, 10});
+    vector<int> v3 = df.get_column("column2");
+    for (int i : v3) {
+        cout << i << endl;
     }
 
-    t1.join();
-    for(auto &t: threads) {
-        t.join();
-    }
-    for(auto &t: threads2) {
-        t.join();
-    }
     return 0;
 }
