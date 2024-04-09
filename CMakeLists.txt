@@ -4,6 +4,6 @@ project(Compesca_A1)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(Compesca_A1
-        main.cpp
+        test_dataframe.cpp
         src/DataFrame.h
 )
