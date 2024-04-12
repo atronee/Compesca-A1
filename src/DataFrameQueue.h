@@ -6,6 +6,7 @@
 class DataFrameQueue {
     // A queue of DataFrame objects. The queue has a maximum size of 100.
     // The queue is thread-safe.
+    // The queue uses two semaphores to control access to the queue, implementing the producer-consumer pattern.
 private:
     std::queue<DataFrame> dataQueue;
     Semaphore emptySemaphore;
