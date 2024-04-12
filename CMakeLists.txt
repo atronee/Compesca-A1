@@ -6,4 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(Compesca_A1
         test_dataframe.cpp
         src/DataFrame.h
+        src/DataFrame.cpp
+        src/Semaphore.cpp
+        src/Semaphore.cpp
 )
