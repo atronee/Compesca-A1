@@ -10,19 +10,8 @@
 using std::vector;
 using std::string;
 
-class Handler {
-public:
-    Handler() {}
-    ~Handler() {}
-    ConsumerProducerQueue<DataFrame*> *queue_in;
-    ConsumerProducerQueue<DataFrame*> *queue_out;
-    DataFrame* df = queue_in->pop();
-};
-
 class SelectHandler : public Handler {
 public:
-    SelectHandler() {}
-    ~SelectHandler() {}
     DataFrame* select(vector<string> columns) {
         // select the dataframe
         for (const string& column : df->get_column_order()) {
@@ -36,8 +25,6 @@ public:
 
 class FilterHandler : public Handler {
 public:
-    FilterHandler() {}
-    ~FilterHandler() {}
     DataFrame* filter(string column, string operation, string value) {
         // filter the dataframe
         if (df->get_column_type(column) == &typeid(int)) {
