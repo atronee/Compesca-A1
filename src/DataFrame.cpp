@@ -18,7 +18,7 @@ const std::type_info* DataFrame::get_column_type(const std::string& column_name)
     return column_types[column_name];
 }
 
-void DataFrame::add_row(const std::initializer_list<std::any>& row_data) {
+void DataFrame::add_row(const std::vector<std::any>& row_data) {
     /*
      * Adds a new row to the DataFrame. The number of elements in the row_data should match the number of columns.
      * The type of the data in each element should match the type of the corresponding column.

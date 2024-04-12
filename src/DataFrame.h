@@ -12,6 +12,14 @@ private:
     std::vector<std::string> column_order;
     int n_rows;
 public:
+    const std::type_info* get_column_type(const std::string& column_name);
+
+    void add_row(const std::vector<std::any>& row_data);
+
+    void remove_column(const std::string& column_name);
+
+    void remove_row(int index);
+    
     template <typename T>
     void add_column(const std::string& column_name, const std::vector<T>& column_data){
         /*
@@ -53,10 +61,5 @@ public:
         return column_data;
     }
 
-    const std::type_info* get_column_type(const std::string& column_name);
 
-    void add_row(const std::initializer_list<std::any>& row_data);
-    void remove_column(const std::string& column_name);
-
-    void remove_row(int index);
 };
