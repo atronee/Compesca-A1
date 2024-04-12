@@ -1,3 +1,5 @@
+#ifndef DATAFRAME_H
+#define DATAFRAME_H
 #include <any>
 #include <vector>
 #include <unordered_map>
@@ -12,6 +14,10 @@ private:
     std::vector<std::string> column_order;
     int n_rows;
 public:
+    DataFrame() : n_rows(0) {};
+
+    DataFrame(const std::vector<std::string>& column_names, std::vector<const std::type_info*>& column_types);
+
     const std::type_info* get_column_type(const std::string& column_name);
 
     void add_row(const std::vector<std::any>& row_data);
@@ -21,7 +27,7 @@ public:
     void remove_row(int index);
 
     template <typename T>
-    void add_column(const std::string& column_name, const std::vector<T>& column_data){
+    void add_column(const std::string& column_name, std::vector<T> column_data){
         /*
          * The function adds a new column to the DataFrame. The column name should be unique.
          * T is the type of the data in the column.
@@ -63,3 +69,5 @@ public:
 
 
 };
+
+#endif // DATAFRAME_H

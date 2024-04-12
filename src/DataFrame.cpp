@@ -7,6 +7,21 @@
 #include "DataFrame.h"
 
 
+DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<const std::type_info*>& column_types) : n_rows(0) {
+    /*
+     * Constructor to create a DataFrame with the specified column names and types.
+     */
+    if (column_names.size() != column_types.size())
+        throw std::invalid_argument("Number of column names does not match number of column types");
+
+    for (size_t i = 0; i < column_names.size(); ++i) {
+        if (this->column_types.find(column_names[i]) != this->column_types.end())
+            throw std::invalid_argument("Column name already exists");
+
+        this->column_types[column_names[i]] = column_types[i];
+        this->column_order.push_back(column_names[i]);
+    }
+}
 
 const std::type_info* DataFrame::get_column_type(const std::string& column_name) {
     /*

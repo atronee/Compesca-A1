@@ -1,3 +1,5 @@
+#ifndef CONSUMERPRODUCERQUEUE_H
+#define CONSUMERPRODUCERQUEUE_H
 #include <queue>
 #include <mutex>
 #include "DataFrame.h"
@@ -12,7 +14,7 @@ private:
     Semaphore emptySemaphore;
     Semaphore fullSemaphore;
 public:
-    ConsumerProducerQueue(int max_count = 100) : emptySemaphore(max_count, max_count), fullSemaphore(0, max_count) {};
+    explicit ConsumerProducerQueue(int max_count = 100) : emptySemaphore(max_count, max_count), fullSemaphore(0, max_count) {};
     std::mutex mtx;
 
 
@@ -37,10 +39,11 @@ public:
     bool is_empty(){
         return dataQueue.empty();
     }
-    
+
     int size(){
         return dataQueue.size();
     }
 
 };
 
+#endif // CONSUMERPRODUCERQUEUE_H

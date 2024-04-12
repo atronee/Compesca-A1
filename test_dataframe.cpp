@@ -1,9 +1,14 @@
 #include <iostream>
 #include <vector>
 #include <any>
+#include <string>
 #include "src/DataFrame.h"
+#include "src/ConsumerProducerQueue.h"
 using namespace std;
 int main() {
+    std::vector<const std::type_info*> types = {&typeid(int), &typeid(string)};
+    std::vector<std::string> column_names = {"column1", "column2"};
+    DataFrame df0(column_names, types);
     DataFrame df;
     vector<int> v = {1, 2, 3, 4, 5};
     df.add_column("column1", v);
@@ -35,5 +40,6 @@ int main() {
         cout << i << endl;
     }
 
+    ConsumerProducerQueue<DataFrame> queue;
     return 0;
 }
