@@ -9,4 +9,5 @@ add_executable(Compesca_A1
         src/DataFrame.cpp
         src/Semaphore.cpp
         src/Semaphore.cpp
+        src/ConsumerProducerQueue.h
 )

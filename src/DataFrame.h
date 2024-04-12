@@ -19,7 +19,7 @@ public:
     void remove_column(const std::string& column_name);
 
     void remove_row(int index);
-    
+
     template <typename T>
     void add_column(const std::string& column_name, const std::vector<T>& column_data){
         /*
