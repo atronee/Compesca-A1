@@ -58,3 +58,29 @@ std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> CSVReade
     file.close();                        
     return {column_order, data};         
 }
+
+std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> TXTReader::read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter) {
+
+    std::ifstream file(filename);  
+    if (!file.is_open()) {          
+        std::cerr << "Error opening TXT file: " << filename << std::endl;  
+        return {};                  
+    }
+
+    std::vector<std::string> column_order;        
+    std::vector<std::vector<std::any>> data;      
+    
+    std::string line;               
+    while (std::getline(file, line)) {  
+        std::vector<std::any> row_data;  
+        std::stringstream ss(line);      
+        std::string cell;                 
+        while (std::getline(ss, cell, delimiter)) {  
+            row_data.push_back(cell);                    
+        }
+        data.push_back(row_data);            
+    }
+
+    file.close();                        
+    return {column_order, data};         
+}

@@ -22,4 +22,10 @@ public:
     //             delimiter - character used as a delimiter in the CSV file (default: ',')
 };
 
+class TXTReader : public Reader {  // Declaration of the derived class TXTReader, inheriting from Reader
+public:
+    std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter = ',') override;
+    
+};
+
 #endif // READER_H               // End of header guard
