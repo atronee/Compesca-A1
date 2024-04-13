@@ -10,7 +10,7 @@ int main(){
 
     std::vector<const std::type_info*> types = {&typeid(std::string), &typeid(int), &typeid(std::string), &typeid(std::string)};
 
-    auto [column_order, data] = csvReader.read("src/testDataFrame/data.csv", types);
+    auto [column_order, data] = csvReader.read("../src/testDataFrame/data.csv", types);
 
 
     DataFrame df(column_order, types);
