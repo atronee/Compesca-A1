@@ -48,3 +48,6 @@ _deps
 
 # Pasta do VSCode
 /.vscode
+
+# Pasta de Logs
+/src/logs
