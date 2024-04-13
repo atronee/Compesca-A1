@@ -25,7 +25,10 @@ public:
 class TXTReader : public Reader {  // Declaration of the derived class TXTReader, inheriting from Reader
 public:
     std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter = ',') override;
-    
+    // Implementation of the read function for reading TXT files
+    // Parameters: filename - name of the TXT file to read from
+    //             types - vector of type_info pointers specifying the types of data to read
+    //             delimiter - character used as a delimiter in the TXT file (default: ',')
 };
 
 #endif // READER_H               // End of header guard

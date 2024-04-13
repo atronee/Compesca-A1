@@ -60,25 +60,27 @@ std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> CSVReade
 }
 
 std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> TXTReader::read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter) {
-
-    std::ifstream file(filename);  
-    if (!file.is_open()) {          
+    /*
+        Function to read TXT file and return data as a pair of vectors
+    */
+    std::ifstream file(filename);  // Open the TXT file for reading
+    if (!file.is_open()) {          // Check if file opening failed
         std::cerr << "Error opening TXT file: " << filename << std::endl;  
         return {};                  
     }
 
-    std::vector<std::string> column_order;        
-    std::vector<std::vector<std::any>> data;      
+    std::vector<std::string> column_order;        // Vector to store column names
+    std::vector<std::vector<std::any>> data;      // Vector of vectors to store data
     
-    std::string line;               
-    while (std::getline(file, line)) {  
+    std::string line;               // String to store each line of the TXT file
+    while (std::getline(file, line)) {  // Read each line of the file
         std::vector<std::any> row_data;  
         std::stringstream ss(line);      
         std::string cell;                 
-        while (std::getline(ss, cell, delimiter)) {  
+        while (std::getline(ss, cell, delimiter)) {  // Parse each cell using delimiter
             row_data.push_back(cell);                    
         }
-        data.push_back(row_data);            
+        data.push_back(row_data);             // Add the row data to the main data vector
     }
 
     file.close();                        
