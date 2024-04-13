@@ -19,10 +19,22 @@ int main(){
         df.add_row(row);
     }
 
-    auto v4 = df.get_column<std::string>("Nome");
-    for (const std::string& s : v4) {
-        std::cout << s << std::endl;
+    auto v1 = df.get_column<std::string>("Nome");
+    for (const auto& i : v1) {
+        std::cout << i << std::endl;
     }
+
+    auto v2 = df.get_column<int>("Idade");
+    for (const auto& i : v2) {
+        std::cout << i << std::endl;
+    }
+
+    auto v3 = df.get_column<std::string>("Cidade");
+    for (const auto& i : v3) {
+        std::cout << i << std::endl;
+    }
+    
+
 
     return 0;
 }
