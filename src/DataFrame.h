@@ -67,6 +67,13 @@ public:
         return column_data;
     }
 
+    std::vector<std::string> get_column_order() const {
+        /*
+         * returns the order of the columns in the DataFrame.
+         */
+        return column_order;
+    }
+
 
 };
 

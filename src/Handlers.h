@@ -22,12 +22,12 @@ class SelectHandler : public Handler {
 public:
     SelectHandler() {}
     ~SelectHandler() {}
-    DataFrame* select(vector<string> columns) {}
+    DataFrame* select(vector<string> columns);
 };
 
 class FilterHandler : public Handler {
 public:
     FilterHandler() {}
     ~FilterHandler() {}
-    DataFrame* filter(string column, string operation, string value) {}
+    DataFrame* filter(string column, string operation, string value);
 };
