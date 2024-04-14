@@ -23,23 +23,28 @@ int main(){
 
     auto v1 = df.get_column<std::string>("Nome");
     for (const auto& i : v1) {
-        std::cout << i << std::endl;
+        std::cout << i << "<--";
+        std::cout << typeid(i).name() << std::endl;
     }
 
     auto v2 = df.get_column<int>("Idade");
     for (const auto& i : v2) {
-        std::cout << i << std::endl;
+        std::cout << i << "<--";
+        std::cout << typeid(i).name() << std::endl;
     }
 
     auto v3 = df.get_column<std::string>("Cidade");
     for (const auto& i : v3) {
-        std::cout << i << std::endl;
+        std::cout << i << "<--";
+        std::cout << typeid(i).name() << std::endl;
     }
     
     
     // Test the TXTReader class    
     std:: cout << "Test the TXTReader class" << std::endl;
-    auto [column_order_txt, data_txt] = csvReader.read("../src/testDataFrame/data.txt", types);
+    TXTReader txtReader;
+
+    auto [column_order_txt, data_txt] = txtReader.read("../src/testDataFrame/data.txt", types);
 
     DataFrame df2(column_order_txt, types);
 
@@ -49,19 +54,22 @@ int main(){
 
     auto v4 = df2.get_column<std::string>("Nome");
     for (const auto& i : v4) {
-        std::cout << i << std::endl;
+        std::cout << i << "<--";
+        std::cout << typeid(i).name() << std::endl;
     }
 
     auto v5 = df2.get_column<int>("Idade");
 
     for (const auto& i : v5) {
-        std::cout << i << std::endl;
+        std::cout << i << "<--";
+        std::cout << typeid(i).name() << std::endl;
     }
 
     auto v6 = df2.get_column<std::string>("Cidade");
 
     for (const auto& i : v6) {
-        std::cout << i << std::endl;
+        std::cout << i << "<--";
+        std::cout << typeid(i).name() << std::endl;
     }
 
 
