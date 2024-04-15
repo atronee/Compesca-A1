@@ -23,3 +23,15 @@ add_executable(TestReader
         src/Semaphore.cpp
         src/ConsumerProducerQueue.h)
 target_link_libraries(TestReader)
+
+# test mock
+add_executable(test_mock
+        src/mock.h
+        src/mock.cpp
+)
+
+# test trigger
+add_executable(test_trigger
+        src/triggers.cpp
+        src/triggers.h
+)
