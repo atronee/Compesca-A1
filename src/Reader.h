@@ -10,6 +10,7 @@
 
 class Reader {                    // Declaration of the base class Reader
 public:
+    // read function to read data from a file
     virtual std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter = ',') = 0;
 };
 
