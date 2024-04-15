@@ -7,29 +7,29 @@
 #include <unordered_map>
 #include <any>
 #include <typeinfo> 
+#include "ConsumerProducerQueue.h"
 
 class Reader {                    // Declaration of the base class Reader
 public:
     // read function to read data from a file
-    virtual std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter = ',') = 0;
-};
+virtual void read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter, ConsumerProducerQueue<std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>>>& queue) = 0;};
 
 class CSVReader : public Reader {  // Declaration of the derived class CSVReader, inheriting from Reader
 public:
-    std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter = ',') override;
+    void read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter, ConsumerProducerQueue<std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>>>& queue) override;
     // Implementation of the read function for reading CSV files
     // Parameters: filename - name of the CSV file to read from
     //             types - vector of type_info pointers specifying the types of data to read
     //             delimiter - character used as a delimiter in the CSV file (default: ',')
 };
 
-class TXTReader : public Reader {  // Declaration of the derived class TXTReader, inheriting from Reader
-public:
-    std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter = ',') override;
-    // Implementation of the read function for reading TXT files
-    // Parameters: filename - name of the TXT file to read from
-    //             types - vector of type_info pointers specifying the types of data to read
-    //             delimiter - character used as a delimiter in the TXT file (default: ',')
-};
+// class TXTReader : public Reader {  // Declaration of the derived class TXTReader, inheriting from Reader
+// public:
+//     std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>> read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter = ',') override;
+//     // Implementation of the read function for reading TXT files
+//     // Parameters: filename - name of the TXT file to read from
+//     //             types - vector of type_info pointers specifying the types of data to read
+//     //             delimiter - character used as a delimiter in the TXT file (default: ',')
+// };
 
 #endif // READER_H               // End of header guard

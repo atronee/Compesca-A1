@@ -4,12 +4,14 @@
 #include <string>
 #include "src/Reader.h"
 #include "src/DataFrame.h"
+#include "src/ConsumerProducerQueue.h"
+
 
 int main(){ 
     
     // Test the CSVReader class
     // std:: cout << "Test the CSVReader class" << std::endl;
-    CSVReader csvReader;
+    // CSVReader csvReader;
 
     // std::vector<const std::type_info*> types = {&typeid(std::string), &typeid(int), &typeid(std::string), &typeid(std::string)};
 
@@ -72,24 +74,50 @@ int main(){
     //     std::cout << typeid(i).name() << std::endl;
     // }
 
-    // read in block
-
+    CSVReader csvReader;
     std::vector<const std::type_info*> types2 = {&typeid(int), &typeid(std::string), &typeid(std::string)};
+    
+    ConsumerProducerQueue<std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>>> queue(15);
+    // std::vector<const std::type_info*> types2 = {&typeid(std::string), &typeid(int), &typeid(std::string), &typeid(std::string)};
+    
+    csvReader.read("../testData/data2.csv", types2, ',', queue);
+    std::cout << "Queue size: " << queue.size() << std::endl;
+    // Print elements in the queue
+    while (!queue.is_empty()) {
+        //print size of the queue
+        std::cout << "Queue size: " << queue.size() << std::endl;
 
-    auto [column_order_block, data_block] = csvReader.read("../testData/data2.csv", types2);
+        auto [column_order, block_data] = queue.pop();
+        
+        // print column names
+        for (const auto& col : column_order) {
+            std::cout << "column: " << col << std::endl;
+        }
 
-    DataFrame df3(column_order_block, types2);
+        // convert it to a DataFrame
+        DataFrame df(column_order, types2);
+        for (const auto& row : block_data) {
+            df.add_row(row);
+        }
 
-    for (const auto& row : data_block) {
-        df3.add_row(row);
+        auto v1 = df.get_column<int>("id");
+        auto v2 = df.get_column<std::string>("data");
+
+        for (size_t i = 0; i < v1.size(); i++) {
+            std::cout << v1[i] << " - " << v2[i] << std::endl;
+        }
+
+        // TODO: This is giving an error for some reason...
+
+        // auto v3 = df.get_column<std::string>("diasemana");
+        // for (const auto& i : v3) {
+        //     std::cout << i << "<--";
+        //     std::cout << typeid(i).name() << std::endl;
+        // }
+
     }
 
-
-    auto v7 = df3.get_column<int>("id");
-    for (const auto& i : v7) {
-        std::cout << i << "<--";
-        std::cout << typeid(i).name() << std::endl;
-    }
+    std::cout << "End of test" << std::endl;
 
     return 0;
 }
