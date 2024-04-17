@@ -74,6 +74,20 @@ public:
         return column_order;
     }
 
+    void clear_data(){
+        /*
+         * Clears only the data in the DataFrame.
+         */
+        data.clear();
+        n_rows = 0;
+    }
+    int get_number_of_rows(){
+        /*
+         * Returns the number of rows in the DataFrame.
+         */
+        return n_rows;
+    }
+
 
 };
 
