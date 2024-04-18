@@ -5,29 +5,41 @@
 #include <string>
 #include <algorithm>
 #include <ctime>
+#include <mutex>
 
 using std::vector;
 using std::string;
 
 class Handler {
-public:
-    Handler() {}
-    ~Handler() {}
+protected:
     ConsumerProducerQueue<DataFrame*> *queue_in;
     ConsumerProducerQueue<DataFrame*> *queue_out;
-    DataFrame* df = queue_in->pop();
+public:
+    Handler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out):
+    queue_in(queue_in), queue_out(queue_out){};
 };
 
 class SelectHandler : public Handler {
 public:
-    SelectHandler() {}
-    ~SelectHandler() {}
-    DataFrame* select(vector<string> columns);
+    SelectHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
+            : Handler(queue_in, queue_out) {};
+    void select(vector<string> columns);
 };
 
 class FilterHandler : public Handler {
 public:
-    FilterHandler() {}
-    ~FilterHandler() {}
-    DataFrame* filter(string column, string operation, string value);
+    FilterHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
+    : Handler(queue_in, queue_out) {};
+
+    void filter(string column, string operation, string value);
+};
+
+class printHandler : public Handler {
+private:
+    std::mutex print_mtx;
+public:
+    printHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out= nullptr)
+    : Handler(queue_in, queue_out) {};
+
+    void print();
 };

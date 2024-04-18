@@ -6,22 +6,36 @@
 #include <typeinfo>                
 #include <vector>                  
 
-void FileReader::read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter, ConsumerProducerQueue<DataFrame>& queue, bool read_in_blocks, int block_size) {
+void FileReader::read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter,
+                      int start, int & end, ConsumerProducerQueue<DataFrame*>& queue,
+                      bool read_in_blocks, int block_size) {
+    /*
+     * Function to read data from a CSV or TXT file and store it in a queue of DataFrames
+     * Parameters:
+     * - filename: path of the file to read from
+     * - types: vector of type_info pointers specifying the types of data to read
+     * - delimiter: character used as a delimiter in the file
+     * - start: line to start reading
+     * - queue: reference to the queue to store the data
+     * - read_in_blocks: flag to indicate whether to read data in blocks or not
+     * - block_size: number of rows to read in each block
+     */
+
     std::ifstream file(filename);  // Open the CSV file for reading
     if (!file.is_open()) {          // Check if file opening failed
         std::cerr << "Error opening CSV file: " << filename << std::endl;  
         return;
     }
+    file.seekg(start); // Move to the start line
 
     std::vector<std::string> column_order;        // Vector to store column names
-    std::vector<std::vector<std::any>> block_data; // Vector of vectors to store data for the current block
     std::string line;               // String to store each line of the CSV file
     DataFrame* df = nullptr;        // Pointer to the DataFrame object
     bool header = true;
 
     size_t line_count = 0;  // Counter for lines read
     while (std::getline(file, line)) {  // Read each line of the file
-        std::vector<std::any> row_data;  // Vector to store data for the current row
+        std::vector<DataVariant> row_data;  // Vector to store data for the current row
         std::vector<std::string> row;    // Vector to store individual elements of the current row
         std::stringstream ss(line);      // String stream to parse the current line
         std::string cell;                // String to store each cell of the current row
@@ -58,17 +72,19 @@ void FileReader::read(const std::string& filename, std::vector<const std::type_i
 
             if (line_count == block_size && read_in_blocks) {  // If block size reached or end of file
                 // Add block data to the queue
-                queue.push(*df);
+                queue.push(df);
 
                 line_count = 0;  // Reset line counter
-                df->clear_data();
+                df = new DataFrame(column_order, types);  // Create a new DataFrame object
             }
         }
     }
 
     if (df != nullptr && !df->get_number_of_rows()) {  // If there is remaining data
-        queue.push(*df);  // Add the remaining data to the queue
+        queue.push(df);  // Add the remaining data to the queue
     }
+
+    end = file.tellg();  // Get the end position of the file
 
     file.close();                        
 }

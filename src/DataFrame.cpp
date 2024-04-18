@@ -1,10 +1,16 @@
-#include <any>
+#include <variant>
 #include <vector>
 #include <unordered_map>
 #include <string>
 #include <typeinfo>
 #include <stdexcept>
+#include <iostream>
+#include <ctime>
+#include <typeindex>
+#include <algorithm>
+#include <iomanip>
 #include "DataFrame.h"
+
 
 
 DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<const std::type_info*>& column_types) : n_rows(0) {
@@ -18,22 +24,25 @@ DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<c
         if (this->column_types.find(column_names[i]) != this->column_types.end())
             throw std::invalid_argument("Column name already exists");
 
-        this->column_types[column_names[i]] = column_types[i];
+        this->column_types[column_names[i]] = type_to_index[std::type_index(*column_types[i])];
         this->column_order.push_back(column_names[i]);
     }
 }
 
-const std::type_info* DataFrame::get_column_type(const std::string& column_name) {
+
+
+size_t DataFrame::get_column_type(const std::string& column_name) {
     /*
      * returns the type of the data in the specified column. The column name should exist.
      */
     if (column_types.find(column_name) == column_types.end())
         throw std::invalid_argument("Column name does not exist");
 
+
     return column_types[column_name];
 }
 
-void DataFrame::add_row(const std::vector<std::any>& row_data) {
+void DataFrame::add_row(const std::vector<DataVariant>& row_data) {
     /*
      * Adds a new row to the DataFrame. The number of elements in the row_data should match the number of columns.
      * The type of the data in each element should match the type of the corresponding column.
@@ -44,7 +53,7 @@ void DataFrame::add_row(const std::vector<std::any>& row_data) {
     auto it = row_data.begin();
     for (size_t i = 0; i < row_data.size(); ++i, ++it) {
         // Check if the type of the value matches the type of the column
-        if (it->type() != *column_types[column_order[i]])
+        if (it->index() != column_types[column_order[i]])
             throw std::invalid_argument("Type of value does not match type of column");
 
         data[column_order[i]].push_back(*it);
@@ -77,4 +86,33 @@ void DataFrame::remove_row(int index) {
     }
 
     n_rows--;
+}
+
+void DataFrame::print() {
+    /*
+     * Prints the DataFrame to the console.
+     */
+    for (const auto& column : column_order) {
+        std::cout << column << " ";
+    }
+    std::cout << std::endl;
+
+    for (size_t i = 0; i < n_rows; ++i) {
+        for (const auto& column : column_order) {
+            if(data[column][i].index() == 0) {
+                std::cout<< std::get<int>(data[column][i]) << " ";
+            }
+            else if(data[column][i].index() == 1) {
+                std::cout<<std::get<float>(data[column][i]) << " ";
+            }
+            else if(data[column][i].index() == 2) {
+
+                std::cout<< std::get<std::string>(data[column][i]) << " ";
+            }
+
+            else
+                std::cout << "Unsupported type" << " ";
+        }
+        std::cout << std::endl;
+    }
 }

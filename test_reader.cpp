@@ -11,22 +11,15 @@
 std::atomic<bool> isReadingComplete(false);
 std::mutex print_mtx;
 
-void print_test_csv( ConsumerProducerQueue<DataFrame>* queue) {
+void print_test_csv( ConsumerProducerQueue<DataFrame*>* queue) {
     while (queue->size() || !isReadingComplete){
         //print size of the queue
         std::cout << "Queue size: " << queue->size() << std::endl;
 
-        DataFrame df = queue->pop();
-
-        auto v1 = df.get_column<int>("id");
-        auto v2 = df.get_column<std::string>("semana");
-        auto v3 = df.get_column<std::string>("data");
-
-        for (size_t i = 0; i < v1.size(); i++) {
-            print_mtx.lock();
-            std::cout << v1[i] << " - " << v2[i] << " - " << v3[i] << std::endl;
-            print_mtx.unlock();
-        }
+        DataFrame *df = queue->pop();
+        print_mtx.lock();
+        df->print();
+        print_mtx.unlock();
 
     }
     std::unique_lock<std::mutex> lck(print_mtx);
@@ -34,16 +27,17 @@ void print_test_csv( ConsumerProducerQueue<DataFrame>* queue) {
 
 }
 
-void test_read_csv(ConsumerProducerQueue<DataFrame>* queue, std::vector<const std::type_info*> types2){
+void test_read_csv(ConsumerProducerQueue<DataFrame*>* queue, std::vector<const std::type_info*> types2){
     FileReader csvReader;
-    csvReader.read("../testData/data2.csv", types2, ',', *queue, true, 10);
+    int end = 0;
+    csvReader.read("../testData/data2.csv", types2, ',',0,end, *queue, true, 10);
     isReadingComplete = true;
 }
 
 int main(){ 
 
     std::vector<const std::type_info*> types2 = {&typeid(int), &typeid(std::string), &typeid(std::string)};
-    ConsumerProducerQueue<DataFrame> queue(15);
+    ConsumerProducerQueue<DataFrame*> queue(15);
 
     std::vector<std::thread> threads;
 
