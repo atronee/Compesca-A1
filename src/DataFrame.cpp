@@ -5,6 +5,7 @@
 #include <typeinfo>
 #include <stdexcept>
 #include "DataFrame.h"
+#include <algorithm>
 
 
 DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<const std::type_info*>& column_types) : n_rows(0) {

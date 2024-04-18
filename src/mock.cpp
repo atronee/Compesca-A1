@@ -147,7 +147,7 @@ void mockCSV()
         return;
     }
 
-    consumerFile << "ID, NOME, SOBRENOME, ENDEREÇO, DATA DE NASCIMENTO, DATA DE CADASTRO\n";
+    consumerFile << "ID,NOME,SOBRENOME,ENDEREÇO,DATA DE NASCIMENTO,DATA DE CADASTRO\n";
 
     for (int record = 1; record <= numRecords; ++record) {
         std::string consumer = consumerData();
@@ -169,7 +169,7 @@ void mockCSV()
         return;
     }
 
-    productFile << "ID, NOME, IMAGEM, PREÇO, DESCRIÇÃO\n";
+    productFile << "ID,NOME,IMAGEM,PREÇO,DESCRIÇÃO\n";
 
     for (int record = 1; record <= numRecords; ++record) {
         std::string product = productData();
@@ -191,7 +191,7 @@ void mockCSV()
         return;
     }
 
-    stockFile << "ID PRODUTO, QUANTIDADE\n";
+    stockFile << "ID PRODUTO,QUANTIDADE\n";
 
     for (int record = 1; record <= numRecords; ++record) {
         std::string stock = stockData();
@@ -213,7 +213,7 @@ void mockCSV()
         return;
     }
     //column names
-    orderFile << "ID USUARIO, ID PRODUTO, QUANTIDADE, DATA DE COMPRA, DATA DE PAGAMENTO, DATA DE ENVIO, DATA DE ENTREGA\n";
+    orderFile << "ID USUARIO,ID PRODUTO,QUANTIDADE,DATA DE COMPRA,DATA DE PAGAMENTO,DATA DE ENVIO,DATA DE ENTREGA\n";
 
     for (int record = 1; record <= numRecords; ++record) {
         std::string order = orderData();
@@ -322,7 +322,34 @@ std::string generateLogDebug()
 }
 
 // Mocks the behavior of a continuous status machine that constantly creates log files
-void mockLogFiles() {
+
+enum LogType {
+    LOG_AUDIT,
+    LOG_USER_BEHAVIOR,
+    LOG_FAILURE_NOTIFICATION,
+    LOG_DEBUG
+};
+
+void writeColumnNames(std::ofstream& outputFile, LogType fileType) {
+    switch (fileType) {
+        case LOG_AUDIT:
+            outputFile << "Type,User Author Id,Action,Action Description,Text Content,Date\n";
+            break;
+        case LOG_USER_BEHAVIOR:
+            outputFile << "Type,User Author Id,Action,Stimulus,Component,Text Content,Date\n";
+            break;
+        case LOG_FAILURE_NOTIFICATION:
+            outputFile << "Type,Component,Message,Severity,Text Content,Date\n";
+            break;
+        case LOG_DEBUG:
+            outputFile << "Type,Message,Text Content,Date\n";
+            break;
+        default:
+            break;
+    }
+}
+
+void mockLogFiles(int filesPerType, int linesPerFile) {
     srand(static_cast<unsigned int>(time(nullptr)));
 
     // Output directory path
@@ -332,58 +359,78 @@ void mockLogFiles() {
     system(("mkdir -p " + outputDir).c_str());
 
     // Number of log lines per file
-    const int linesPerFile = 100;
 
-    // Number of log files to generate
-    const int numFiles = 5;
+    // Number of log files per type
 
-    for (int fileIndex = 1; fileIndex <= numFiles; ++fileIndex) {
-        std::string filename = outputDir + "log_" + std::to_string(fileIndex) + ".txt";
-
-        // Open the output file
-        std::ofstream outputFile(filename);
-        if (!outputFile.is_open()) {
-            std::cerr << "Error opening output file: " << filename << "\n";
-            return;
+    for (int fileType = LOG_AUDIT; fileType <= LOG_DEBUG; ++fileType) {
+        std::string typeLabel;
+        switch (fileType) {
+            case LOG_AUDIT:
+                typeLabel = "audit";
+                break;
+            case LOG_USER_BEHAVIOR:
+                typeLabel = "user_behavior";
+                break;
+            case LOG_FAILURE_NOTIFICATION:
+                typeLabel = "failure";
+                break;
+            case LOG_DEBUG:
+                typeLabel = "debug";
+                break;
+            default:
+                std::cerr << "Invalid file type.\n";
+                return;
         }
-        int randLog = 0;
-        for (int line = 1; line <= linesPerFile; ++line) {
-            randLog = getRandomInt(1, 4);
-            switch (randLog) {
-                case 1: {
-                    std::string logMessage = generateLogAudit();
-                    outputFile << logMessage << "\n";
-                    break;
-                }
-                case 2: {
-                    std::string logMessage = generateLogUserBehavior();
-                    outputFile << logMessage << "\n";
-                    break;
-                }
-                case 3: {
-                    std::string logMessage = generateLogFailureNotification();
-                    outputFile << logMessage << "\n";
-                    break;
-                }
-                case 4: {
-                    std::string logMessage = generateLogDebug();
-                    outputFile << logMessage << "\n";
-                    break;
-                }
-                default:
-                    break;
+
+        for (int fileIndex = 1; fileIndex <= filesPerType; ++fileIndex) {
+            std::string filename = outputDir + typeLabel + "_logs_" + std::to_string(fileIndex) + ".txt";
+
+            // Open the output file
+            std::ofstream outputFile(filename);
+            if (!outputFile.is_open()) {
+                std::cerr << "Error opening output file: " << filename << "\n";
+                return;
             }
+
+            // Write column names
+            writeColumnNames(outputFile, static_cast<LogType>(fileType));
+
+            // Write log messages
+            for (int line = 1; line <= linesPerFile; ++line) {
+                std::string logMessage;
+
+                switch (fileType) {
+                    case LOG_AUDIT:
+                        logMessage = generateLogAudit();
+                        break;
+                    case LOG_USER_BEHAVIOR:
+                        logMessage = generateLogUserBehavior();
+                        break;
+                    case LOG_FAILURE_NOTIFICATION:
+                        logMessage = generateLogFailureNotification();
+                        break;
+                    case LOG_DEBUG:
+                        logMessage = generateLogDebug();
+                        break;
+                    default:
+                        break;
+                }
+
+                outputFile << logMessage << "\n";
+            }
+
+            // Close the output file
+            outputFile.close();
+            std::cout << "Log file generated: " << filename << "\n";
         }
-        // Close the output file
-        outputFile.close();
-        std::cout << "Log file generated: " << filename << "\n";
     }
+
     std::cout << "Mock log file generation complete.\n";
 }
 int main()
 {
-    mockCSV();
-    mockLogFiles();
+    //mockCSV();
+    mockLogFiles(10, 5000);
 
     return 0;
 }
