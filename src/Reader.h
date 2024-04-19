@@ -1,6 +1,7 @@
 #ifndef READER_H                   
 #define READER_H
 
+#include "DataFrame.h"
 #include <vector>                 
 #include <string>
 #include <map>
@@ -9,14 +10,16 @@
 #include <typeinfo> 
 #include "ConsumerProducerQueue.h"
 
-class Reader {                    // Declaration of the base class Reader
+class Reader { // Declaration of the base class Reader
 public:
     // read function to read data from a file
-virtual void read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter, ConsumerProducerQueue<std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>>>& queue, bool read_in_blocks) = 0;};
+virtual void read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter, int start, int & end,ConsumerProducerQueue<DataFrame*>& queue, bool read_in_blocks, int blocksize) = 0;};
+
 
 class FileReader : public Reader {  // Declaration of the derived class CSVReader, inheriting from Reader
 public:
-    void read(const std::string& filename, const std::vector<const std::type_info*>& types, char delimiter, ConsumerProducerQueue<std::pair<std::vector<std::string>, std::vector<std::vector<std::any>>>>& queue, bool read_in_blocks) override;
+    void read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter, int start, int & end,
+              ConsumerProducerQueue<DataFrame*>& queue, bool read_in_blocks, int blocksize) override;
     // Implementation of the read function for reading CSV files
     // Parameters: filename - name of the CSV file to read from
     //             types - vector of type_info pointers specifying the types of data to read

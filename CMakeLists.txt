@@ -24,6 +24,19 @@ add_executable(TestReader
         src/ConsumerProducerQueue.h)
 target_link_libraries(TestReader)
 
+add_executable(TestPipeline
+        test_pipeline.cpp
+        src/DataFrame.h
+        src/DataFrame.cpp
+        src/Reader.h
+        src/Reader.cpp
+        src/Semaphore.h
+        src/Semaphore.cpp
+        src/ConsumerProducerQueue.h
+        src/Handlers.h
+        src/Handlers.cpp)
+target_link_libraries(TestPipeline)
+
 # test mock
 add_executable(test_mock
         src/mock.h
@@ -35,3 +48,5 @@ add_executable(test_trigger
         src/triggers.cpp
         src/triggers.h
 )
+
+
