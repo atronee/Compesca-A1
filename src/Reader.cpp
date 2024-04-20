@@ -4,7 +4,11 @@
 #include <sstream>                 
 #include <iostream>               
 #include <typeinfo>                
-#include <vector>                  
+#include <vector>
+#include <sys/file.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <ext/stdio_filebuf.h>
 
 void FileReader::read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter,
                       int start, int & end, ConsumerProducerQueue<DataFrame*>& queue,
@@ -21,11 +25,22 @@ void FileReader::read(const std::string& filename, std::vector<const std::type_i
      * - block_size: number of rows to read in each block
      */
 
-    std::ifstream file(filename);  // Open the CSV file for reading
-    if (!file.is_open()) {          // Check if file opening failed
-        std::cerr << "Error opening CSV file: " << filename << std::endl;  
+    int fd = open(filename.c_str(), O_RDONLY);  // Open the file with POSIX open
+    if (fd == -1) {          // Check if file opening failed
+        std::cerr << "Error opening CSV file: " << filename << std::endl;
         return;
     }
+
+    __gnu_cxx::stdio_filebuf<char> filebuf(fd, std::ios::in);  // Create a filebuf with the file descriptor
+    std::istream file(&filebuf);  // Create an istream with the filebuf
+
+    // Apply a shared lock to the file descriptor
+    if (flock(fd, LOCK_SH) != 0) {
+        std::cerr << "Error locking file: " << filename << std::endl;
+        close(fd);
+        return;
+    }
+
     file.seekg(start); // Move to the start line
 
     std::vector<std::string> column_order;        // Vector to store column names
@@ -86,5 +101,7 @@ void FileReader::read(const std::string& filename, std::vector<const std::type_i
 
     end = file.tellg();  // Get the end position of the file
 
-    file.close();                        
+    // Release the lock and close the file
+    flock(fd, LOCK_UN);
+    close(fd);
 }
