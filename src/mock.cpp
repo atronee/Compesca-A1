@@ -307,13 +307,6 @@ std::string generateLogDebug()
 
 // Mocks the behavior of a continuous status machine that constantly creates log files
 
-enum LogType {
-    LOG_AUDIT,
-    LOG_USER_BEHAVIOR,
-    LOG_FAILURE_NOTIFICATION,
-    LOG_DEBUG
-};
-
 void writeColumnNames(std::ofstream& outputFile, LogType fileType) {
     switch (fileType) {
         case LOG_AUDIT:
@@ -420,7 +413,7 @@ std::string createConsumerTable()
     return "CREATE TABLE Consumer (ID INTEGER PRIMARY KEY, NOME TEXT, SOBRENOME TEXT, ENDEREÇO TEXT, DATA_DE_NASCIMENTO TEXT, DATA_DE_CADASTRO TEXT);";
 }
 
-void mockSqliteTable()
+void mockSqliteTable(const int lines)
 {
     // creates a sqlite db
     sqlite3 *db;
@@ -450,7 +443,7 @@ void mockSqliteTable()
     }
 
     // inserts data into the table
-    for(int i = 0; i <10; i++)
+    for(int i = 0; i <lines; i++)
     {
         sql = consumerData(true);
         rc = sqlite3_exec(db, sql.c_str(), 0, 0, &err_msg);
@@ -464,9 +457,9 @@ void mockSqliteTable()
 
 int main()
 {
-    //mockCSV();
-    //mockLogFiles(10, 5000);
-    mockSqliteTable();
+    mockCSV();
+    mockLogFiles(10, 5000);
+    mockSqliteTable(100);
 
     return 0;
 }
