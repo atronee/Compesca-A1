@@ -11,7 +11,7 @@ add_executable(TestDataframe
         src/Semaphore.cpp
         src/ConsumerProducerQueue.h
 )
-target_link_libraries(TestDataframe)
+
 
 add_executable(TestReader
         test_reader.cpp
@@ -22,7 +22,7 @@ add_executable(TestReader
         src/Semaphore.cpp
         src/Semaphore.cpp
         src/ConsumerProducerQueue.h)
-target_link_libraries(TestReader)
+
 
 add_executable(TestPipeline
         test_pipeline.cpp
@@ -35,18 +35,22 @@ add_executable(TestPipeline
         src/ConsumerProducerQueue.h
         src/Handlers.h
         src/Handlers.cpp)
-target_link_libraries(TestPipeline)
 
 # test mock
+find_package(SQLite3)
 add_executable(test_mock
         src/mock.h
         src/mock.cpp
 )
+target_link_libraries(test_mock SQLite::SQLite3)
 
 # test trigger
 add_executable(test_trigger
         src/triggers.cpp
         src/triggers.h
+        sqlite3.h
 )
+
+
 
 
