@@ -6,6 +6,7 @@
 #include <ctime>   // For time()
 #include <filesystem>
 #include "mock.h"
+#include "../sqlite3.h"
 
 // Function to generate a random integer within a range
 int getRandomInt(int min, int max) {
@@ -24,7 +25,7 @@ std::string randomString(int length) {
 
 // USUARIO
 // ID, NOME, SOBRENOME, ENDEREÇO, DATA DE NASCIMENTO, DATA DE CADASTRO
-std::string consumerData() {
+std::string consumerData(bool isSqlFlag = false) {
     const std::vector<std::string> names = {"Alice", "Bob", "Charlie", "David", "Emma", "Frank", "Grace"};
     const std::vector<std::string> surNames = {"Smith", "Johnson", "Brown", "Taylor", "Lee", "Martinez", "White"};
     const std::vector<std::string> cities = {"New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia",
@@ -43,7 +44,13 @@ std::string consumerData() {
     int registerDay = getRandomInt(1, 30);
     int registerMonth = getRandomInt(1, 12);
     int registerYear = getRandomInt(2019, 2024);
-
+    if (isSqlFlag)
+    {
+        return "INSERT INTO Consumer (ID, NOME, SOBRENOME, ENDEREÇO, DATA_DE_NASCIMENTO, DATA_DE_CADASTRO) VALUES (" +
+        std::to_string(userId) + ", '" + name + "', '" + surName + "', '" + city + "', '" +std::to_string(bornDay) +
+        "/" + std::to_string(bornMonth) + "/" + std::to_string(bornYear) + "', '"+ std::to_string(registerDay) +
+        "/" + std::to_string(registerMonth) + "/" + std::to_string(registerYear) + "');";
+    }
     return std::to_string(userId)+","+ name + "," + surName + "," + city + "," + std::to_string(bornDay) + "/" +
     std::to_string(bornMonth) +"/" + std::to_string(bornYear) + "," + std::to_string(registerDay) + "/" +
     std::to_string(registerMonth) + "/" + std::to_string(registerYear);
@@ -118,18 +125,10 @@ std::string orderData()
 }
 
 
-void mockCSV()
+void mockCSV(const int numRecords = 1000)
 {
-    // Gera dados da loja e cria um csv
-    // recebe uma função de geração de dados
-    // cria 4 arquivos csv com dados de usuario, produto, estoque e ordens de compra
-
-
     // Seed the random number generator
     srand(static_cast<unsigned int>(time(nullptr)));
-
-    // Number of mock data records to generate
-    const int numRecords = 1000;
 
     // Output directory path
     const std::string outputDir = "data/";
@@ -228,22 +227,7 @@ void mockCSV()
     std::cout << "Mock data generation complete.\n";
 }
 
-//DataCat
-
-/*
-O serviço DataCat fornece arquivos de log em texto (formato TXT) disponibilizados
-em um diretório da máquina executando o ETL
-Os eventos de log podem ser classificados em auditoria, comportamento do
-usuário, notificação de falhas e depuração.
-Todo evento de log é composto pela data de notificação, pelo seu tipo, e por uma
-mensagem com o conteúdo textual do evento.
-Um log de auditoria representa adicionalmente o ID do usuário autor e a ação
-realizada sobre o sistema.
-Um log de comportamento do usuário representa adicionalmente o ID do usuário
-autor, o estímulo realizado sobre a interface, e o componente-alvo.
-Um log de notificação de falhas representa adicionalmente o componente-alvo, o
-arquivo/linha de código, e a gravidade.
- */
+//DataCat mock data
 
 std::string generateLogAudit()
 {
@@ -427,10 +411,62 @@ void mockLogFiles(int filesPerType, int linesPerFile) {
 
     std::cout << "Mock log file generation complete.\n";
 }
+
+// Sqlite Mock data
+// creates a sql command that creates the same data as the consumerData function
+
+std::string createConsumerTable()
+{
+    return "CREATE TABLE Consumer (ID INTEGER PRIMARY KEY, NOME TEXT, SOBRENOME TEXT, ENDEREÇO TEXT, DATA_DE_NASCIMENTO TEXT, DATA_DE_CADASTRO TEXT);";
+}
+
+void mockSqliteTable()
+{
+    // creates a sqlite db
+    sqlite3 *db;
+    int rc = sqlite3_open("../mock.db", &db);
+    if(rc)
+    {
+        std::cerr << "Error opening SQLite3 database: " << sqlite3_errmsg(db) << std::endl << std::endl;
+        sqlite3_close(db);
+        return;
+    }
+    else
+    {
+        std::cout << "Opened mock.db." << std::endl << std::endl;
+    }
+    // creates a table
+    char *err_msg = nullptr;
+    std::string sql = createConsumerTable();
+    rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg);
+    if(rc != SQLITE_OK)
+    {
+        std::cerr << "SQL error: " << err_msg << std::endl;
+        sqlite3_free(err_msg);
+    }
+    else
+    {
+        std::cout << "Table created successfully." << std::endl;
+    }
+
+    // inserts data into the table
+    for(int i = 0; i <10; i++)
+    {
+        sql = consumerData(true);
+        rc = sqlite3_exec(db, sql.c_str(), 0, 0, &err_msg);
+        if(rc != SQLITE_OK)
+        {
+            std::cerr << "SQL error: " << err_msg << std::endl;
+            sqlite3_free(err_msg);
+        }
+    }
+}
+
 int main()
 {
     //mockCSV();
-    mockLogFiles(10, 5000);
+    //mockLogFiles(10, 5000);
+    mockSqliteTable();
 
     return 0;
 }
