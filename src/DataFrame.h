@@ -38,6 +38,8 @@ public:
         return column_types;
     }
 
+    std::vector<DataVariant> get_row(int index) const;
+
     void add_row(const std::vector<DataVariant>& row_data);
 
     void remove_column(const std::string& column_name);

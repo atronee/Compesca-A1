@@ -117,3 +117,18 @@ void DataFrame::print() {
         std::cout << std::endl;
     }
 }
+
+std::vector<DataVariant> DataFrame::get_row(int index) const {
+    /*
+     * Returns the data in the row at the specified index. The index should be within the range [0, n_rows).
+     */
+    if (index < 0 || index >= n_rows)
+        throw std::invalid_argument("Index out of bounds");
+
+    std::vector<DataVariant> row_data(column_order.size());
+    for (const auto& column : column_order) {
+        row_data.push_back(data.at(column)[index]);
+    }
+
+    return row_data;
+}
