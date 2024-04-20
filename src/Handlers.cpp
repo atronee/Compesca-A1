@@ -7,6 +7,7 @@
 #include <ctime>
 #include <typeindex>
 #include "Handlers.h"
+#include <any>
 
 using std::vector;
 using std::string;
@@ -206,7 +207,7 @@ void printHandler::print() {
     }
 }
 
-void JoinHandler::join(DataFrame* df1, string main_column, string incoming_column){
+void JoinHandler::join(DataFrame* df1, string main_column, string join_column){
     vector<string> main_column = df1->get_column<string>(main_column); 
     while (true) {
         DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
@@ -214,18 +215,32 @@ void JoinHandler::join(DataFrame* df1, string main_column, string incoming_colum
 
         DataFrame* result_df = new DataFrame(); // Placeholder for the join result
         // Get the column to join on from the main DataFrame
-        vector<string> incoming_column = incoming_df->get_column<string>(incoming_column); // Get the column to join on from the incoming DataFrame
+        vector<string> incoming_column = incoming_df->get_column<string>(join_column); // Get the column to join on from the incoming DataFrame
         
-        for (size_t i = 0; i < main_column.size(); i++) {
-            for(size_t i = 0; i,incoming_column.size(); i++){
-                if(main_column[i] == incoming_column[i]){
-                    vector<string> main_row= df1->get_row(i);
-                    vector<string> incoming_row= incoming_df->get_row(i);
-                    //merge rows
-                    auto merged_row = main_row.insert(main_row.end(), incoming_row.begin(), incoming_row.end()) ;
-                    result_df->add_row(merged_row);
+        for (int i = 0; i < main_column.size(); i++) {
+            for(int j = 0; j<incoming_column.size(); j++){
+                string main_value= std::any_cast<string>(main_column[i]);
+                string incoming_value= std::any_cast<string>(incoming_column[i]);
+                if(main_value == incoming_value){
+                    if (main_value == incoming_value) {
+                        // Retrieve the full rows as vectors of DataVariant
+                        vector<DataVariant> row_data = df1->get_row(i); // Main DataFrame row
+                        vector<DataVariant> incoming_row_data = incoming_df->get_row(j); // Incoming DataFrame row
+
+                        // Create a new vector to hold the combined row data
+                        vector<DataVariant> combined_row_data = row_data;
+
+                        // Insert elements from the incoming_row_data, excluding the join column index
+                        // Assuming 'join_column_index' is the index of the join column in incoming_row_data
+                        incoming_row_data.erase(incoming_row_data.begin() + 0); // Remove the join column from incoming row
+                        combined_row_data.insert(combined_row_data.end(), incoming_row_data.begin(), incoming_row_data.end());
+
+                        // Add the combined row to the result DataFrame
+                        result_df->add_row(combined_row_data);
+                        } // Add the row data from the main DataFrame to the result DataFrame
                 }
-            }
+
+        }
         }
         queue_out->push(result_df); // Push result to output queue
     }

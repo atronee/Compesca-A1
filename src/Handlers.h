@@ -49,5 +49,5 @@ public:
     JoinHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
     : Handler(queue_in, queue_out) {};
 
-    void join(DataFrame* df1, string column);
+    void join(DataFrame* df1, string main_column, string join_column);
 };
