@@ -84,11 +84,9 @@ std::string productData()
 
 //Estoque
 //ID, Quantidade
-std::string stockData()
+std::string stockData(int productId)
 {
-    int productId = getRandomInt(1, 7);
     int quantity = getRandomInt(1, 1000);
-
     return std::to_string(productId) + "," + std::to_string(quantity);
 }
 
@@ -192,8 +190,8 @@ void mockCSV(const int numRecords = 1000)
 
     stockFile << "ID PRODUTO,QUANTIDADE\n";
 
-    for (int record = 1; record <= numRecords; ++record) {
-        std::string stock = stockData();
+    for (int record = 1; record <= 7; ++record) {
+        std::string stock = stockData(record);
         stockFile << stock << "\n";
     }
 
@@ -459,7 +457,7 @@ int main()
 {
     mockCSV();
     mockLogFiles(10, 5000);
-    mockSqliteTable(100);
+    mockSqliteTable(80);
 
     return 0;
 }
