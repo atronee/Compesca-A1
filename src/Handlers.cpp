@@ -205,3 +205,28 @@ void printHandler::print() {
         df->print();
     }
 }
+
+void JoinHandler::join(DataFrame* df1, string main_column, string incoming_column){
+    vector<string> main_column = df1->get_column<string>(main_column); 
+    while (true) {
+        DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
+        if (incoming_df == nullptr) break; // Stop if no more data
+
+        DataFrame* result_df = new DataFrame(); // Placeholder for the join result
+        // Get the column to join on from the main DataFrame
+        vector<string> incoming_column = incoming_df->get_column<string>(incoming_column); // Get the column to join on from the incoming DataFrame
+        
+        for (size_t i = 0; i < main_column.size(); i++) {
+            for(size_t i = 0; i,incoming_column.size(); i++){
+                if(main_column[i] == incoming_column[i]){
+                    vector<string> main_row= df1->get_row(i);
+                    vector<string> incoming_row= incoming_df->get_row(i);
+                    //merge rows
+                    auto merged_row = main_row.insert(main_row.end(), incoming_row.begin(), incoming_row.end()) ;
+                    result_df->add_row(merged_row);
+                }
+            }
+        }
+        queue_out->push(result_df); // Push result to output queue
+    }
+}

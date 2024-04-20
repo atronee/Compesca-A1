@@ -43,3 +43,11 @@ public:
 
     void print();
 };
+
+class JoinHandler : public Handler {
+public:
+    JoinHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
+    : Handler(queue_in, queue_out) {};
+
+    void join(DataFrame* df1, string column);
+};
