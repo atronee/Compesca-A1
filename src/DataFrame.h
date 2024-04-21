@@ -48,6 +48,8 @@ public:
 
     void print();
 
+    void add_row_at_index(int index, const std::vector<DataVariant>& row_data);
+
     template <typename T>
     void update_column(const std::string &column_name, const std::vector<T> &new_column_data) {
         /*

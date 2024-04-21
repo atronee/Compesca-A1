@@ -132,3 +132,28 @@ std::vector<DataVariant> DataFrame::get_row(int index) const {
 
     return row_data;
 }
+
+void DataFrame::add_row_at_index(int index, const std::vector<DataVariant>& row_data) {
+    /*
+     * Adds a new row to the DataFrame at the specified index. The number of elements in the row_data should match the number of columns.
+     * The type of the data in each element should match the type of the corresponding column.
+     * The index should be within the range [0, n_rows].
+     */
+    if (row_data.size() != column_order.size())
+        throw std::invalid_argument("Size of row data does not match number of columns");
+
+    if (index < 0 || index > n_rows)
+        throw std::invalid_argument("Index out of bounds");
+
+    auto it = row_data.begin();
+    for (size_t i = 0; i < row_data.size(); ++i, ++it) {
+        // Check if the type of the value matches the type of the column
+        if (it->index() != column_types[column_order[i]])
+            throw std::invalid_argument("Type of value does not match type of column");
+
+        // Insert the value at the specified index
+        data[column_order[i]].insert(data[column_order[i]].begin() + index, *it);
+    }
+
+    n_rows++;
+}
