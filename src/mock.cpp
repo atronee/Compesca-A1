@@ -5,6 +5,9 @@
 #include <cstdlib> // For rand() and srand()
 #include <ctime>   // For time()
 #include <filesystem>
+#include <sys/file.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "mock.h"
 #include "../sqlite3.h"
 
@@ -84,11 +87,9 @@ std::string productData()
 
 //Estoque
 //ID, Quantidade
-std::string stockData()
+std::string stockData(int productId)
 {
-    int productId = getRandomInt(1, 7);
     int quantity = getRandomInt(1, 1000);
-
     return std::to_string(productId) + "," + std::to_string(quantity);
 }
 
@@ -139,10 +140,21 @@ void mockCSV(const int numRecords = 1000)
     // Generate mock data for the consumer
     std::string consumerFilename = outputDir + "consumer.csv";
 
-    // Open the output file
+    // Open the output file with POSIX open
+    int fd_consumer = open(consumerFilename.c_str(), O_WRONLY | O_CREAT, 0644);
+    if (fd_consumer == -1) {
+        std::cerr << "Error opening output file: " << consumerFilename << "\n";
+        return;
+    }
+
+    // Apply a lock to the file descriptor
+    flock(fd_consumer, LOCK_EX);
+
+    // Use ofstream to write to the file
     std::ofstream consumerFile(consumerFilename);
     if (!consumerFile.is_open()) {
         std::cerr << "Error opening output file: " << consumerFilename << "\n";
+        close(fd_consumer);
         return;
     }
 
@@ -155,11 +167,24 @@ void mockCSV(const int numRecords = 1000)
 
     // Close the output file
     consumerFile.close();
+    flock(fd_consumer, LOCK_UN);
+    close(fd_consumer);
+
 
     std::cout << "Consumer data generated: " << consumerFilename << "\n";
 
     // Generate mock data for the product
     std::string productFilename = outputDir + "product.csv";
+
+    // Open the output file with POSIX open
+    int fd_product = open(productFilename.c_str(), O_WRONLY | O_CREAT, 0644);
+    if (fd_product == -1) {
+        std::cerr << "Error opening output file: " << productFilename << "\n";
+        return;
+    }
+
+    // Apply a lock to the file descriptor
+    flock(fd_product, LOCK_EX);
 
     // Open the output file
     std::ofstream productFile(productFilename);
@@ -177,11 +202,23 @@ void mockCSV(const int numRecords = 1000)
 
     // Close the output file
     productFile.close();
+    flock(fd_product, LOCK_UN);
+    close(fd_product);
 
     std::cout << "Product data generated: " << productFilename << "\n";
 
     // Generate mock data for the stock
     std::string stockFilename = outputDir + "stock.csv";
+
+    // Open the output file with POSIX open
+    int fd_stock = open(stockFilename.c_str(), O_WRONLY | O_CREAT, 0644);
+    if (fd_stock == -1) {
+        std::cerr << "Error opening output file: " << productFilename << "\n";
+        return;
+    }
+
+    // Apply a lock to the file descriptor
+    flock(fd_stock, LOCK_EX);
 
     // Open the output file
     std::ofstream stockFile(stockFilename);
@@ -192,18 +229,30 @@ void mockCSV(const int numRecords = 1000)
 
     stockFile << "ID PRODUTO,QUANTIDADE\n";
 
-    for (int record = 1; record <= numRecords; ++record) {
-        std::string stock = stockData();
+    for (int record = 1; record <= 7; ++record) {
+        std::string stock = stockData(record);
         stockFile << stock << "\n";
     }
 
     // Close the output file
     stockFile.close();
+    flock(fd_stock, LOCK_UN);
+    close(fd_stock);
 
     std::cout << "Stock data generated: " << stockFilename << "\n";
 
     // Generate mock data for the order
     std::string orderFilename = outputDir + "order.csv";
+
+    // Open the output file with POSIX open
+    int fd_order = open(orderFilename.c_str(), O_WRONLY | O_CREAT, 0644);
+    if (fd_order == -1) {
+        std::cerr << "Error opening output file: " << productFilename << "\n";
+        return;
+    }
+
+    // Apply a lock to the file descriptor
+    flock(fd_order, LOCK_EX);
 
     // Open the output file
     std::ofstream orderFile(orderFilename);
@@ -211,6 +260,7 @@ void mockCSV(const int numRecords = 1000)
         std::cerr << "Error opening output file: " << orderFilename << "\n";
         return;
     }
+
     //column names
     orderFile << "ID USUARIO,ID PRODUTO,QUANTIDADE,DATA DE COMPRA,DATA DE PAGAMENTO,DATA DE ENVIO,DATA DE ENTREGA\n";
 
@@ -221,6 +271,8 @@ void mockCSV(const int numRecords = 1000)
 
     // Close the output file
     orderFile.close();
+    flock(fd_order, LOCK_UN);
+    close(fd_order);
 
     std::cout << "Order data generated: " << orderFilename << "\n";
 
@@ -244,8 +296,8 @@ const std::vector<std::string> actions = {"create", "read", "update", "delete"};
     int month = getRandomInt(1, 12);
     int year = getRandomInt(2019, 2024);
 
-    return "audit," + std::to_string(userAuthorId) + "," + action + "," + actionDescription + "," + textContent + "," +
-    std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
+    return "audit," + std::to_string(userAuthorId) + "," + action + "," + actionDescription + "," + textContent +
+    "," + std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
 }
 
 std::string generateLogUserBehavior()
@@ -254,19 +306,23 @@ std::string generateLogUserBehavior()
     const std::vector<std::string> components = {"button", "input", "table", "form"};
     const std::vector<std::string> stimuli = {"User clicked on a button", "User hovered over an input field",
                                               "User scrolled through a table", "User dragged a form element"};
-    std::string textContent = randomString(50);
 
+
+    std::string textContent = randomString(50);
     std::string action = actions[getRandomInt(0, actions.size() - 1)];
     int userAuthorId = getRandomInt(0, 1000);
     std::string stimulus = stimuli[getRandomInt(0, stimuli.size() - 1)];
     std::string component = components[getRandomInt(0, components.size() - 1)];
+    // if the user clicked on a button, then the column buttonProductId will have the product id else it will be id 0
+    int buttonProductId = action == "click" ? getRandomInt(1, 7) : 0;
 
     int day = getRandomInt(1, 30);
     int month = getRandomInt(1, 12);
     int year = getRandomInt(2019, 2024);
 
-    return "user_behavior," + std::to_string(userAuthorId) + "," + action + "," + stimulus + "," + component + "," +
-    textContent + "," + std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
+    return "user_behavior," + std::to_string(userAuthorId) + "," + action + ","+
+    std::to_string(buttonProductId)+  "," + stimulus + "," + component + "," + textContent + "," +
+    std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
 }
 
 std::string generateLogFailureNotification()
@@ -313,7 +369,7 @@ void writeColumnNames(std::ofstream& outputFile, LogType fileType) {
             outputFile << "Type,User Author Id,Action,Action Description,Text Content,Date\n";
             break;
         case LOG_USER_BEHAVIOR:
-            outputFile << "Type,User Author Id,Action,Stimulus,Component,Text Content,Date\n";
+            outputFile << "Type,User Author Id,Action,Button Product Id,Stimulus,Component,Text Content,Date\n";
             break;
         case LOG_FAILURE_NOTIFICATION:
             outputFile << "Type,Component,Message,Severity,Text Content,Date\n";
@@ -362,6 +418,16 @@ void mockLogFiles(int filesPerType, int linesPerFile) {
         for (int fileIndex = 1; fileIndex <= filesPerType; ++fileIndex) {
             std::string filename = outputDir + typeLabel + "_logs_" + std::to_string(fileIndex) + ".txt";
 
+            // Open the output file with POSIX open
+            int fd = open(filename.c_str(), O_WRONLY | O_CREAT, 0644);
+            if (fd == -1) {
+                std::cerr << "Error opening output file: " << filename << "\n";
+                return;
+            }
+
+            // Apply a lock to the file descriptor
+            flock(fd, LOCK_EX);
+
             // Open the output file
             std::ofstream outputFile(filename);
             if (!outputFile.is_open()) {
@@ -398,6 +464,9 @@ void mockLogFiles(int filesPerType, int linesPerFile) {
 
             // Close the output file
             outputFile.close();
+            flock(fd, LOCK_UN);
+            close(fd);
+
             std::cout << "Log file generated: " << filename << "\n";
         }
     }
@@ -428,6 +497,22 @@ void mockSqliteTable(const int lines)
     {
         std::cout << "Opened mock.db." << std::endl << std::endl;
     }
+
+    // Get the file descriptor and apply a lock
+    int fd = -1;
+    sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
+    if (fd == -1) {
+        std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
+        sqlite3_close(db);
+        return;
+    }
+    if (flock(fd, LOCK_EX) != 0) {
+        std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
+        close(fd);
+        sqlite3_close(db);
+        return;
+    }
+
     // creates a table
     char *err_msg = nullptr;
     std::string sql = createConsumerTable();
@@ -453,13 +538,18 @@ void mockSqliteTable(const int lines)
             sqlite3_free(err_msg);
         }
     }
+
+    // Release the lock and close the file
+    flock(fd, LOCK_UN);
+    close(fd);
+    sqlite3_close(db);
 }
 
 int main()
 {
     mockCSV();
     mockLogFiles(10, 5000);
-    mockSqliteTable(100);
+    mockSqliteTable(80);
 
     return 0;
 }

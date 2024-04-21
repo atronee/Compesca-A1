@@ -10,7 +10,7 @@ std::string getRandomString(int);
 
 std::string consumerData(bool);
 std::string productData();
-std::string stockData();
+std::string stockData(int);
 std::string orderData();
 
 void mockCSV(int);

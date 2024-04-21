@@ -34,6 +34,22 @@ public:
     void filter(string column, string operation, string value);
 };
 
+class GroupByHandler : public Handler {
+public:
+    GroupByHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
+    : Handler(queue_in, queue_out) {};
+
+    void group_by(string column, string operation);
+};
+
+class SortHandler : public Handler {
+public:
+    SortHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
+    : Handler(queue_in, queue_out) {};
+
+    void sort(string column, string order);
+};
+
 class printHandler : public Handler {
 private:
     std::mutex print_mtx;

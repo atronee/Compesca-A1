@@ -3,6 +3,7 @@
 #include <thread>
 #include <filesystem>
 #include "triggers.h"
+#include "ConsumerProducerQueue.h"
 #include <set>
 
 
@@ -30,10 +31,10 @@ bool EventBasedTrigger::isNewLogFile(const std::filesystem::path& folder, const 
     return processedFiles.find(filename) == processedFiles.end();
 }
 
-void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::path logFolder) {
+void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::path logFolder, ConsumerProducerQueue<std::string>& queue_files) {
     while (true) {
         // Check for new log files every 5 seconds
-        const auto interval = std::chrono::seconds(5);
+        const auto interval = std::chrono::seconds(1);
         std::this_thread::sleep_for(interval);
 
         // Iterate through files in the log folder
@@ -43,20 +44,8 @@ void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::pa
                 // Process the new log file
                 std::cout << "New log file detected: " << entry.path().filename() << std::endl;
                 processedFiles.insert(entry.path().filename().string());
-                executePipeline();
+                queue_files.push(entry.path().string());
             }
         }
     }
-}
-int main() {
-    // Create instances of TimeBasedTrigger and EventBasedTrigger
-    TimeBasedTrigger timeTrigger;
-    EventBasedTrigger eventTrigger;
-
-    // timeTrigger.startTrigger(5);
-
-    eventTrigger.triggerOnApperanceOfNewLogFile("./logs");
-
-
-    return 0;
 }

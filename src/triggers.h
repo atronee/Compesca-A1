@@ -5,6 +5,7 @@
 #include <chrono>
 #include <filesystem>
 #include <set>
+#include "ConsumerProducerQueue.h"
 
 class Trigger {
         public:
@@ -26,7 +27,7 @@ public:
 
     bool isNewLogFile(const std::filesystem::path& folder, const std::string& filename);
 
-    void triggerOnApperanceOfNewLogFile(const std::filesystem::path logFolder);
+    void triggerOnApperanceOfNewLogFile(const std::filesystem::path logFolder, ConsumerProducerQueue<std::string>& queue_files);
 };
 
 #endif //COMPESCA_A1_TRIGGERS_H
