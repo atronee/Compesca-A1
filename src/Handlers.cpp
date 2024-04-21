@@ -213,6 +213,9 @@ void JoinHandler::join(DataFrame* df1, string main_column_name, string join_colu
 
     vector<int> main_column = df1->get_column<int>(main_column_name);
     vector<string> column_order_m = df1->get_column_order();
+    for (int i = 0; i < column_order_m.size(); i++) {
+        std::cout<<column_order_m[i]<<std::endl;
+    }
 
 
     
