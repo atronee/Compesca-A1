@@ -296,8 +296,8 @@ const std::vector<std::string> actions = {"create", "read", "update", "delete"};
     int month = getRandomInt(1, 12);
     int year = getRandomInt(2019, 2024);
 
-    return "audit," + std::to_string(userAuthorId) + "," + action + "," + actionDescription + "," + textContent + "," +
-    std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
+    return "audit," + std::to_string(userAuthorId) + "," + action + "," + actionDescription + "," + textContent +
+    "," + std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
 }
 
 std::string generateLogUserBehavior()
@@ -306,19 +306,23 @@ std::string generateLogUserBehavior()
     const std::vector<std::string> components = {"button", "input", "table", "form"};
     const std::vector<std::string> stimuli = {"User clicked on a button", "User hovered over an input field",
                                               "User scrolled through a table", "User dragged a form element"};
-    std::string textContent = randomString(50);
 
+
+    std::string textContent = randomString(50);
     std::string action = actions[getRandomInt(0, actions.size() - 1)];
     int userAuthorId = getRandomInt(0, 1000);
     std::string stimulus = stimuli[getRandomInt(0, stimuli.size() - 1)];
     std::string component = components[getRandomInt(0, components.size() - 1)];
+    // if the user clicked on a button, then the column buttonProductId will have the product id else it will be id 0
+    int buttonProductId = action == "click" ? getRandomInt(1, 7) : 0;
 
     int day = getRandomInt(1, 30);
     int month = getRandomInt(1, 12);
     int year = getRandomInt(2019, 2024);
 
-    return "user_behavior," + std::to_string(userAuthorId) + "," + action + "," + stimulus + "," + component + "," +
-    textContent + "," + std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
+    return "user_behavior," + std::to_string(userAuthorId) + "," + action + ","+
+    std::to_string(buttonProductId)+  "," + stimulus + "," + component + "," + textContent + "," +
+    std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
 }
 
 std::string generateLogFailureNotification()
@@ -365,7 +369,7 @@ void writeColumnNames(std::ofstream& outputFile, LogType fileType) {
             outputFile << "Type,User Author Id,Action,Action Description,Text Content,Date\n";
             break;
         case LOG_USER_BEHAVIOR:
-            outputFile << "Type,User Author Id,Action,Stimulus,Component,Text Content,Date\n";
+            outputFile << "Type,User Author Id,Action,Button Product Id,Stimulus,Component,Text Content,Date\n";
             break;
         case LOG_FAILURE_NOTIFICATION:
             outputFile << "Type,Component,Message,Severity,Text Content,Date\n";
