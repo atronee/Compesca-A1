@@ -20,6 +20,13 @@ static std::unordered_map<std::type_index, size_t> type_to_index = {
 
 };
 
+static std::unordered_map<size_t, std::string> index_to_type = {
+        {0, "int"},
+        {1, "float"},
+        {2, "string"},
+        {3, "time"}
+};
+
 
 class DataFrame {
 private:

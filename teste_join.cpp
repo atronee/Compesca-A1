@@ -32,7 +32,7 @@ int main() {
     vector<string> demanda_uni_equil_data = {"rainha", "operaria", "operaria", "linda"};
 
     df_ptr->add_column("id", id_data);
-    df_ptr->add_column("semana", semana_data);
+    df_ptr->add_column("semanas", semana_data);
     df_ptr->add_column("demanda_uni_equil", demanda_uni_equil_data);
 
     std::vector<std::thread> threads;
