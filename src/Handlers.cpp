@@ -207,8 +207,8 @@ void printHandler::print() {
     }
 }
 
-void JoinHandler::join(DataFrame* df1, string main_column, string join_column){
-    vector<string> main_column = df1->get_column<string>(main_column);
+void JoinHandler::join(DataFrame* df1, string main_column_name, string join_column_name){
+    vector<string> main_column = df1->get_column<string>(main_column_name);
     while (true) {
         DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
         if (incoming_df == nullptr) {
@@ -217,10 +217,10 @@ void JoinHandler::join(DataFrame* df1, string main_column, string join_column){
         }
         DataFrame* result_df = new DataFrame(); // Placeholder for the join result
         // Get the column to join on from the main DataFrame
-        vector<string> incoming_column = incoming_df->get_column<string>(join_column); // Get the column to join on from the incoming DataFrame
+        vector<string> incoming_column = incoming_df->get_column<string>(join_column_name); // Get the column to join on from the incoming DataFrame
         vector<string> column_order = incoming_df->get_column_order();
         //find index of join column
-        int join_column_index = std::find(column_order.begin(), column_order.end(), join_column) - column_order.begin();
+        int join_column_index = std::find(column_order.begin(), column_order.end(), join_column_name) - column_order.begin();
         for (int i = 0; i < main_column.size(); i++) {
             for(int j = 0; j<incoming_column.size(); j++){
                 string main_value= std::any_cast<string>(main_column[i]);
