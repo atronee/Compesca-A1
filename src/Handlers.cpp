@@ -37,156 +37,168 @@ void FilterHandler::filter(string column, string operation, string value) {
         }
         if (df->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
             vector<int> column_data = df->get_column<int>(column);
-            vector<int> new_column_data;
             if (operation == "==") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] == std::stoi(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] == std::stoi(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "!=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] != std::stoi(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] != std::stoi(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "<") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] < std::stoi(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] < std::stoi(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == ">") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] > std::stoi(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] > std::stoi(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "<=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] <= std::stoi(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] <= std::stoi(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == ">=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] >= std::stoi(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] >= std::stoi(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else {
                 throw std::invalid_argument("Invalid operation");
             }
-            df->update_column(column, new_column_data);
         } else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
             vector<float> column_data = df->get_column<float>(column);
-            vector<float> new_column_data;
             if (operation == "==") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] == std::stod(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] == std::stod(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "!=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] != std::stod(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] != std::stod(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "<") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] < std::stod(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] < std::stod(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == ">") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] > std::stod(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] > std::stod(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "<=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] <= std::stod(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] <= std::stod(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == ">=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] >= std::stod(value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] >= std::stod(value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else {
                 throw std::invalid_argument("Invalid operation");
             }
-            df->update_column(column, new_column_data);
         } else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(string))]) {
             vector<string> column_data = df->get_column<string>(column);
-            vector<string> new_column_data;
             if (operation == "==") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] == value) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] == value)) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "!=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (column_data[i] != value) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(column_data[i] != value)) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else {
                 throw std::invalid_argument("Invalid operation");
             }
-            df->update_column(column, new_column_data);
         }
             // Now for time columns
         else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(std::tm))]) {
             vector<std::tm> column_data = df->get_column<std::tm>(column);
-            vector<std::tm> new_column_data;
             std::tm tm_value;
             //strptime(value.c_str(), "%Y-%m-%d %H:%M:%S", &tm_value);
             if (operation == "==") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (std::mktime(&column_data[i]) == std::mktime(&tm_value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(std::mktime(&column_data[i]) == std::mktime(&tm_value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "!=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (std::mktime(&column_data[i]) != std::mktime(&tm_value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(std::mktime(&column_data[i]) != std::mktime(&tm_value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "<") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (std::mktime(&column_data[i]) < std::mktime(&tm_value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(std::mktime(&column_data[i]) < std::mktime(&tm_value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == ">") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (std::mktime(&column_data[i]) > std::mktime(&tm_value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(std::mktime(&column_data[i]) > std::mktime(&tm_value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == "<=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (std::mktime(&column_data[i]) <= std::mktime(&tm_value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(std::mktime(&column_data[i]) <= std::mktime(&tm_value))) {
+                        df->remove_row(i);
+                        i --;
                     }
                 }
             } else if (operation == ">=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (std::mktime(&column_data[i]) >= std::mktime(&tm_value)) {
-                        new_column_data.push_back(column_data[i]);
+                    if (!(std::mktime(&column_data[i]) >= std::mktime(&tm_value))) {
+                        df->remove_row(i);
+                        i --;
                     }// filter the dataframe
                 }
             } else {
                 throw std::invalid_argument("Invalid operation");
             }
-            df->update_column(column, new_column_data);
         } else {
             throw std::invalid_argument("Invalid column type");
         }
