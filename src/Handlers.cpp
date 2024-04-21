@@ -208,20 +208,23 @@ void printHandler::print() {
 }
 
 void JoinHandler::join(DataFrame* df1, string main_column, string join_column){
-    vector<string> main_column = df1->get_column<string>(main_column); 
+    vector<string> main_column = df1->get_column<string>(main_column);
     while (true) {
         DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
-        if (incoming_df == nullptr) break; // Stop if no more data
-
+        if (incoming_df == nullptr) {
+            queue_out->push(nullptr);
+            break; // Stop if no more data
+        }
         DataFrame* result_df = new DataFrame(); // Placeholder for the join result
         // Get the column to join on from the main DataFrame
         vector<string> incoming_column = incoming_df->get_column<string>(join_column); // Get the column to join on from the incoming DataFrame
-        
+        vector<string> column_order = incoming_df->get_column_order();
+        //find index of join column
+        int join_column_index = std::find(column_order.begin(), column_order.end(), join_column) - column_order.begin();
         for (int i = 0; i < main_column.size(); i++) {
             for(int j = 0; j<incoming_column.size(); j++){
                 string main_value= std::any_cast<string>(main_column[i]);
                 string incoming_value= std::any_cast<string>(incoming_column[i]);
-                if(main_value == incoming_value){
                     if (main_value == incoming_value) {
                         // Retrieve the full rows as vectors of DataVariant
                         vector<DataVariant> row_data = df1->get_row(i); // Main DataFrame row
@@ -232,14 +235,12 @@ void JoinHandler::join(DataFrame* df1, string main_column, string join_column){
 
                         // Insert elements from the incoming_row_data, excluding the join column index
                         // Assuming 'join_column_index' is the index of the join column in incoming_row_data
-                        incoming_row_data.erase(incoming_row_data.begin() + 0); // Remove the join column from incoming row
+                        incoming_row_data.erase(incoming_row_data.begin() + join_column_index); // Remove the join column from incoming row
                         combined_row_data.insert(combined_row_data.end(), incoming_row_data.begin(), incoming_row_data.end());
 
                         // Add the combined row to the result DataFrame
                         result_df->add_row(combined_row_data);
                         } // Add the row data from the main DataFrame to the result DataFrame
-                }
-
         }
         }
         queue_out->push(result_df); // Push result to output queue
