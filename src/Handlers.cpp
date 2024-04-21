@@ -19,7 +19,8 @@ void SelectHandler::select(vector<string> columns) {
             break;
         }
         // select the columns
-        for (const string& column : df->get_column_order()) {
+        auto df_cols = df->get_column_order();
+        for (auto column : df_cols) {
             if (std::find(columns.begin(), columns.end(), column) == columns.end()) {
                 df->remove_column(column);
             }
@@ -38,14 +39,14 @@ void FilterHandler::filter(string column, string operation, string value) {
         if (df->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
             vector<int> column_data = df->get_column<int>(column);
             if (operation == "==") {
-                for (size_t i = 0; i < column_data.size(); ++i) {
+                for (size_t i = 0; i < df->get_number_of_rows(); ++i) {
                     if (!(column_data[i] == std::stoi(value))) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == "!=") {
-                for (size_t i = 0; i < column_data.size(); ++i) {
+                for (size_t i = 0; i < df->get_number_of_rows(); ++i) {
                     if (!(column_data[i] != std::stoi(value))) {
                         df->remove_row(i);
                         i --;
@@ -129,7 +130,7 @@ void FilterHandler::filter(string column, string operation, string value) {
             } else {
                 throw std::invalid_argument("Invalid operation");
             }
-        } else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(string))]) {
+        } else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(std::string))]) {
             vector<string> column_data = df->get_column<string>(column);
             if (operation == "==") {
                 for (size_t i = 0; i < column_data.size(); ++i) {

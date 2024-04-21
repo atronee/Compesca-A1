@@ -66,7 +66,8 @@ void FileReader::read(std::vector<const std::type_info*>& types, char delimiter,
                 column_order = row;// Store column names
                 df = new DataFrame(column_order, types);  // Create a DataFrame with column names and types
                 header = false;
-            } else {                                  // For subsequent rows (data)
+            }
+            else {                                  // For subsequent rows (data)
                 for (size_t i = 0; i < row.size(); ++i) {
                     if (i < types.size() && types[i] != nullptr) {
                         // Check the type of the cell and convert it accordingly

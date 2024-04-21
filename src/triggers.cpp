@@ -34,7 +34,7 @@ bool EventBasedTrigger::isNewLogFile(const std::filesystem::path& folder, const 
 void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::path logFolder, ConsumerProducerQueue<std::string>& queue_files) {
     while (true) {
         // Check for new log files every 5 seconds
-        const auto interval = std::chrono::seconds(5);
+        const auto interval = std::chrono::seconds(1);
         std::this_thread::sleep_for(interval);
 
         // Iterate through files in the log folder

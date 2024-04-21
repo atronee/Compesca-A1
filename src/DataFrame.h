@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <typeindex>
 #include <ctime>
+#include <iostream>
 
 using DataVariant = std::variant<int, float, std::string, std::tm>;
 
@@ -56,7 +57,7 @@ public:
          * Updates the data in the specified column. The column name should exist.
          */
         if (data.find(column_name) == data.end())
-            throw std::invalid_argument("Column name does not exist");
+            throw std::invalid_argument("update_column: Column name does not exist");
 
         if (new_column_data.size() != data[column_name].size())
             throw std::invalid_argument("Size of new column data does not match number of rows");
@@ -71,9 +72,9 @@ public:
          * The function adds a new column to the DataFrame. The column name should be unique.
          * T is the type of the data in the column.
          */
-        if (data.find(column_name) != data.end()) {
+        if (data.find(column_name) != data.end())
             throw std::invalid_argument("Column name already exists");
-        }
+
         if(!data.empty() && column_data.size() != data[column_order[0]].size()) {
             throw std::invalid_argument("Size of column data does not match number of rows");
         }
@@ -93,8 +94,14 @@ public:
          * T is the type of the data in the column. If the type of the data in the column does not match T,
          * the function throws an exception.
          */
-        if (data.find(column_name) == data.end())
-            throw std::invalid_argument("Column name does not exist");
+        if (data.find(column_name) == data.end()) {
+            std::cout << "Column name: " << column_name << std::endl;
+            std::cout << "data: " << std::endl;
+            for (const auto& col : data) {
+                std::cout << col.first << std::endl;
+            }
+            throw std::invalid_argument("get_column: Column name does not exist");
+        }
         if (type_to_index[typeid(T)] != column_types[column_name])
             throw std::invalid_argument("Type of value does not match type of column");
 
