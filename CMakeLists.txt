@@ -20,7 +20,7 @@ add_executable(Compesca_A1
         src/Handlers.cpp
         src/triggers.h
         src/triggers.cpp
-        main.cpp
+        dashboardCalc.cpp
         src/DataFrameVersionManager.cpp
         src/DataFrameVersionManager.h
         src/writer.cpp

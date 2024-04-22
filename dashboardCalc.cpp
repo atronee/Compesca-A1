@@ -10,7 +10,18 @@
 #include <thread>
 #include <atomic>
 #include <iostream>
+#include "src/DataFrameVersionManager.h"
 #include "src/triggers.h"
+#include "src/mock.h"
+
+void mock_files(){
+    for (int i = 0; i<1000; i+=10){
+        mockCSV();
+        mockLogFiles(10, 100,i);
+        mockSqliteTable(80);
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
+}
 
 int main() {
     // answer the questions save the results of a "log"/ dashboard file
@@ -130,7 +141,7 @@ int main() {
     ConsumerProducerQueue<DataFrame *> queue_join6(15);
     ConsumerProducerQueue<DataFrame *> queue_print6(15);
     ConsumerProducerQueue<DataFrame *> queue_stock(15);
-    ConsumerProducerQueue<DataFrame *> queue_agregator(15);
+    ConsumerProducerQueue<DataFrame *> queue_aggregator(15);
 
 
     EventBasedTrigger eventTrigger6;
@@ -139,7 +150,7 @@ int main() {
         eventTrigger6.triggerOnApperanceOfNewLogFile("./data", stock_files6);
     });
 
-
+    threads.emplace_back(mock_files);
     // wait 5 seconds for the file to be created
     std::this_thread::sleep_for(std::chrono::seconds(10));
     queue_files6.push("STOP");
@@ -170,11 +181,11 @@ int main() {
         groupby6.group_by("ID PRODUTO", "sum");
     });
 
-    DataFrame* df_stock = queue_stock.pop(); 
+    DataFrameVersionManager df_stock(&queue_stock);
 
     auto joiner6 = JoinHandler(&queue_gb6, &queue_join6);
-    threads.emplace_back([df_stock, &joiner6] {
-        joiner6.join(df_stock, "ID PRODUTO", "ID PRODUTO");
+    threads.emplace_back([&df_stock, &joiner6] {
+        joiner6.join(&df_stock, "ID PRODUTO", "ID PRODUTO");
     });
 
     // auto agregator = FinalHandler(&queue_join6, &queue_agregator);
