@@ -211,65 +211,359 @@ void FilterHandler::filter(string column, string operation, string value) {
 };
 
 void GroupByHandler::group_by(string column, string operation) {
+    DataFrame* DF = nullptr;
+    //concatenate everything in queue_in
     while(true) {
         DataFrame* df = queue_in->pop();
         if (df == nullptr) {
-            queue_out->push(nullptr);
             break;
         }
-        if (df->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
-            vector<int> column_data = df->get_column<int>(column);
-            std::sort(column_data.begin(), column_data.end());
-            vector<int> new_column_data;
-            if (operation == "sum") {
-                int sum = 0;
-                for (size_t i = 0; i < column_data.size(); ++i) {
-                    sum += column_data[i];
-                }
-                new_column_data.push_back(sum);
-            } else if (operation == "mean") {
-                int sum = 0;
-                for (size_t i = 0; i < column_data.size(); ++i) {
-                    sum += column_data[i];
-                }
-                new_column_data.push_back(sum / column_data.size());
-            } else if (operation == "max") {
-                new_column_data.push_back(column_data.back());
-            } else if (operation == "min") {
-                new_column_data.push_back(column_data.front());
-            } else {
-                throw std::invalid_argument("Invalid operation");
-            }
-            df->update_column(column, new_column_data);
-        } else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
-            vector<float> column_data = df->get_column<float>(column);
-            std::sort(column_data.begin(), column_data.end());
-            vector<float> new_column_data;
-            if (operation == "sum") {
-                float sum = 0;
-                for (size_t i = 0; i < column_data.size(); ++i) {
-                    sum += column_data[i];
-                }
-                new_column_data.push_back(sum);
-            } else if (operation == "mean") {
-                float sum = 0;
-                for (size_t i = 0; i < column_data.size(); ++i) {
-                    sum += column_data[i];
-                }
-                new_column_data.push_back(sum / column_data.size());
-            } else if (operation == "max") {
-                new_column_data.push_back(column_data.back());
-            } else if (operation == "min") {
-                new_column_data.push_back(column_data.front());
-            } else {
-                throw std::invalid_argument("Invalid operation");
-            }
-            df->update_column(column, new_column_data);
+        // concatenate df into DF
+        if (DF == nullptr) {
+            DF = df;
         } else {
-            throw std::invalid_argument("Invalid column type");
+            DF->concatenate(*df);
+            free(df);
         }
-        queue_out->push(df);
     }
+
+    DataFrame* new_df;
+
+    // group all rows by column
+    if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
+        vector<int> column_data = DF->get_column<int>(column);
+        std::unordered_map<int, vector<int>> groups;
+        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
+            groups[column_data[i]].push_back(i);
+        }
+        vector<string> new_column_order = DF->get_column_order();
+        vector<const std::type_info *> new_column_types;
+        for (const auto& some_column : new_column_order) {
+            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+        }
+        new_df = new DataFrame(new_column_order, new_column_types);
+        for (const auto& group : groups) {
+            vector<DataVariant> row_data;
+            for (size_t i = 0; i < DF->get_column_order().size(); ++i) {
+                string this_column = DF->get_column_order()[i];
+                if (this_column == column) {
+                    row_data.push_back(group.first);
+                } else {
+                    if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(int))]) {
+                        vector<int> this_column_data = DF->get_column<int>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else if (operation == "sum") {
+                            int sum = 0;
+                            for (size_t i : group.second) {
+                                sum += this_column_data[i];
+                            }
+                            row_data.push_back(sum);
+                        } else if (operation == "mean") {
+                            float sum = 0;
+                            for (size_t i : group.second) {
+                                sum += this_column_data[i];
+                            }
+                            row_data.push_back(sum / group.second.size());
+                        } else if (operation == "min") {
+                            int min = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (this_column_data[i] < min) {
+                                    min = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(min);
+                        } else if (operation == "max") {
+                            int max = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (this_column_data[i] > max) {
+                                    max = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(max);
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(float))]) {
+                        vector<float> this_column_data = DF->get_column<float>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else if (operation == "sum") {
+                            float sum = 0;
+                            for (size_t i : group.second) {
+                                sum += this_column_data[i];
+                            }
+                            row_data.push_back(sum);
+                        } else if (operation == "mean") {
+                            float sum = 0;
+                            for (size_t i : group.second) {
+                                sum += this_column_data[i];
+                            }
+                            row_data.push_back(sum / group.second.size());
+                        } else if (operation == "min") {
+                            float min = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (this_column_data[i] < min) {
+                                    min = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(min);
+                        } else if (operation == "max") {
+                            float max = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (this_column_data[i] > max) {
+                                    max = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(max);
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
+                        vector<string> this_column_data = DF->get_column<string>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::tm))]) {
+                        vector<std::tm> this_column_data = DF->get_column<std::tm>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else if (operation == "min") {
+                            std::tm min = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (std::mktime(&this_column_data[i]) < std::mktime(&min)) {
+                                    min = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(min);
+                        } else if (operation == "max") {
+                            std::tm max = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (std::mktime(&this_column_data[i]) > std::mktime(&max)) {
+                                    max = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(max);
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else {
+                        throw std::invalid_argument("Invalid column type");
+                    }
+                }
+            }
+            new_df->add_row(row_data);
+        }
+    } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
+        vector<float> column_data = DF->get_column<float>(column);
+        std::unordered_map<float, vector<int>> groups;
+        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
+            groups[column_data[i]].push_back(i);
+        }
+        vector<string> new_column_order = DF->get_column_order();
+        vector<const std::type_info *> new_column_types;
+        for (const auto& some_column : new_column_order) {
+            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+        }
+        new_df = new DataFrame(new_column_order, new_column_types);
+        for (const auto& group : groups) {
+            vector<DataVariant> row_data;
+            for (size_t i = 0; i < DF->get_column_order().size(); ++i) {
+                string this_column = DF->get_column_order()[i];
+                if (this_column == column) {
+                    row_data.push_back(group.first);
+                } else {
+                    if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(int))]) {
+                        vector<int> this_column_data = DF->get_column<int>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else if (operation == "sum") {
+                            int sum = 0;
+                            for (size_t i : group.second) {
+                                sum += this_column_data[i];
+                            }
+                            row_data.push_back(sum);
+                        } else if (operation == "mean") {
+                            float sum = 0;
+                            for (size_t i : group.second) {
+                                sum += this_column_data[i];
+                            }
+                            row_data.push_back(sum / group.second.size());
+                        } else if (operation == "min") {
+                            int min = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (this_column_data[i] < min) {
+                                    min = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(min);
+                        } else if (operation == "max") {
+                            int max = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (this_column_data[i] > max) {
+                                    max = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(max);
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(float))]) {
+                        vector<float> this_column_data = DF->get_column<float>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else if (operation == "sum") {
+                            float sum = 0;
+                            for (size_t i : group.second) {
+                                sum += this_column_data[i];
+                            }
+                            row_data.push_back(sum);
+                        } else if (operation == "mean") {
+                            float sum = 0;
+                            for (size_t i : group.second) {
+                                sum += this_column_data[i];
+                            }
+                            row_data.push_back(sum / group.second.size());
+                        } else if (operation == "min") {
+                            float min = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (this_column_data[i] < min) {
+                                    min = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(min);
+                        } else if (operation == "max") {
+                            float max = this_column_data[group.second[0]];
+                            for (size_t i : group.second) {
+                                if (this_column_data[i] > max) {
+                                    max = this_column_data[i];
+                                }
+                            }
+                            row_data.push_back(max);
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else {
+                        throw std::invalid_argument("Invalid column type");
+                    }
+                }
+            }
+            new_df->add_row(row_data);
+        }
+    } else if(DF->get_column_type(column) == type_to_index[std::type_index(typeid(std::string))]) {
+        vector<string> column_data = DF->get_column<string>(column);
+        std::unordered_map<string, vector<int>> groups;
+        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
+            groups[column_data[i]].push_back(i);
+        }
+        vector<string> new_column_order = DF->get_column_order();
+        vector<const std::type_info *> new_column_types;
+        for (const auto& some_column : new_column_order) {
+            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+        }
+        new_df = new DataFrame(new_column_order, new_column_types);
+        for (const auto& group : groups) {
+            vector<DataVariant> row_data;
+            for (size_t i = 0; i < DF->get_column_order().size(); ++i) {
+                string this_column = DF->get_column_order()[i];
+                if (this_column == column) {
+                    row_data.push_back(group.first);
+                } else {
+                    if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(int))]) {
+                        vector<int> this_column_data = DF->get_column<int>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(float))]) {
+                        vector<float> this_column_data = DF->get_column<float>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
+                        vector<string> this_column_data = DF->get_column<string>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else {
+                        throw std::invalid_argument("Invalid column type");
+                    }
+                }
+            }
+            new_df->add_row(row_data);
+        }
+    } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(std::tm))]) {
+        vector<std::tm> column_data = DF->get_column<std::tm>(column);
+        std::unordered_map<std::tm, vector<int>, decltype(compareTm)*> groups(0, compareTm);
+        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
+            groups[column_data[i]].push_back(i);
+        }
+        vector<string> new_column_order = DF->get_column_order();
+        vector<const std::type_info *> new_column_types;
+        for (const auto& some_column : new_column_order) {
+            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+        }
+        new_df = new DataFrame(new_column_order, new_column_types);
+        for (const auto& group : groups) {
+            vector<DataVariant> row_data;
+            for (size_t i = 0; i < DF->get_column_order().size(); ++i) {
+                string this_column = DF->get_column_order()[i];
+                if (this_column == column) {
+                    row_data.push_back(group.first);
+                } else {
+                    if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(int))]) {
+                        vector<int> this_column_data = DF->get_column<int>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(float))]) {
+                        vector<float> this_column_data = DF->get_column<float>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
+                        vector<string> this_column_data = DF->get_column<string>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::tm))]) {
+                        vector<std::tm> this_column_data = DF->get_column<std::tm>(this_column);
+                        if (operation == "count") {
+                            row_data.push_back((int) group.second.size());
+                        } else {
+                            throw std::invalid_argument("Invalid operation");
+                        }
+                    } else {
+                        throw std::invalid_argument("Invalid column type");
+                    }
+                }
+            }
+            new_df->add_row(row_data);
+        }
+    } else {
+        throw std::invalid_argument("Invalid column type");
+    }
+
+    free(DF);
+    queue_out->push(new_df);
+    queue_out->push(nullptr);
 }
 
 // void SortHandler::sort(string column, string order) {
