@@ -10,7 +10,18 @@
 #include <thread>
 #include <atomic>
 #include <iostream>
+#include "src/DataFrameVersionManager.h"
 #include "src/triggers.h"
+#include "src/mock.h"
+
+void mock_files(){
+    for (int i = 0; i<1000; i+=10){
+        mockCSV();
+        mockLogFiles(10, 100,i);
+        mockSqliteTable(80);
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
+}
 #include "libs/sqlite3.h"
 
 

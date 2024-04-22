@@ -154,12 +154,19 @@ void SQLiteReader::read(std::vector<const std::type_info*>& types, char delimite
         }
 
         // Apply a shared lock to the database
-        if (sqlite3_db_mutex(db) != SQLITE_OK) {
-            std::cerr << "Error locking database: " << filename << std::endl;
+        int fd = -1;
+        sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
+        if (fd == -1) {
+            std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
             sqlite3_close(db);
             return;
         }
-
+        if (flock(fd, LOCK_SH) != 0) {
+            std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
+            close(fd);
+            sqlite3_close(db);
+            return;
+        }
         sqlite3_step(stmt);  // Execute the query
 
         std::vector<std::string> column_order;  // Vector to store column names
@@ -184,12 +191,12 @@ void SQLiteReader::read(std::vector<const std::type_info*>& types, char delimite
                 if (sqlite3_column_type(stmt, i) == SQLITE_INTEGER) {
                     row_data.push_back(sqlite3_column_int(stmt, i));  // Convert integer data
                 } else if (sqlite3_column_type(stmt, i) == SQLITE_FLOAT) {
-                    row_data.push_back(sqlite3_column_double(stmt, i));  // Convert float data
+                    row_data.push_back(float(sqlite3_column_double(stmt, i)));  // Convert float data
                 } else if (sqlite3_column_type(stmt, i) == SQLITE_TEXT) {
                     row_data.push_back(std::string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, i))));  // Convert text data
                 } else {
 
-                    row_data.push_back(std::string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, i)));  // Convert text data
+                    row_data.push_back(std::string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, i))));  // Convert text data
                 }
             }
 
@@ -222,5 +229,7 @@ void SQLiteReader::read(std::vector<const std::type_info*>& types, char delimite
         // Release the lock and close the database
         sqlite3_finalize(stmt);
         sqlite3_close(db);
+        flock(fd, LOCK_UN);
+        close(fd);
     }
 }
