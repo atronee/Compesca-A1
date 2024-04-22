@@ -141,7 +141,7 @@ public:
         return n_rows;
     }
 
-    void reorder_rows(const std::vector<int>& new_order){
+    void reorder_rows(const std::vector<size_t>& new_order){
         /*
          * Reorders the rows in the DataFrame according to the specified order.
          */
