@@ -326,7 +326,7 @@ void GroupByHandler::group_by(string column, string operation) {
                             }
                             row_data.push_back(max);
                         }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))] || DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::tm))]) {
                         vector<string> this_column_data = DF->get_column<string>(this_column);
                         if (operation == "count") {
                             row_data.push_back((int) group.second.size());

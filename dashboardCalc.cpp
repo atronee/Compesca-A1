@@ -38,6 +38,9 @@ int main() {
         eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files1);
     });
 
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    queue_files1.push("STOP");
+
     // void FileReader::read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter,
     //                      int start, int & end, ConsumerProducerQueue<DataFrame*>& queue,
     //                      bool read_in_blocks, int block_size)
@@ -87,9 +90,9 @@ int main() {
     
     //pop from queue_sort1
 
-    DataFrame* df = queue_sort1.pop();
+    DataFrame* df1 = queue_sort1.pop();
     //print the first 10 rows
-    df->print();
+    df1->print();
 
 
 
@@ -118,6 +121,7 @@ int main() {
     FileReader csvReader6;
 
     ConsumerProducerQueue<std::string> queue_files6(15);
+    ConsumerProducerQueue<std::string> stock_files6(15);
     ConsumerProducerQueue<DataFrame *> queue_reader6(15);
     ConsumerProducerQueue<DataFrame *> queue_select6(15);
     ConsumerProducerQueue<DataFrame *> queue_filter6(15);
@@ -127,9 +131,11 @@ int main() {
     ConsumerProducerQueue<DataFrame *> queue_agregator(15);
 
     EventBasedTrigger eventTrigger6;
-    std::thread eventTriggerThread6([&eventTrigger6, &queue_files6] {
+    std::thread eventTriggerThread6([&eventTrigger6, &queue_files6, &stock_files6] {
         eventTrigger6.triggerOnApperanceOfNewLogFile("./data", queue_files6);
+        eventTrigger6.triggerOnApperanceOfNewLogFile("./data", stock_files6);
     });
+
 
     // wait 5 seconds for the file to be created
     std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -140,6 +146,8 @@ int main() {
                                                        &typeid(std::string), &typeid(std::string), 
                                                        &typeid(std::string), &typeid(std::string)};
     
+    std::vector<const std::type_info *> stock_types = {&typeid(int), &typeid(int)};
+
     int end6 = 0;
     threads.emplace_back([&csvReader6, &order_types, &end6, &queue_reader6,  &queue_files6] {
         csvReader6.read(order_types, ',', 0, end6, std::ref(queue_reader6), std::ref(queue_files6), true, 10, "order");
@@ -170,10 +178,10 @@ int main() {
     // });
 
     //pop from queue_agregator
-    DataFrame* df = queue_join6.pop();
-    df->diff_columns("estoque", "QUANTIDADE");
+    DataFrame* df6 = queue_join6.pop();
+    df6->diff_columns("estoque", "QUANTIDADE");
     
-    queue_filter6.push(df);
+    queue_filter6.push(df6);
 
     auto filter6 = FilterHandler(&queue_filter6, &queue_print6);
 
@@ -183,8 +191,8 @@ int main() {
         });
     }
 
-    df=queue_print6.pop();
-    int sum = df->sum_column("diff");
+    df6=queue_print6.pop();
+    int sum = df6->sum_column("diff");
     sum = sum * -1;
     std::cout<<"Número de produtos vendidos sem disponibilidade em estoque: "<<sum<<std::endl;
     
