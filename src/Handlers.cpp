@@ -18,9 +18,7 @@ void SelectHandler::select(vector<string> columns) {
     while(true) {
         DataFrame* df = queue_in->pop();
         if (df == nullptr) {
-            for (int i = 0; i < queues_out->size(); ++i) {
-                queues_out->at(i).push(nullptr);
-            }
+            queue_out->push(nullptr);
             break;
         }
         // select the columns
@@ -30,9 +28,7 @@ void SelectHandler::select(vector<string> columns) {
                 df->remove_column(column);
             }
         }
-        for (int i = 0; i < queues_out->size(); ++i) {
-            queues_out->at(i).push(df);
-    }
+    queue_out->push(df);
 }
 };
 
@@ -40,9 +36,7 @@ void FilterHandler::filter(string column, string operation, string value) {
     while(true) {
         DataFrame* df = queue_in->pop();
         if (df == nullptr) {
-            for (int i = 0; i < queues_out->size(); ++i) {
-                queues_out->at(i).push(nullptr);
-            }
+            queue_out->push(nullptr);
             break;
         }
         if (df->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
@@ -212,9 +206,7 @@ void FilterHandler::filter(string column, string operation, string value) {
         } else {
             throw std::invalid_argument("Invalid column type");
         }
-        for (int i = 0; i < queues_out->size(); ++i) {
-                queues_out->at(i).push(nullptr);
-        }
+        queue_out->push(df);
     }
 };
 
@@ -222,9 +214,8 @@ void GroupByHandler::group_by(string column, string operation) {
     while(true) {
         DataFrame* df = queue_in->pop();
         if (df == nullptr) {
-            for (int i = 0; i < queues_out->size(); ++i) {
-                queues_out->at(i).push(nullptr);
-            }
+            queue_out->push(nullptr);
+            break;
         }
         if (df->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
             vector<int> column_data = df->get_column<int>(column);
@@ -277,9 +268,7 @@ void GroupByHandler::group_by(string column, string operation) {
         } else {
             throw std::invalid_argument("Invalid column type");
         }
-        for (int i = 0; i < queues_out->size(); ++i) {
-            queues_out->at(i).push(df);
-        }
+        queue_out->push(df);
     }
 }
 
@@ -341,9 +330,7 @@ void printHandler::print() {
     while(true) {
         DataFrame* df = queue_in->pop();
         if (df == nullptr) {
-            for (int i = 0; i < queues_out->size(); ++i) {
-                queues_out->at(i).push(nullptr);
-            }
+            queue_out->push(nullptr);
             break;
         }
 
@@ -366,9 +353,7 @@ bool compareTm(const std::tm& lhs, const std::tm& rhs) {
     while (true) {
         DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
         if (incoming_df == nullptr) {
-            for (int i = 0; i < queues_out->size(); ++i) {
-                queues_out->at(i).push(nullptr);
-            }
+            queue_out->push(nullptr);
             break; // Stop if no more data
         }
 
@@ -437,9 +422,8 @@ bool compareTm(const std::tm& lhs, const std::tm& rhs) {
                 }
             }
         } 
-        for (int i = 0; i < queues_out->size(); ++i) {
-                queues_out->at(i).push(nullptr);
-            } // Push result to output queue
+        queue_out->push(result_df);
+        // Push result to output queue
         // free the result df
     }
 };

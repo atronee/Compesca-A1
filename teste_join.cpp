@@ -22,16 +22,13 @@ int main() {
     ConsumerProducerQueue<DataFrame *> queue_join1(15);
     ConsumerProducerQueue<DataFrame *> queue_join2(15);
 
-    std::vector<ConsumerProducerQueue<DataFrame *>> queues_out_join;
-    queues_out_join.push_back(std::move(queue_join1));
-    queues_out_join.push_back(std::move(queue_join2));
+   
 
     FileReader csvReader;
     //auto selector = SelectHandler(&queue_reader, &queue_select);
     //auto filter = FilterHandler(&queue_select, &queue_filter);
-    auto joiner = JoinHandler(&queue_reader, &queues_out_join);
+    auto joiner = JoinHandler(&queue_reader, &queue_join1);
     auto printer1 = printHandler(&queue_join1);
-    auto printer2 = printHandler(&queue_join2);
 
     DataFrame* df_ptr = new DataFrame();
 
@@ -73,10 +70,6 @@ int main() {
 
     threads.emplace_back([&printer1] {
         printer1.print();
-    });
-
-    threads.emplace_back([&printer2] {
-        printer2.print();
     });
 
     for (auto &t: threads) {
