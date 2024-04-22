@@ -44,6 +44,7 @@ _deps
 
 # Pasta do cmake
 /cmake-build-debug
+/cmake-build-default
 /build
 
 # Pasta do VSCode
@@ -51,3 +52,6 @@ _deps
 
 # Pasta de Logs
 /src/logs
+
+#Pasta clion
+/.idea
