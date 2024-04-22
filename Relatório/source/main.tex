@@ -1,0 +1,143 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc} 
+\usepackage[portuguese,brazilian]{babel}
+\usepackage[lmargin=3cm,tmargin=3cm,rmargin=2cm,bmargin=2cm]{geometry} 
+\usepackage[T1]{fontenc} 
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{indentfirst}
+\usepackage{graphicx}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,dsfont,mathtools,blindtext} 
+\usepackage{minted}
+\usepackage{lipsum} % Apenas para gerar texto de exemplo
+\usepackage{xcolor} % to access the named colour LightGray
+\usepackage{algorithm,algpseudocode}
+
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+   \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+       {\raggedright\textbf{\fname@algorithm~\thealgorithm} ##2\par}%
+       \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+       \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+       \fi
+       \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+   \end{center}
+  }
+\makeatother
+
+\definecolor{LightGray}{gray}{0.9}
+\newcommand{\capaDisciplina}{Computação Escalável}
+\newcommand{\capaTitulo}{A1} 
+\newcommand{\capaProfessor}{Thiago Pinheiro de Araújo}
+\newcommand{\capaAutor}{\\ Bruno Kauan Lunardon
+\\Fabrício Dalvi Venturim
+\\ Luís Felipe de Almeida Marques
+\\ Otávio Augusto Matos Alves
+\\ Vinícius Antunes de Sousa
+
+}
+\newcommand{\capaEndereco}{Rio de Janeiro}
+\newcommand{\capaAno}{2024}
+\newcommand{\capaPreambulo}{X}
+
+\newcommand{\HRule}{\rule{\linewidth}{0,5mm}}
+
+\begin{document}
+\begin{titlepage}
+
+%======================================================
+%                      Capa
+%======================================================
+
+\center
+
+%------------------------------------------------------
+% Parte Superior
+%------------------------------------------------------
+\begin{figure}
+    \centering
+    \includegraphics[width=0.4\textwidth]{FGV.png}
+\end{figure}
+\textbf{\LARGE Fundação Getulio Vargas}\\ 
+\textbf{\LARGE Escola de Matemática Aplicada}\\
+\textbf{\LARGE Curso de Ciência de Dados e Inteligência Artificial}\\[2cm]
+%-----------------------------------------------------
+%  Autores do Trabalho
+%-----------------------------------------------------
+\textbf{\large \capaAutor}
+\vspace{2cm}
+%-----------------------------------------------------
+%  Título
+%-----------------------------------------------------
+\HRule \\[0.4cm]
+{ \huge \textbf{\capaTitulo}}\\[0.25cm]
+\HRule\\[1.0cm]
+\vspace{3cm}
+%-----------------------------------------------------
+% Disciplina
+%----------------------------------------------------
+\textbf{\large \capaDisciplina}\\[0.5cm]
+%-----------------------------------------------------
+% Professor
+%----------------------------------------------------
+\textbf{\Large Professor: \capaProfessor}\\[0.5cm]
+\vspace{1.5cm}
+%--------------------------------------------------
+%  Endereço/Ano
+%--------------------------------------------------
+\vspace{\fill}
+\textbf{\capaEndereco}\\
+\textbf{\capaAno}
+\end{titlepage}
+
+
+\section*{Modelagem}
+\subsection*{DataFrame}
+O \verb|DataFrame| consiste em uma classe que guarda um hashmap que liga os nomes (strings) das colunas do dataframe às colunas, que consistem em \\\mintinline{cpp}{std::vectors<std::variant<int, float, std::string, std::tm>>},\\
+de forma que as colunas podem assumir qualquer um desses tipos. A classe também guarda atributos auxiliares para sabermos a ordem da coluna, e a os tipos das colunas "reais das colunas", possibilitando sabermos a ordem em que linhas novas devem ser inseridas e para qual tipo podemos fazer a conversão das colunas.\\
+A classe \verb|DataFrame| contém vários métodos para manipulação dos dados, como adicionar colunas e linhas e também removê-las.
+\subsection*{ConsumerProducerQueue}
+A classe \verb|ConsumerProducerQueue| é uma implementação de uma fila "thread-safe" usando o padrão produtor consumidor para controlar o acesso a fila. Os elementos da fila são ponteiros para a abstração de DataFrame.
+\subsection*{Handlers}
+Em nossa implementação, os \verb|Handler| são repressentados por uma classe em que cada subclasse é um tratador específico. Exemplos dessas incluem \verb|Filter|, \verb|GroupBy| e \verb|Sort|.
+
+Cada \verb|Handler| recebe uma \verb|Queue| de entrada e uma \verb|Queue| para saída.
+
+\subsection*{Trigger}
+Para garantir o funcionamento automático da pipeline o usuário tem a sua disposição 3
+triggers, um trigger que executa a pipeline a cada x segundos, um trigger que observa um 
+diretório escolhido pelo usuário e verifica se tem algum arquivo \mintinline{cpp}{txt} ou \mintinline{cpp}{csv} novo no diretório, o último trigger verifica um diretório dado e verifica se algum arquivo foi alterado, esse trigger então manda$/$aplica um killswitch no pipeline ativo e cria um novo pipeline idêntico ao anterior, agora porém com os dados do \mintinline{cpp}{csv}, por exemplo, atualizado.
+
+\section*{Concorrência}
+\subsection*{Pipeline}
+A pipeline é modelada como um Directed Acyclic Graph (DAG) onde cada vértice é um \verb|Handler| e cada aresta é uma \verb|ConsumerProducerQueue|. Todo vértice tem grau de entrada 1 e grau de saída 1 ou 0. Inicialmente tentamos adicionar a opção de que um \verb|Handler| enviasse para mais de uma fila de saída, porém encontramos o seguinte problema, como os elementos das filas são ponteiros para \verb|DataFrames| e os \verb|Handlers| mudam esses \verb|DataFrames| ao enviar um ponteiro para n filas diferentes o primeiro dos n futuros \verb|Handlers| que acessar o dado contido em um ponteiro vai mudar esse dado para os demais \verb|Handlers|, poderíamos contornar isso fazendo com que os \verb|Handlers| trabalhassem com cópias dos dados mas isso seria ineficiente, consumindo tanto memória quanto adicionando um overhead de execução ao programa. Decidimos limitar o número de filas de saída um para não encontrar esse problema. Uma possível expansão do trabalho seria modelar uma solução para esse problema.
+
+Nossas pipelines foram modeladas para estarem sempre em execução e usamos um \verb|Event Trigger| para adicionar novos dados quando eles estiverem disponíveis no momento que uma parcela dos dados alcance um vértice com grau de saída 0, ou seja, algum ponto final na pipeline ela é adiciona ao repositório em sua respectiva tabela.
+
+Em cada etapa da pipeline, são alocados números fixos de "threads", sendo a leitura de um arquivo realizada por uma única "thread" enquanto os tratadores geralmente vão ser executados por múltiplas "threads".
+Toda a concorrência de acesso é resolvida pela classe das \verb|Queues|
+
+\subsection*{Arquivos}
+Para controlar o acesso simultâneo de arquivos, foi utilizado a função \verb|flock|, de forma que várias "threads" podem ler o mesmo arquivo, mas para a escrita nos arquivos o escritor precisa de acesso exclusivo do arquivo. Em nossa implementação, o \verb|flock| só é liberado quando o leitor ou escritor de arquivo termina de ler ou escrever o arquivo.
+
+Para aumentar a eficiência e permitir um processamento paralelo mais eficaz nas etapas subsequentes da pipeline, além de não ficar preso em uma leitura infinita, implementamos a leitura e criação de blocos de DataFrame. No processo de leitura de arquivos, os dados são divididos em blocos de tamanho fixo ou conforme necessário, dependendo do contexto. Esses blocos de dados são então inseridos em uma fila de DataFrames, onde podem ser processados por tratadores em paralelo.
+
+Essa abordagem de leitura e criação de blocos permite que múltiplos tratadores processem os dados simultaneamente, mesmo que a leitura da base de dados não esteja completa.
+
+
+\subsection*{Mock Data}
+Para simular os arquivos de dados do serviço de compras utilizamos as dicas do enunciado, para os arquivos de \mintinline{cpp}{log} fizemos 4 tipos de arquivos de diferentes como especificado, porém para o \textit{User Behavior} interpretamos o click do usuário em um botão que corresponde a um produto como uma visualização. Com a Conta Verde apenas implementamos o especificado, é de se notar o problema de consistência quando estamos executando o pipeline, se a tabela de estoque é mudada durante a execução não podemos só sobrescrever a anterior e seguir o processamento, por esse problema decidimos pela parada da pipeline e criação de outra idêntica que continua do mesmo lugar.
+
+\end{document}
