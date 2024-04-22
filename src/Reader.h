@@ -9,10 +9,11 @@
 #include <any>
 #include <typeinfo> 
 #include "ConsumerProducerQueue.h"
+#include <iostream>
 
 class Reader { // Declaration of the base class Reader
 public:
-    // read function to read data from a file
+    // keeps a reference to the queue to s
 virtual void read(std::vector<const std::type_info*>& types, char delimiter, int start, int & end,
                   ConsumerProducerQueue<DataFrame*>& queue_out, ConsumerProducerQueue<std::string>& queue_in,
                   bool read_in_blocks, int blocksize) =0;};

@@ -141,6 +141,24 @@ public:
         return n_rows;
     }
 
+    void reorder_rows(const std::vector<int>& new_order){
+        /*
+         * Reorders the rows in the DataFrame according to the specified order.
+         */
+        if (new_order.size() != n_rows)
+            throw std::invalid_argument("Size of new order does not match number of rows");
+
+        std::unordered_map<std::string, std::vector<DataVariant>> new_data;
+        for (const auto& column : column_order) {
+            std::vector<DataVariant> new_column_data;
+            for (int i : new_order) {
+                new_column_data.push_back(data[column][i]);
+            }
+            new_data[column] = new_column_data;
+        }
+
+        data = new_data;
+    }
 
 };
 

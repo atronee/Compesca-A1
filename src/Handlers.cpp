@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <ctime>
 #include <typeindex>
+#include <numeric>
 #include "Handlers.h"
 #include <any>
 #include <iostream>
@@ -278,26 +279,45 @@ void SortHandler::sort(string column, string order) {
             queue_out->push(nullptr);
             break;
         }
+        // sort all columns based on the specified column
         if (df->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
             vector<int> column_data = df->get_column<int>(column);
-            if (order == "asc") {
-                std::sort(column_data.begin(), column_data.end());
-            } else if (order == "desc") {
-                std::sort(column_data.begin(), column_data.end(), std::greater<int>());
-            } else {
-                throw std::invalid_argument("Invalid order");
+            vector<size_t> indices(column_data.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] < column_data[i2];});
+            if (order == "desc") {
+                std::reverse(indices.begin(), indices.end());
             }
-            df->update_column(column, column_data);
+            df->reorder_rows(indices);
         } else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
             vector<float> column_data = df->get_column<float>(column);
-            if (order == "asc") {
-                std::sort(column_data.begin(), column_data.end());
-            } else if (order == "desc") {
-                std::sort(column_data.begin(), column_data.end(), std::greater<float>());
-            } else {
-                throw std::invalid_argument("Invalid order");
+            vector<size_t> indices(column_data.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] < column_data[i2];});
+            if (order == "desc") {
+                std::reverse(indices.begin(), indices.end());
             }
-            df->update_column(column, column_data);
+            df->reorder_rows(indices);
+        } else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(std::string))]) {
+            vector<string> column_data = df->get_column<string>(column);
+            vector<size_t> indices(column_data.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] < column_data[i2];});
+            if (order == "desc") {
+                std::reverse(indices.begin(), indices.end());
+            }
+            df->reorder_rows(indices);
+        } else if (df->get_column_type(column) == type_to_index[std::type_index(typeid(std::tm))]) {
+            vector<std::tm> column_data = df->get_column<std::tm>(column);
+            vector<size_t> indices(column_data.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {
+                return std::mktime(&column_data[i1]) < std::mktime(&column_data[i2]);
+            });
+            if (order == "desc") {
+                std::reverse(indices.begin(), indices.end());
+            }
+            df->reorder_rows(indices);
         } else {
             throw std::invalid_argument("Invalid column type");
         }
