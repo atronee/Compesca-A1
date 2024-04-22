@@ -35,14 +35,5 @@ public:
     //             queue - reference to the queue to store the data
     //             read_in_blocks - flag to indicate whether to read data in blocks or not (default: true)
 };
-/*
-class DbReader : public Reader {  // Declaration of the derived class DbReader, inheriting from Reader
-public:
-    void readDb(const std::string& filename, ConsumerProducerQueue<DataFrame*>& queue, bool read_in_blocks,
-                int blocksize, std::vector<const std::type_info*>& types);
-    // reads the data from a db file with sqlite3
-    void read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter, int start, int & end,
-              ConsumerProducerQueue<DataFrame*>& queue, bool read_in_blocks, int blocksize) override;
-};
-*/
+
 #endif // READER_H               // End of header guard
