@@ -99,28 +99,37 @@ void DataFrame::print() {
     /*
      * Prints the DataFrame to the console.
      */
+    bool printed = false;
     for (const auto& column : column_order) {
-        std::cout << column << " ";
+        // Check if the column is not empty
+        if (!data[column].empty()) {
+            std::cout << column << " ";
+            printed = true;
+        }
     }
-    std::cout << std::endl;
+    if (printed) std::cout << std::endl;
 
     for (size_t i = 0; i < n_rows; ++i) {
+        printed = false;
         for (const auto& column : column_order) {
-            if(data[column][i].index() == 0) {
-                std::cout<< std::get<int>(data[column][i]) << " ";
+            // Check if the column is not empty
+            if (!data[column].empty()) {
+                if(data[column][i].index() == 0) {
+                    std::cout<< std::get<int>(data[column][i]) << " ";
+                }
+                else if(data[column][i].index() == 1) {
+                    std::cout<<std::get<float>(data[column][i]) << " ";
+                }
+                else if(data[column][i].index() == 2) {
+                    std::cout<< std::get<std::string>(data[column][i]) << " ";
+                }
+                else {
+                    std::cout << "Unsupported type" << " ";
+                }
+                printed = true;
             }
-            else if(data[column][i].index() == 1) {
-                std::cout<<std::get<float>(data[column][i]) << " ";
-            }
-            else if(data[column][i].index() == 2) {
-
-                std::cout<< std::get<std::string>(data[column][i]) << " ";
-            }
-
-            else
-                std::cout << "Unsupported type" << " ";
         }
-        std::cout << std::endl;
+        if (printed) std::cout << std::endl;
     }
 }
 
@@ -162,4 +171,55 @@ void DataFrame::add_row_at_index(int index, const std::vector<DataVariant>& row_
     }
 
     n_rows++;
+}
+
+void DataFrame::diff_columns(const std::string& column_name, const std::string& other_column_name) {
+    /*
+     * Adds a new column to the DataFrame that contains the difference between the values in the specified columns.
+     * The column names should exist and the type of the columns should be int or float.
+     */
+    if (data.find(column_name) == data.end() || data.find(other_column_name) == data.end())
+        throw std::invalid_argument("Column name does not exist");
+
+    if (column_types[column_name] != 0 && column_types[column_name] != 1)
+        throw std::invalid_argument("Type of column should be int or float");
+
+    if (column_types[other_column_name] != 0 && column_types[other_column_name] != 1)
+        throw std::invalid_argument("Type of column should be int or float");
+
+    std::vector<DataVariant> diff_data;
+    for (size_t i = 0; i < n_rows; ++i) {
+        if (column_types[column_name] == 0) {
+            diff_data.push_back(std::get<int>(data[column_name][i]) - std::get<int>(data[other_column_name][i]));
+        } else {
+            diff_data.push_back(std::get<float>(data[column_name][i]) - std::get<float>(data[other_column_name][i]));
+        }
+    }
+
+    data["diff"] = diff_data;
+    column_order.push_back("diff");
+    column_types["diff"] = column_types[column_name];
+}
+
+
+int DataFrame::sum_column(const std::string& column_name) {
+    /*
+    * Returns the sum of the values in the specified column. The column name should exist and the type of the column should be int or float.
+     */
+    if (data.find(column_name) == data.end())
+        throw std::invalid_argument("Column name does not exist");
+    
+    if (column_types[column_name] != 0 && column_types[column_name] != 1)
+        throw std::invalid_argument("Type of column should be int or float");
+    
+    int sum = 0;
+    for (size_t i = 0; i < n_rows; ++i) {
+        if (column_types[column_name] == 0) {
+            sum += std::get<int>(data[column_name][i]);
+        } else {
+            sum += std::get<float>(data[column_name][i]);
+        }
+    }
+
+    return sum;
 }

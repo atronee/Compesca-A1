@@ -210,6 +210,15 @@ void FilterHandler::filter(string column, string operation, string value) {
     }
 };
 
+bool compareTm(const std::tm& lhs, const std::tm& rhs) {
+    return lhs.tm_year == rhs.tm_year &&
+           lhs.tm_mon == rhs.tm_mon &&
+           lhs.tm_mday == rhs.tm_mday &&
+           lhs.tm_hour == rhs.tm_hour &&
+           lhs.tm_min == rhs.tm_min &&
+           lhs.tm_sec == rhs.tm_sec;
+}
+
 void GroupByHandler::group_by(string column, string operation) {
     DataFrame* DF = nullptr;
     //concatenate everything in queue_in
@@ -317,33 +326,10 @@ void GroupByHandler::group_by(string column, string operation) {
                             }
                             row_data.push_back(max);
                         }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
+                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))] || DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::tm))]) {
                         vector<string> this_column_data = DF->get_column<string>(this_column);
                         if (operation == "count") {
                             row_data.push_back((int) group.second.size());
-                        } else {
-                            throw std::invalid_argument("Invalid operation");
-                        }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::tm))]) {
-                        vector<std::tm> this_column_data = DF->get_column<std::tm>(this_column);
-                        if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
-                        } else if (operation == "min") {
-                            std::tm min = this_column_data[group.second[0]];
-                            for (size_t i : group.second) {
-                                if (std::mktime(&this_column_data[i]) < std::mktime(&min)) {
-                                    min = this_column_data[i];
-                                }
-                            }
-                            row_data.push_back(min);
-                        } else if (operation == "max") {
-                            std::tm max = this_column_data[group.second[0]];
-                            for (size_t i : group.second) {
-                                if (std::mktime(&this_column_data[i]) > std::mktime(&max)) {
-                                    max = this_column_data[i];
-                                }
-                            }
-                            row_data.push_back(max);
                         } else {
                             throw std::invalid_argument("Invalid operation");
                         }
@@ -503,60 +489,6 @@ void GroupByHandler::group_by(string column, string operation) {
             }
             new_df->add_row(row_data);
         }
-    } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(std::tm))]) {
-        vector<std::tm> column_data = DF->get_column<std::tm>(column);
-        std::unordered_map<std::tm, vector<int>, decltype(compareTm)*> groups(0, compareTm);
-        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
-            groups[column_data[i]].push_back(i);
-        }
-        vector<string> new_column_order = DF->get_column_order();
-        vector<const std::type_info *> new_column_types;
-        for (const auto& some_column : new_column_order) {
-            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
-        }
-        new_df = new DataFrame(new_column_order, new_column_types);
-        for (const auto& group : groups) {
-            vector<DataVariant> row_data;
-            for (size_t i = 0; i < DF->get_column_order().size(); ++i) {
-                string this_column = DF->get_column_order()[i];
-                if (this_column == column) {
-                    row_data.push_back(group.first);
-                } else {
-                    if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(int))]) {
-                        vector<int> this_column_data = DF->get_column<int>(this_column);
-                        if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
-                        } else {
-                            throw std::invalid_argument("Invalid operation");
-                        }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(float))]) {
-                        vector<float> this_column_data = DF->get_column<float>(this_column);
-                        if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
-                        } else {
-                            throw std::invalid_argument("Invalid operation");
-                        }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
-                        vector<string> this_column_data = DF->get_column<string>(this_column);
-                        if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
-                        } else {
-                            throw std::invalid_argument("Invalid operation");
-                        }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::tm))]) {
-                        vector<std::tm> this_column_data = DF->get_column<std::tm>(this_column);
-                        if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
-                        } else {
-                            throw std::invalid_argument("Invalid operation");
-                        }
-                    } else {
-                        throw std::invalid_argument("Invalid column type");
-                    }
-                }
-            }
-            new_df->add_row(row_data);
-        }
     } else {
         throw std::invalid_argument("Invalid column type");
     }
@@ -564,6 +496,31 @@ void GroupByHandler::group_by(string column, string operation) {
     free(DF);
     queue_out->push(new_df);
     queue_out->push(nullptr);
+}
+
+//make a function to compare two strings that represent dates in the format YYYY/MM/DD HH:MM
+
+bool compareDates(const std::string& date1, const std::string& date2) {
+    // Extract year, month, day, hour, and minute from date1
+    int year1 = std::stoi(date1.substr(0, 4));
+    int month1 = std::stoi(date1.substr(5, 2));
+    int day1 = std::stoi(date1.substr(8, 2));
+    int hour1 = std::stoi(date1.substr(11, 2));
+    int minute1 = std::stoi(date1.substr(14, 2));
+
+    // Extract year, month, day, hour, and minute from date2
+    int year2 = std::stoi(date2.substr(0, 4));
+    int month2 = std::stoi(date2.substr(5, 2));
+    int day2 = std::stoi(date2.substr(8, 2));
+    int hour2 = std::stoi(date2.substr(11, 2));
+    int minute2 = std::stoi(date2.substr(14, 2));
+
+    // Compare each component starting from the year down to the minute
+    if (year1 != year2) return year1 < year2;
+    if (month1 != month2) return month1 < month2;
+    if (day1 != day2) return day1 < day2;
+    if (hour1 != hour2) return hour1 < hour2;
+    return minute1 < minute2;
 }
 
 void SortHandler::sort(string column, string order) {
@@ -680,21 +637,11 @@ void printHandler::print() {
     while(true) {
         DataFrame* df = queue_in->pop();
         if (df == nullptr) {
-            queue_out->push(nullptr);
             break;
         }
 
         df->print();
     }
-}
-
-bool compareTm(const std::tm& lhs, const std::tm& rhs) {
-    return lhs.tm_year == rhs.tm_year &&
-           lhs.tm_mon == rhs.tm_mon &&
-           lhs.tm_mday == rhs.tm_mday &&
-           lhs.tm_hour == rhs.tm_hour &&
-           lhs.tm_min == rhs.tm_min &&
-           lhs.tm_sec == rhs.tm_sec;
 }
 
 

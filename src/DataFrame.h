@@ -58,6 +58,10 @@ public:
 
     void add_row_at_index(int index, const std::vector<DataVariant>& row_data);
 
+    void diff_columns(const std::string& column_name, const std::string& other_column_name);
+
+    int sum_column(const std::string& column_name);
+
     template <typename T>
     void update_column(const std::string &column_name, const std::vector<T> &new_column_data) {
         /*

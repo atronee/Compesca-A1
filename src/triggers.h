@@ -17,7 +17,6 @@ class Trigger {
 
 class TimeBasedTrigger : public Trigger {
 public:
-
     void startTrigger(int seconds, VoidFunctionPtr executePipeline);
 };
 
