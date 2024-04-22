@@ -99,28 +99,37 @@ void DataFrame::print() {
     /*
      * Prints the DataFrame to the console.
      */
+    bool printed = false;
     for (const auto& column : column_order) {
-        std::cout << column << " ";
+        // Check if the column is not empty
+        if (!data[column].empty()) {
+            std::cout << column << " ";
+            printed = true;
+        }
     }
-    std::cout << std::endl;
+    if (printed) std::cout << std::endl;
 
     for (size_t i = 0; i < n_rows; ++i) {
+        printed = false;
         for (const auto& column : column_order) {
-            if(data[column][i].index() == 0) {
-                std::cout<< std::get<int>(data[column][i]) << " ";
+            // Check if the column is not empty
+            if (!data[column].empty()) {
+                if(data[column][i].index() == 0) {
+                    std::cout<< std::get<int>(data[column][i]) << " ";
+                }
+                else if(data[column][i].index() == 1) {
+                    std::cout<<std::get<float>(data[column][i]) << " ";
+                }
+                else if(data[column][i].index() == 2) {
+                    std::cout<< std::get<std::string>(data[column][i]) << " ";
+                }
+                else {
+                    std::cout << "Unsupported type" << " ";
+                }
+                printed = true;
             }
-            else if(data[column][i].index() == 1) {
-                std::cout<<std::get<float>(data[column][i]) << " ";
-            }
-            else if(data[column][i].index() == 2) {
-
-                std::cout<< std::get<std::string>(data[column][i]) << " ";
-            }
-
-            else
-                std::cout << "Unsupported type" << " ";
         }
-        std::cout << std::endl;
+        if (printed) std::cout << std::endl;
     }
 }
 
