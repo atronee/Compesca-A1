@@ -12,9 +12,12 @@
 #include <iostream>
 #include "src/triggers.h"
 
-int main() {
+std::vector<ConsumerProducerQueue<std::string>> queuesFiles;
+
+void pipeline(){
     // answer the questions save the results of a "log"/ dashboard file
     // 1º question: Número de produtos visualizados por minuto
+    // 2º question: Número de produtos comprados por minuto.
 
     // let's use the logs named userBehavior_1..10.csv
 
@@ -22,16 +25,20 @@ int main() {
                                                              &typeid(int), &typeid(std::string), &typeid(std::string),
                                                              &typeid(std::string), &typeid(std::string)};
 
+
     // create a reader object
     FileReader csvReader;
     // creates the queues
-    ConsumerProducerQueue<std::string> queue_files(15);
+    ConsumerProducerQueue<DataFrame *> queue_files(15);
+    queuesFiles.emplace_back(queue_files);
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
     ConsumerProducerQueue<DataFrame *> queue_filter(15);
 
+    std::vector<std::thread> threads;
+
     EventBasedTrigger eventTrigger;
-    std::thread eventTriggerThread([&eventTrigger, &queue_files] {
+    threads.emplace_back([&eventTrigger, &queue_files] {
         eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files);
     });
 
@@ -43,7 +50,7 @@ int main() {
     auto filter = FilterHandler(&queue_select, &queue_filter);
     auto printer = printHandler(&queue_filter);
 
-    std::vector<std::thread> threads;
+
 
     int end = 0;
     threads.emplace_back([&csvReader, &typesUserBehavior, &end, &queue_reader, &queue_files] {
@@ -69,9 +76,21 @@ int main() {
         printer.print();
     });
 
+
+
     for (auto &t: threads) {
         t.join();
     }
+
+}
+*/
+int main()
+{
+    pipeline();
+    EventBasedTrigger eventTrigger;
+    std::thread eventTriggerThread([&eventTrigger] {
+        eventTrigger.triggerOnChangeInFile("./data", pipeline, queuesFiles);
+    });
 
     return 0;
 }
