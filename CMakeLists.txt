@@ -23,5 +23,7 @@ add_executable(Compesca_A1
         main.cpp
         src/DataFrameVersionManager.cpp
         src/DataFrameVersionManager.h
+        src/writer.cpp
+        src/writer.h
 )
 target_link_libraries(Compesca_A1 SQLite::SQLite3)

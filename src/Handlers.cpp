@@ -15,6 +15,7 @@
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "writer.h"
 
 using std::vector;
 using std::string;
@@ -748,96 +749,102 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
         if (df == nullptr) {
             break;
         }
-        std::unordered_map<string, std::size_t> column_types = df->get_column_types();
-        vector<string> column_order = df->get_column_order();
-        auto fileDF = new DataFrame();
-        for (const auto & i : column_order) {
-            if (column_types[i] == type_to_index[std::type_index(typeid(int))]) {
-                fileDF->add_column(i, vector<int>{});
-            } else if (column_types[i] == type_to_index[std::type_index(typeid(float))]) {
-                fileDF->add_column(i, vector<float>{});
-            } else if (column_types[i] == type_to_index[std::type_index(typeid(std::string))]) {
-                fileDF->add_column(i, vector<string>{});
-            } else if (column_types[i] == type_to_index[std::type_index(typeid(std::tm))]) {
-                fileDF->add_column(i, vector<std::tm>{});
-            }
-        }
-        std::ifstream file(filePath);
-
-        if (file.good()) {
-            // Read data from SQLite file
-            sqlite3 *db;
-            sqlite3_stmt *stmt;
-
-            if (sqlite3_open(filePath.c_str(), &db) == SQLITE_OK) {
-                // Get the file descriptor and apply a shared lock
-                int fd = -1;
-                sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
-                if (fd == -1) {
-                    std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
-                    sqlite3_close(db);
-                    return;
-                }
-                if (flock(fd, LOCK_SH) != 0) {
-                    std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
-                    close(fd);
-                    sqlite3_close(db);
-                    return;
-                }
-
-                std::string sql = "SELECT * FROM " + table;
-                if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-
-                    while (sqlite3_step(stmt) == SQLITE_ROW) {
-                        vector<DataVariant> row_data;
-                        for(int i = 0; i < column_order.size(); ++i) {
-                            if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(int))]) {
-                                row_data.emplace_back(sqlite3_column_int(stmt, i));
-                            } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(float))]) {
-                                row_data.emplace_back(static_cast<float>(sqlite3_column_double(stmt, i)));
-                            } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(std::string))]) {
-                                row_data.emplace_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i))));
-                            } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(std::tm))]) {
-                                std::tm tm{};
-                                strptime(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i)), "%Y-%m-%d %H:%M:%S", &tm);
-                                row_data.emplace_back(tm);
-                            }
-                        }
-                        fileDF->add_row(row_data);
-                    }
-                }
-                sqlite3_finalize(stmt);
-            }
-            sqlite3_close(db);
-        }
         if(!sortFlag && !groupFlag){
-            fileDF->concatenate(*df);
+            write_to_sqlite(df, filePath, table);
         }
-        else if (sortFlag && groupFlag) {
-            DataFrame* new_df = groupBy(fileDF, columnGroup, groupOperation);
-            delete fileDF;
-            fileDF = new_df;
-            ConsumerProducerQueue<DataFrame*> q_in(2);
-            ConsumerProducerQueue<DataFrame*> q_out(2);
-            SortHandler sh(&q_in,&q_out);
-            q_in.push(fileDF);
-            q_in.push(nullptr);
-            sh.sort(columnGroup, sortOrder);
-            delete fileDF;
-            fileDF = q_out.pop();
-        }
-        else if(groupFlag){
-            DataFrame* new_df = groupBy(fileDF, columnGroup, groupOperation);
-            delete fileDF;
-            fileDF = new_df;
-        }
-        else{
-            DataFrame* new_df = aggregate_sort(df, fileDF, columnSort, sortOrder);
-            delete fileDF;
-            fileDF = new_df;
-        }
+        else {
+            std::unordered_map<string, std::size_t> column_types = df->get_column_types();
+            vector<string> column_order = df->get_column_order();
+            auto fileDF = new DataFrame();
+            for (const auto & i : column_order) {
+                if (column_types[i] == type_to_index[std::type_index(typeid(int))]) {
+                    fileDF->add_column(i, vector<int>{});
+                } else if (column_types[i] == type_to_index[std::type_index(typeid(float))]) {
+                    fileDF->add_column(i, vector<float>{});
+                } else if (column_types[i] == type_to_index[std::type_index(typeid(std::string))]) {
+                    fileDF->add_column(i, vector<string>{});
+                } else if (column_types[i] == type_to_index[std::type_index(typeid(std::tm))]) {
+                    fileDF->add_column(i, vector<std::tm>{});
+                }
+            }
+            std::ifstream file(filePath);
 
+            if (file.good()) {
+                // Read data from SQLite file
+                sqlite3 *db;
+                sqlite3_stmt *stmt;
 
+                if (sqlite3_open(filePath.c_str(), &db) == SQLITE_OK) {
+                    // Get the file descriptor and apply a shared lock
+                    int fd = -1;
+                    sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
+                    if (fd == -1) {
+                        std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
+                        sqlite3_close(db);
+                        return;
+                    }
+                    if (flock(fd, LOCK_SH) != 0) {
+                        std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
+                        close(fd);
+                        sqlite3_close(db);
+                        return;
+                    }
+
+                    std::string sql = "SELECT * FROM " + table;
+                    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+
+                        while (sqlite3_step(stmt) == SQLITE_ROW) {
+                            vector<DataVariant> row_data;
+                            for(int i = 0; i < column_order.size(); ++i) {
+                                if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(int))]) {
+                                    row_data.emplace_back(sqlite3_column_int(stmt, i));
+                                } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(float))]) {
+                                    row_data.emplace_back(static_cast<float>(sqlite3_column_double(stmt, i)));
+                                } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(std::string))]) {
+                                    row_data.emplace_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i))));
+                                } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(std::tm))]) {
+                                    std::tm tm{};
+                                    strptime(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i)), "%Y-%m-%d %H:%M:%S", &tm);
+                                    row_data.emplace_back(tm);
+                                }
+                            }
+                            fileDF->add_row(row_data);
+                        }
+                    }
+                    sqlite3_finalize(stmt);
+                    flock(fd, LOCK_UN);
+                    close(fd);
+                }
+                sqlite3_close(db);
+            }
+            if(sortFlag && groupFlag)
+            {
+                DataFrame *new_df = groupBy(fileDF, columnGroup, groupOperation);
+                delete fileDF;
+                fileDF = new_df;
+                ConsumerProducerQueue<DataFrame *> q_in(2);
+                ConsumerProducerQueue<DataFrame *> q_out(2);
+                SortHandler sh(&q_in, &q_out);
+                q_in.push(fileDF);
+                q_in.push(nullptr);
+                sh.sort(columnGroup, sortOrder);
+                delete fileDF;
+                fileDF = q_out.pop();
+            }
+
+            else if (groupFlag) {
+                DataFrame *new_df = groupBy(fileDF, columnGroup, groupOperation);
+                delete fileDF;
+                fileDF = new_df;
+            } else {
+                DataFrame *new_df = aggregate_sort(df, fileDF, columnSort, sortOrder);
+                delete fileDF;
+                fileDF = new_df;
+            }
+            write_to_sqlite(fileDF, filePath, table, true);
+            delete fileDF;
+        }
+        delete df;
     }
 
 
