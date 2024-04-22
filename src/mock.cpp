@@ -105,24 +105,38 @@ std::string orderData()
     int purchaseDay = getRandomInt(1, 30);
     int purchaseMonth = getRandomInt(1, 12);
     int purchaseYear = getRandomInt(2019, 2024);
+    int purchaseHour = getRandomInt(0, 23);
+    int purchaseMinute = getRandomInt(0, 59);
+
 
     int paymentDay = getRandomInt(purchaseDay, 30);
     int paymentMonth = getRandomInt(purchaseMonth, 12);
     int paymentYear = getRandomInt(purchaseYear, 2024);
+    int paymentHour = getRandomInt(purchaseHour, 23);
+    int paymentMinute = getRandomInt(purchaseMinute, 59);
+
 
     int shippingDay = getRandomInt(paymentDay, 30);
     int shippingMonth = getRandomInt(paymentMonth, 12);
     int shippingYear = getRandomInt(paymentYear, 2024);
+    int shippingHour = getRandomInt(paymentHour, 23);
+    int shippingMinute = getRandomInt(paymentMinute, 59);
 
     int deliveryDay = getRandomInt(shippingDay, 30);
     int deliveryMonth = getRandomInt(shippingMonth, 12);
     int deliveryYear = getRandomInt(shippingYear, 2024);
+    int deliveryHour = getRandomInt(shippingHour, 23);
+    int deliveryMinute = getRandomInt(shippingMinute, 59);
 
     return std::to_string(userId) + "," + std::to_string(productId) + "," + std::to_string(quantity) + "," +
-    std::to_string(purchaseDay) + "/" + std::to_string(purchaseMonth) + "/" + std::to_string(purchaseYear) + "," +
-    std::to_string(paymentDay) + "/" + std::to_string(paymentMonth) + "/" + std::to_string(paymentYear) + "," +
-    std::to_string(shippingDay) + "/" + std::to_string(shippingMonth) + "/" + std::to_string(shippingYear) + "," +
-    std::to_string(deliveryDay) + "/" + std::to_string(deliveryMonth) + "/" + std::to_string(deliveryYear);
+    std::to_string(purchaseYear) + "/" + std::to_string(purchaseMonth) + "/" + std::to_string(purchaseDay) +
+    " " + std::to_string(purchaseHour) + ":" + std::to_string(purchaseMinute) + "," +
+    std::to_string(paymentYear) + "/" + std::to_string(paymentMonth) + "/" + std::to_string(paymentDay) +
+    " " + std::to_string(paymentHour) + ":" + std::to_string(paymentMinute) + "," +
+    std::to_string(shippingYear) + "/" + std::to_string(shippingMonth) + "/" + std::to_string(shippingDay) +
+    " " + std::to_string(shippingHour) + ":" + std::to_string(shippingMinute) + "," +
+    std::to_string(deliveryYear) + "/" + std::to_string(deliveryMonth) + "/" + std::to_string(deliveryDay) +
+    " " + std::to_string(deliveryHour) + ":" + std::to_string(deliveryMinute);
 }
 
 
@@ -316,13 +330,16 @@ std::string generateLogUserBehavior()
     // if the user clicked on a button, then the column buttonProductId will have the product id else it will be id 0
     int buttonProductId = action == "click" ? getRandomInt(1, 7) : 0;
 
+    int Minute = getRandomInt(0, 59);
+    int hour = getRandomInt(0, 23);
     int day = getRandomInt(1, 30);
     int month = getRandomInt(1, 12);
     int year = getRandomInt(2019, 2024);
 
     return "user_behavior," + std::to_string(userAuthorId) + "," + action + ","+
     std::to_string(buttonProductId)+  "," + stimulus + "," + component + "," + textContent + "," +
-    std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
+    std::to_string(year) + "/" + std::to_string(month) + "/" + std::to_string(day) + " " +
+    std::to_string(hour) + ":" + std::to_string(Minute);
 }
 
 std::string generateLogFailureNotification()
