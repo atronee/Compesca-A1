@@ -3,18 +3,34 @@
 #include <vector>
 #include <string>
 #include <cstdlib> // For rand() and srand()
+#include <random>
 #include <ctime>   // For time()
 #include <filesystem>
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <cmath>
 #include "mock.h"
 #include "../libs/sqlite3.h"
 
 // Function to generate a random integer within a range
 int getRandomInt(int min, int max) {
-    return min + rand() % (max - min + 1);
+// Seed the random number generator
+    // uniform (0,1) variable
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(min, max);
+
+    double beta = 2.0;
+    double alpha = 2.0;
+    double u = dis(gen);
+    double v = dis(gen);
+    double x = std::pow(u, 1.0/alpha)+0.001;
+    double y = std::pow(v, 1.0/beta)+0.001;
+    return min + (max - min) * x / (x + y);
 }
+
 
 std::string randomString(int length) {
     const std::string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -562,10 +578,6 @@ void mockSqliteTable(const int lines)
     sqlite3_close(db);
 }
 
-void request_simulado()
-{
-
-}
 
 int main()
 {

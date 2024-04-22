@@ -123,6 +123,10 @@ void DataFrame::print() {
                 else if(data[column][i].index() == 2) {
                     std::cout<< std::get<std::string>(data[column][i]) << " ";
                 }
+                else if(data[column][i].index() == 3) {
+                    std::tm tm_date = std::get<std::tm>(data[column][i]);
+                    std::cout << std::put_time(&tm_date, "%d/%m/%Y") << " ";
+                }
                 else {
                     std::cout << "Unsupported type" << " ";
                 }
