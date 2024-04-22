@@ -7,12 +7,7 @@
 #include <set>
 
 
-// Child class TimeBasedTrigger
-void TimeBasedTrigger::executePipeline(){
-// Your time-based pipeline execution logic here
-    std::cout << "Time-based trigger: Pipeline executed\n";
-}
-void TimeBasedTrigger::startTrigger(int seconds) {
+void TimeBasedTrigger::startTrigger(int seconds, VoidFunctionPtr executePipeline) {
     const auto interval = std::chrono::seconds(seconds);
     while (true) {
         executePipeline();
@@ -20,11 +15,6 @@ void TimeBasedTrigger::startTrigger(int seconds) {
     }
 }
 
-// Child class EventBasedTrigger
-void EventBasedTrigger::executePipeline(){
-    // Your event-based pipeline execution logic here
-    std::cout << "Event-based trigger: Pipeline executed\n";
-}
 
 bool EventBasedTrigger::isNewLogFile(const std::filesystem::path& folder, const std::string& filename) {
     // Check if the file is not in the set of processed files
@@ -40,7 +30,7 @@ void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::pa
         // Iterate through files in the log folder
         for (const auto& entry : std::filesystem::directory_iterator(logFolder)) {
             // check if file is not in the set of processed files and is a txt file
-            if (entry.path().extension() == ".txt" && isNewLogFile(logFolder, entry.path().filename().string())){
+            if ((entry.path().extension() == ".txt" || entry.path().extension() == ".csv")&& isNewLogFile(logFolder, entry.path().filename().string())){
                 // Process the new log file
                 std::cout << "New log file detected: " << entry.path().filename() << std::endl;
                 processedFiles.insert(entry.path().filename().string());
