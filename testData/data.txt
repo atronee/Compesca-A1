@@ -1,5 +1,0 @@
-Nome,Idade,Cidade,Data
-João,25,São Paulo,2021-03-21
-Maria,30,Rio de Janeiro,2011-12-09
-Carlos,40,Belo Horizonte,2020-04-12
-Ana,35,Salvador,2021-12-10
