@@ -18,52 +18,81 @@ int main() {
 
     // let's use the logs named userBehavior_1..10.csv
 
-    // std::vector<const std::type_info *> typesUserBehavior = {&typeid(std::string), &typeid(int), &typeid(std::string),
-    //                                                          &typeid(int), &typeid(std::string), &typeid(std::string),
-    //                                                          &typeid(std::string), &typeid(std::string)};
+    std::vector<const std::type_info *> typesUserBehavior = {&typeid(std::string), &typeid(int), &typeid(std::string),
+                                                             &typeid(int), &typeid(std::string), &typeid(std::string),
+                                                             &typeid(std::string), &typeid(std::tm)};
 
     // // create a reader object
-    // FileReader csvReader;
+    FileReader csvReader;
     // // creates the queues
-    // ConsumerProducerQueue<std::string> queue_files(15);
-    // ConsumerProducerQueue<DataFrame *> queue_reader(15);
-    // ConsumerProducerQueue<DataFrame *> queue_select(15);
-    // ConsumerProducerQueue<DataFrame *> queue_filter(15);
+    ConsumerProducerQueue<std::string> queue_files1(15);
+    ConsumerProducerQueue<DataFrame *> queue_reader1(15);
+    ConsumerProducerQueue<DataFrame *> queue_select1(15);
+    ConsumerProducerQueue<DataFrame *> queue_filter1(15);
+    ConsumerProducerQueue<DataFrame *> queue_gb1(15);
+    ConsumerProducerQueue<DataFrame *> queue_sort1(15);
 
-    // EventBasedTrigger eventTrigger;
-    // std::thread eventTriggerThread([&eventTrigger, &queue_files] {
-    //     eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files);
-    // });
 
-    // //void FileReader::read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter,
-    // //                      int start, int & end, ConsumerProducerQueue<DataFrame*>& queue,
-    // //                      bool read_in_blocks, int block_size)
+    EventBasedTrigger eventTrigger;
+    std::thread eventTriggerThread([&eventTrigger, &queue_files1] {
+        eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files1);
+    });
 
-    // auto selector = SelectHandler(&queue_reader, &queue_select);
-    // auto filter = FilterHandler(&queue_select, &queue_filter);
-    // auto printer = printHandler(&queue_filter);
+    // void FileReader::read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter,
+    //                      int start, int & end, ConsumerProducerQueue<DataFrame*>& queue,
+    //                      bool read_in_blocks, int block_size)
+
+    auto selector1 = SelectHandler(&queue_reader1, &queue_select1);
+    auto filter1 = FilterHandler(&queue_select1, &queue_filter1);
+    auto printer1 = printHandler(&queue_filter1);
+    auto groupby1 = GroupByHandler(&queue_filter1, &queue_gb1);
+    auto sort1 = SortHandler(&queue_gb1, &queue_sort1);
 
     std::vector<std::thread> threads;
 
-    // int end = 0;
-    // threads.emplace_back([&csvReader, &typesUserBehavior, &end, &queue_reader,  &queue_files] {
-    //     csvReader.read(typesUserBehavior, ',', 0, end, std::ref(queue_reader), std::ref(queue_files), true, 10, "user_behavior");
-    // });
+    int end = 0;
+    threads.emplace_back([&csvReader, &typesUserBehavior, &end, &queue_reader1,  &queue_files1] {
+        csvReader.read(typesUserBehavior, ',', 0, end, std::ref(queue_reader1), std::ref(queue_files1), true, 10, "user_behavior");
+    });
 
     // std::cout<<"Selecting\n"<<std::endl;
 
-    // for (int i = 0; i < 2; i++) {
-    //     threads.emplace_back([&selector] {
-    //         selector.select({"User Author Id","Button Product Id", "Date"});
-    //     });
-    // }
+    for (int i = 0; i < 2; i++) {
+        threads.emplace_back([&selector1] {
+            selector1.select({"Button Product Id", "Date"});
+        });
+    }
     // std::cout<<"Filtering\n"<<std::endl;
 
-    // for (int i = 0; i < 2; i++) {
-    //     threads.emplace_back([&filter] {
-    //         filter.filter("Button Product Id", "!=", "0");
-    //     });
-    // }
+    for (int i = 0; i < 2; i++) {
+        threads.emplace_back([&filter1] {
+            filter1.filter("Button Product Id", "!=", "0");
+        });
+    }
+
+    // std::cout<<"Grouping\n"<<std::endl;
+    for (int i = 0; i < 2; i++) {
+        threads.emplace_back([&groupby1] {
+            groupby1.group_by("Date", "count");
+        });
+    }
+
+    // std::cout<<"Sorting\n"<<std::endl;
+
+    for (int i = 0; i < 2; i++) {
+        threads.emplace_back([&sort1] {
+            sort1.sort("Date", "desc");
+        });
+    }
+    
+    //pop from queue_sort1
+
+    DataFrame* df = queue_sort1.pop();
+    //print the first 10 rows
+    df->print();
+
+
+
 
     // std::cout<<"Printing\n"<<std::endl;
 
@@ -125,9 +154,9 @@ int main() {
     }
 
 
-    auto groupby = GroupByHandler(&queue_select6, &queue_gb6);
-    threads.emplace_back([&groupby] {
-        groupby.group_by("ID PRODUTO", "sum");
+    auto groupby6 = GroupByHandler(&queue_select6, &queue_gb6);
+    threads.emplace_back([&groupby6] {
+        groupby6.group_by("ID PRODUTO", "sum");
     });
 
     auto joiner6 = JoinHandler(&queue_gb6, &queue_join6);

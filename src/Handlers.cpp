@@ -498,6 +498,31 @@ void GroupByHandler::group_by(string column, string operation) {
     queue_out->push(nullptr);
 }
 
+//make a function to compare two strings that represent dates in the format YYYY/MM/DD HH:MM
+
+bool compareDates(const std::string& date1, const std::string& date2) {
+    // Extract year, month, day, hour, and minute from date1
+    int year1 = std::stoi(date1.substr(0, 4));
+    int month1 = std::stoi(date1.substr(5, 2));
+    int day1 = std::stoi(date1.substr(8, 2));
+    int hour1 = std::stoi(date1.substr(11, 2));
+    int minute1 = std::stoi(date1.substr(14, 2));
+
+    // Extract year, month, day, hour, and minute from date2
+    int year2 = std::stoi(date2.substr(0, 4));
+    int month2 = std::stoi(date2.substr(5, 2));
+    int day2 = std::stoi(date2.substr(8, 2));
+    int hour2 = std::stoi(date2.substr(11, 2));
+    int minute2 = std::stoi(date2.substr(14, 2));
+
+    // Compare each component starting from the year down to the minute
+    if (year1 != year2) return year1 < year2;
+    if (month1 != month2) return month1 < month2;
+    if (day1 != day2) return day1 < day2;
+    if (hour1 != hour2) return hour1 < hour2;
+    return minute1 < minute2;
+}
+
 void SortHandler::sort(string column, string order) {
     DataFrame* DF = nullptr;
     //concatenate everything in queue_in
