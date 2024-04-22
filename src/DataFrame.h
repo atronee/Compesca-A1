@@ -160,6 +160,20 @@ public:
         data = new_data;
     }
 
+    void concatenate(const DataFrame& df){
+        /*
+         * Concatenates the specified DataFrame to the current DataFrame.
+         */
+        if (column_order != df.column_order)
+            throw std::invalid_argument("Column order does not match");
+
+        for (const auto& column : column_order) {
+            data[column].insert(data[column].end(), df.data.at(column).begin(), df.data.at(column).end());
+        }
+
+        n_rows += df.n_rows;
+    }
+
 };
 
 #endif // DATAFRAME_H
