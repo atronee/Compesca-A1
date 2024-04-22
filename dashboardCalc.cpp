@@ -78,20 +78,33 @@ int main() {
 
     // 6º question: Número de produtos vendidos sem disponibilidade em estoque
 
-    FileReader csvReader6;
+    DataFrame* df_ptr = new DataFrame();
 
+    vector<int> id_data = {1, 2, 3, 4,5,6,7};
+    vector<int> estoque_data = {528,219,408,574,568,224,464};
+
+
+    df_ptr->add_column("id", id_data);
+    df_ptr->add_column("estoque", estoque_data);
+    FileReader csvReader6;
 
     ConsumerProducerQueue<std::string> queue_files6(15);
     ConsumerProducerQueue<DataFrame *> queue_reader6(15);
     ConsumerProducerQueue<DataFrame *> queue_select6(15);
     ConsumerProducerQueue<DataFrame *> queue_filter6(15);
+    ConsumerProducerQueue<DataFrame *> queue_gb6(15);
+    ConsumerProducerQueue<DataFrame *> queue_join6(15);
     ConsumerProducerQueue<DataFrame *> queue_print6(15);
-
+    ConsumerProducerQueue<DataFrame *> queue_agregator(15);
 
     EventBasedTrigger eventTrigger6;
     std::thread eventTriggerThread6([&eventTrigger6, &queue_files6] {
         eventTrigger6.triggerOnApperanceOfNewLogFile("./data", queue_files6);
     });
+
+    // wait 5 seconds for the file to be created
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    queue_files6.push("STOP");
 
     std::vector<const std::type_info *> order_types = {&typeid(int), &typeid(int),
                                                        &typeid(int), 
@@ -104,7 +117,6 @@ int main() {
     });
 
     auto selector6 = SelectHandler(&queue_reader6, &queue_select6);
-    auto filter6 = FilterHandler(&queue_select6, &queue_filter6);
 
     for (int i = 0; i < 2; i++) {
         threads.emplace_back([&selector6] {
@@ -112,20 +124,41 @@ int main() {
         });
     }
 
-    //print
+
+    auto groupby = GroupByHandler(&queue_select6, &queue_gb6);
+    threads.emplace_back([&groupby] {
+        groupby.group_by("ID PRODUTO", "sum");
+    });
+
+    auto joiner6 = JoinHandler(&queue_gb6, &queue_join6);
+    threads.emplace_back([df_ptr, &joiner6] {
+        joiner6.join(df_ptr, "id", "ID PRODUTO");
+    });
+
+    // auto agregator = FinalHandler(&queue_join6, &queue_agregator);
+    // threads.emplace_back([&agregator] {
+    //     agregator.aggregate();
+    // });
+
+    //pop from queue_agregator
+    DataFrame* df = queue_join6.pop();
+    df->diff_columns("estoque", "QUANTIDADE");
+    
+    queue_filter6.push(df);
+
+    auto filter6 = FilterHandler(&queue_filter6, &queue_print6);
+
     for (int i = 0; i < 2; i++) {
         threads.emplace_back([&filter6] {
-            filter6.filter("QUANTIDADE", "==", "3");
+            filter6.filter("diff", "<", "0");
         });
     }
 
-    auto printer6 = printHandler(&queue_filter6);
+    df=queue_print6.pop();
+    int sum = df->sum_column("diff");
+    sum = sum * -1;
+    std::cout<<"Número de produtos vendidos sem disponibilidade em estoque: "<<sum<<std::endl;
     
-    threads.emplace_back([&printer6] {
-        printer6.print();
-    });
-
-    std::cout<<"Printed"<<std::endl;
 
     for (auto &t: threads) {
         t.join();
