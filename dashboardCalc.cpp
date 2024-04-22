@@ -65,6 +65,8 @@ int main() {
         });
     }
 
+    std::cout<<"Printing\n"<<std::endl;
+
     threads.emplace_back([&printer] {
         printer.print();
     });
