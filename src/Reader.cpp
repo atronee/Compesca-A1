@@ -14,7 +14,7 @@
 
 void FileReader::read(std::vector<const std::type_info*>& types, char delimiter,int start, int & end,
                       ConsumerProducerQueue<DataFrame*>& queue_out, ConsumerProducerQueue<std::string>& queue_in,
-                      bool read_in_blocks, int block_size) {
+                      bool read_in_blocks, int block_size, std::string filenameFormat) {
     /*
      * Function to read data from a CSV or TXT file and store it in a queue of DataFrames
      * Parameters:
@@ -28,6 +28,10 @@ void FileReader::read(std::vector<const std::type_info*>& types, char delimiter,
      */
     while (true) {
         std::string filename = queue_in.pop();  // Get the filename from the queue
+        if (filename == "STOP") {  // Check if the filename is "STOP"
+            queue_out.push(nullptr);  // Add a nullptr to the queue
+            break;
+        }
         int fd = open(filename.c_str(), O_RDONLY);  // Open the file with POSIX open
         if (fd == -1) {          // Check if file opening failed
             std::cerr << "Error opening CSV file: " << filename << std::endl;
@@ -91,7 +95,12 @@ void FileReader::read(std::vector<const std::type_info*>& types, char delimiter,
 
                 if (line_count == block_size && read_in_blocks) {  // If block size reached or end of file
                     // Add block data to the queue
+                    // if the beginning of the filename is in the format filenameFormat then add the block to the queue
+                    if (filename.find(filenameFormat) == 0) {
+                        queue_out.push(df);
+                    }
                     queue_out.push(df);
+                    dataframes[std::filesystem::path(filename)].emplace_back(df);  // Store the DataFrame in the map
 
                     line_count = 0;  // Reset line counter
                     df = new DataFrame(column_order, types);  // Create a new DataFrame object
@@ -100,7 +109,10 @@ void FileReader::read(std::vector<const std::type_info*>& types, char delimiter,
         }
 
         if (df != nullptr && !df->get_number_of_rows()) {  // If there is remaining data
-            queue_out.push(df);  // Add the remaining data to the queue
+            if (filename.find(filenameFormat) == 0) {
+                queue_out.push(df);
+            }
+            dataframes[std::filesystem::path(filename)].emplace_back(df);  // Store the DataFrame in the map
         }
 
         end = file.tellg();  // Get the end position of the file
