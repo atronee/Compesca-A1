@@ -1,0 +1,101 @@
+Type,User Author Id,Action,Button Product Id,Stimulus,Component,Text Content,Date
+user_behavior,569,click,4,User clicked on a button,button,lqGVHmFL3PFccOTOHaSeXzKZjiAihwXsMtbjDGUukpwm2g0zeG,2023/1/27 0:27
+user_behavior,694,scroll,0,User clicked on a button,button,A7GaoIjSc3amhvw9zlyBR0qL05P97ZnwWTwapGQsxPCEaZDza0,2019/11/26 19:1
+user_behavior,398,hover,0,User dragged a form element,input,5RPrBwLBMfg2DVs7TfBgfr4T58aA6201JFga2RzCXFsqoKl5OM,2020/3/7 13:46
+user_behavior,53,drag,0,User dragged a form element,form,WqaLZFPZvunVhQbv5KFYohY57PwSFU1pbZY0vDOOY1y3HznA9S,2023/4/1 12:11
+user_behavior,839,hover,0,User scrolled through a table,button,knqzofmdyPPbBEzv9WIAUoL5bMcUqFkyTyW5C860NJZfdmyd94,2024/8/3 19:50
+user_behavior,523,scroll,0,User hovered over an input field,button,0kcp1ybV09PPKpENqRbrO5QvbQ7lqMchVcuMzvvpsb20qxEEcD,2022/5/24 22:1
+user_behavior,89,hover,0,User clicked on a button,table,zFIEqIY07hmlzndoByS5AjReGib5r4COzajNJ5DEdNPAYROpfu,2020/7/9 20:24
+user_behavior,641,scroll,0,User hovered over an input field,table,lCwY1u5E305w3JbsxS6LYpUsTGYTDwNMW9ANtvflmbHdKGt5no,2024/2/8 8:55
+user_behavior,470,hover,0,User dragged a form element,form,oyGYkDpWXI16S0BUA5duir0hSfu40yYeUs02WfOHMEBuu2cTXg,2021/3/3 8:53
+user_behavior,43,scroll,0,User clicked on a button,button,WQSYAbPsVS5suzTNTJPCwVDofxohtIbgmU4MTJ2EsVWKkDn2c3,2021/4/16 13:57
+user_behavior,191,hover,0,User dragged a form element,input,AvYEHIzhr67TmTDX168T61csEY3j5Q4t9SYGolLDhJmsqPdhJb,2021/4/10 1:9
+user_behavior,672,drag,0,User hovered over an input field,table,GtwZteLZsWBV285ioKlvhmkMd9AwKdZgwj4PmFDCq2mg0hocQx,2024/7/6 7:46
+user_behavior,86,hover,0,User hovered over an input field,button,e1Uil4cZgGsIUkU080c8Gztr6XRHpDDrsnzEhAtl4JSOTACPqC,2022/4/23 15:34
+user_behavior,591,drag,0,User hovered over an input field,table,5lUmD7J7d7omZX4BEt3jHtUsiPs4v9lqi3AM07H13WeSH6kcnb,2020/6/2 17:55
+user_behavior,344,click,2,User dragged a form element,input,0qGezzC9ozEdqof9WahWni56BX75sooiDTm0gOZucrysGBpsBu,2022/12/10 17:12
+user_behavior,287,drag,0,User scrolled through a table,input,TaikTsaZ5Xi5fGlL5B1xV3am0JfJg0JYYP8H59x0UFVZ97y4wp,2021/12/22 13:36
+user_behavior,402,scroll,0,User scrolled through a table,button,3jbR8QQFMN0AxtklsfJlBXAE3OUYDdtwnsej7SMHvD7SUf1bkB,2023/5/17 13:22
+user_behavior,861,drag,0,User hovered over an input field,table,P2lcdDemyWY5fp3Xa8PbhelQqTUt6HlJxuLAYNKmzygEM9qK53,2019/2/6 9:59
+user_behavior,325,drag,0,User scrolled through a table,button,v6M5t6ETSgt3DQ98q6mYZdx06fHfC6FY3fRmcj4SplLTZIPfCZ,2024/12/4 8:2
+user_behavior,37,click,4,User scrolled through a table,input,UHuGAynLyuFgIOQpEm2JPRB7FPbr7OgRjynKWyjkQMpmq5BSht,2022/1/13 18:55
+user_behavior,20,drag,0,User clicked on a button,input,sW6Clha5DjeiTtu9mUSrd8caNRB7ykpQ6jifrgbSpd06wj6G3M,2021/3/30 23:2
+user_behavior,845,hover,0,User scrolled through a table,input,3GvHADOGSUFA8Ip42yYypyjj69efCAmv4F2s8EYQptflZsfRQ4,2023/11/9 15:38
+user_behavior,900,hover,0,User dragged a form element,button,OEA7w6XP2sDJFVMQI4VqINtD4GFfQKtseUpBQbgIrHfWqPAZJj,2023/5/20 13:48
+user_behavior,734,drag,0,User clicked on a button,table,HM90QTdfxcl4tR7d7NDUkNXsyiYb9YREAQsfAwkVwuNQ9LT6ml,2022/6/19 2:48
+user_behavior,134,drag,0,User dragged a form element,input,Hp0cOGsT4O1Q9jtPi2wdeFSBridBRCKmQAmu7FbZh2FgaXTiNe,2019/3/29 7:45
+user_behavior,343,click,5,User scrolled through a table,form,RL11rreJmHKcOAFVAqCH4GSMgMR7KZnrAegPukmGRUIulcdJsF,2020/6/24 11:38
+user_behavior,296,scroll,0,User clicked on a button,input,tqoRtuvNDHjisQCBSD889fl925fpzgkQwyxNQSohqwqGcQ7Sk5,2020/6/4 12:42
+user_behavior,219,drag,0,User hovered over an input field,input,irlWLHjno0BveXJKXqHDyAiFz5LnOUpW9AGI6QVkElDI8diWrN,2023/12/22 18:22
+user_behavior,934,scroll,0,User hovered over an input field,form,5B1Qyrm6n0Qvu1X2ZY8JfLXSNiYdzFRt4I9sYjm9a2tuRglH4j,2020/8/3 6:15
+user_behavior,707,scroll,0,User hovered over an input field,table,x4fOYNNezXqzVhSfYWqtQyyLfnoBlNYHH1ltDXx2INptU5wHRN,2024/3/1 6:38
+user_behavior,728,hover,0,User clicked on a button,form,JVpeqhoJKb6AHIQ0qJmXrXMMUYJYoPrWBF0RMepkdjIIRow6WH,2024/1/25 9:53
+user_behavior,211,drag,0,User clicked on a button,input,u0hgrM76o9jwbt4H8h443BM4T5HYdSOyIVCZxxTJx35wmX3k2V,2023/6/7 6:31
+user_behavior,782,scroll,0,User clicked on a button,button,M5w8DhAqCY9bj04FcQwlIgous17mBi3bbp9CvAQVmQXvEPYFvi,2022/2/10 19:14
+user_behavior,210,drag,0,User scrolled through a table,form,ioIkpYhQhFw2RaNcFtYaM7OElGOOnUuv82DlOL1VeoMUopWRGL,2023/9/30 19:13
+user_behavior,313,hover,0,User clicked on a button,form,c8Ow4EZfjy52DjEnvU7dqGSxcc9S1na2lModgdinCdg3kKeGs9,2019/12/2 12:18
+user_behavior,440,click,6,User dragged a form element,table,hek9nWnq1oxeOAiFJTHd9HKGbXBFdsQkv0hILsXCGkEjINOhwm,2020/2/4 0:50
+user_behavior,534,scroll,0,User hovered over an input field,table,H3P0SWztckTGsnP00u6kEeElXs3rHeYe6B5Ons5nAOTSZzIQRC,2024/12/21 16:58
+user_behavior,762,hover,0,User clicked on a button,form,frxinYbZ9tUmRw5zms509yMk53GnBTWHbhNo5Oe25WcMj5bto4,2023/1/21 11:38
+user_behavior,140,hover,0,User scrolled through a table,button,cMkHLrkXkY1aTMcvV8uckmjxF2TODMdFmlcVBmIL8AKRcKaVGu,2019/2/29 19:32
+user_behavior,494,scroll,0,User dragged a form element,form,nvPQHYQsp01ZYpzDp9D8GVVkqNmnx8ZJtCpZr4fGU4tHjSawQE,2020/10/25 17:22
+user_behavior,404,scroll,0,User clicked on a button,table,cDELW7YJoSPSBJc8TS8dyAyGOB1fgwUiZpTJkHjwqYeRxeNeXL,2022/8/22 22:32
+user_behavior,903,drag,0,User scrolled through a table,table,b3AjQN0pVyyhMmlrIo4MbDSkBm0dgvRhmhp2SdgDBEKbPTqn7k,2024/10/13 15:59
+user_behavior,168,drag,0,User scrolled through a table,form,WpW2z1fqHiwaIYIHDpYQl6EhG8kIOeNzrxrOmw4TCqR8fnGGCu,2020/6/12 19:33
+user_behavior,23,hover,0,User hovered over an input field,button,p54Omr31BnTiQ8ZObaiHCCSeRxXC8OTmINYS2SHt5rzJpmmqmu,2021/12/10 2:2
+user_behavior,698,scroll,0,User hovered over an input field,input,YgJ8OmWueE2vyjS5w4hKgAvSlXxLNYBz48xGkj1mMTFa0l5mfb,2020/7/26 20:27
+user_behavior,532,drag,0,User dragged a form element,form,EbK33IoAQxp096t7WE36J4QQvTF5KSeeRO5Kkj80FnOCh7A3Br,2024/12/26 6:6
+user_behavior,939,click,5,User clicked on a button,table,XXB2EfVdn5bdynP0uMombFb7QFLiQQFDE4v69f9ma9nwk2mECB,2020/12/12 23:19
+user_behavior,942,drag,0,User hovered over an input field,button,OlsgfMcdRanP7zbhrlLSKqjF4IedFT0j4gpaSqbxooalNbs3l1,2019/7/27 19:36
+user_behavior,469,hover,0,User clicked on a button,button,U80327h0Nv1bHebSRb8IkXh330e0es1YqRQhMV5qeXrLZqrEpp,2023/2/21 19:35
+user_behavior,478,drag,0,User hovered over an input field,input,bNJX2oB9Zm4foPuZEIe7YtanuiCjfV1gzy1pLtoADgFSWXFovK,2024/10/23 3:19
+user_behavior,310,hover,0,User clicked on a button,form,vJkB6JslkJxIdDdVn0oAlYJtOTOX9zgu6pT0W994JwCMYDv9tH,2022/6/1 0:57
+user_behavior,201,scroll,0,User dragged a form element,input,NV05RdOIXLHRk2hUOKdN1L9r56b3KwMlhAgXBUtovY3EOaosKs,2024/7/20 0:53
+user_behavior,720,hover,0,User hovered over an input field,input,xcnIiMO5dwmqPajjPkw7SMZgDSXpFB00DdyLNaEPwQ5cRejumF,2024/7/12 2:5
+user_behavior,0,scroll,0,User dragged a form element,button,plLfMNCooCQ3XvYXa16ubAJ4FM1ewLXLWxOz8gLmHpguK2hKRb,2020/4/7 5:3
+user_behavior,679,hover,0,User clicked on a button,input,yeU7ZhMmfQVqnawHLmMj4OeLdEm8GP53SO0FTARXhCduAx09JC,2023/4/20 6:38
+user_behavior,910,scroll,0,User scrolled through a table,input,j2aaIM1dvrUiyklRLIHKg9THe4KmHXqPNoPk0EnkU6sggCXPau,2019/7/9 18:4
+user_behavior,136,hover,0,User dragged a form element,input,x5UaI9QSXi4720o96QWMOf0TxXvRLDl7y5742LNOUFLMvZJpDw,2024/11/10 14:35
+user_behavior,345,drag,0,User clicked on a button,input,aLO79H53yGEco9NZsByI2Uvaj9Z3y7wyI8wFEpz2T1481FXh4l,2024/12/27 23:37
+user_behavior,796,hover,0,User clicked on a button,button,uGpSfmcKQr7I9ZA7O5SV03zNVwyXs9QMG5sJfthVIfrH2REGLk,2021/1/11 7:54
+user_behavior,37,scroll,0,User clicked on a button,form,syo22ilznEG7aJoIB4a5Fll4nX6aYuJeSV7I1g7dICaIbmeBgf,2020/2/2 15:1
+user_behavior,984,drag,0,User hovered over an input field,input,fS8hySc5Ji2MOsKluXpT1udBIJ270oz54vcqbflJlcl0uUbMHo,2022/3/23 3:41
+user_behavior,745,scroll,0,User dragged a form element,form,U0yPURPaTSks4mBSElRhQ5AdAVYEPAFzq3caKS9rAjJsv9aZiR,2024/1/23 21:44
+user_behavior,141,drag,0,User scrolled through a table,button,Uf8jtZkuA2rPqAnJTmHIunBhYS7XWKrENpM6fWoDMFg25tzOD7,2022/2/9 18:9
+user_behavior,805,drag,0,User clicked on a button,form,ez8Hcmj8p5lQHQWxKeVoHSxt07nUncBqByXBI6xXZIBupnPZrA,2023/4/1 2:16
+user_behavior,579,click,1,User clicked on a button,form,GteWSAJj8DHVqdkKsxnfNOhAUEGRW0tshxe0VL9TeECsIM2Y8g,2020/4/10 21:54
+user_behavior,178,hover,0,User hovered over an input field,form,tBEBWGrIiopkRSDpstbqx3Zf2YGtuNFNc7eZDtvJGISnqlAHCB,2022/6/8 11:19
+user_behavior,500,drag,0,User hovered over an input field,button,Vb8xd3z0wRj4nSMA6V0DnppbK23WrqpbplwteVhyCpqP72d1N3,2024/6/15 9:32
+user_behavior,606,scroll,0,User clicked on a button,table,N8QOnZ8E1UKokZEYUx1JaT2Z0yQHUx7ytLaFB99qRJE1w9PguF,2022/5/4 16:6
+user_behavior,5,click,1,User scrolled through a table,button,PhEbBga6H93VQBqFXnj2FMGXYa303PxHV2Ik6IgDF7mjyCNkNW,2021/3/24 14:24
+user_behavior,460,click,6,User hovered over an input field,button,Dv3mlzwh8AIBxVLUnm4Z827sw1CYPAkiVdu7DQezgLYBwzlHJd,2023/5/4 19:31
+user_behavior,171,hover,0,User scrolled through a table,table,Po4BqowR2yg694wvsH11JnxEFkSPyWBd8wCmIY3Bl7vk0REgnv,2024/7/30 12:36
+user_behavior,825,scroll,0,User clicked on a button,table,XQe0NArX9fRyoMTxCz1IMkCwOSKOjFp4luVWScKPfpds1VPskG,2024/7/30 12:10
+user_behavior,907,drag,0,User dragged a form element,button,glkbvCUflUP0X42fUNUaVoYF0dJhapagzifSLXXUFBKttAwbdf,2024/11/28 6:51
+user_behavior,107,hover,0,User clicked on a button,input,Zen5Bv9h4U2OqtnHLN3MP8OBoCTwrHJgJU9ad6f8R8K7pVE0zv,2021/1/30 4:53
+user_behavior,349,scroll,0,User clicked on a button,form,WSx0rhXqiUveBtPwJyYzXj2Zz7r5CBTmjgcBl0RuIcy7ubt3Af,2022/1/3 2:35
+user_behavior,324,scroll,0,User hovered over an input field,input,FPpPZtSoFG5Zc5l9plqgJvxSFEPfG3L9JYPwhvKKZFx1yJ0MSe,2023/12/12 0:57
+user_behavior,705,scroll,0,User hovered over an input field,table,eEHdbvSxAb7b0AyRX5FzLJh08lWZQxXUZuWZNCmdEicuGBatuF,2021/1/30 15:50
+user_behavior,514,scroll,0,User dragged a form element,input,L1NuR5gGIGQK8WMrtbrKwWrqZda18HPJyr3dm7HTEmtC83Rp58,2024/2/21 10:53
+user_behavior,870,hover,0,User dragged a form element,input,gadPxuHyGE6n8gEzcygstdgGWlbsrGQxFTa2dHqHckV8qnxrLC,2022/8/1 1:30
+user_behavior,487,drag,0,User hovered over an input field,form,d4nyz4yr76HD6Qm46zqnbSU1lvqyhP3iHhG695l7ZRyVxKPr73,2023/3/30 14:40
+user_behavior,440,scroll,0,User dragged a form element,input,MRaVpfpjeitb7axQv5uM3nfZXpNFWRMyzMhMRxTVFcVBcihxez,2020/5/3 6:32
+user_behavior,237,hover,0,User hovered over an input field,button,cfFzCfEcWZWGvYrU1xZmzpks2kdqABjBENY5Ss7DiT9BIolxJ8,2022/3/11 23:5
+user_behavior,758,drag,0,User hovered over an input field,input,oRBPkcBfUUcl0UkpqwyN6wk1K0gNQx53cwImwargSssGaAVqXj,2022/1/21 9:6
+user_behavior,124,drag,0,User dragged a form element,button,E7Mx866ks4AwKQMgQb16W8XDDY7HMHohDYEBSAL8sbu2P56v6V,2023/3/16 17:29
+user_behavior,542,hover,0,User dragged a form element,button,BL4IeQdFyBhwSgOKUJFfDqvjavslkw1M6ViaBjGXLLjtPV1xvu,2021/1/24 9:46
+user_behavior,613,hover,0,User hovered over an input field,button,qHJ0Ds8BTi7ERGL8kwXHPi8CTUws0IagdJ6E146Ia1aRwLNG7B,2023/12/21 20:59
+user_behavior,736,click,7,User scrolled through a table,table,I3GO7fKB4DxADnAjJbWd6neHUcIcV5IrZe4UhEjb5FzxSZGrYq,2023/8/12 1:4
+user_behavior,831,hover,0,User hovered over an input field,form,QVzD0rn7Wv7P0wcIkIX6XfPpB2BYPO6tyuXoL8jvtg9jDbPLIC,2024/10/8 5:42
+user_behavior,259,scroll,0,User scrolled through a table,button,QMQ988WmHTv1cA0k1ZZCxq7QVioSjmCZWgZUcJ4HqnwtNkBEaq,2019/3/1 0:50
+user_behavior,70,scroll,0,User scrolled through a table,form,iAw5kAS2CqW8GasXLDogBD8W7YWnXbk3zGWK7FCxTntpnMbYfn,2024/12/20 18:4
+user_behavior,438,hover,0,User clicked on a button,table,ye9rBEcbzFCWoNgBYSCKVODpusF63IWsKTHcnJbMeBxqeDS0ji,2022/3/17 3:35
+user_behavior,910,hover,0,User dragged a form element,table,bjXtTF1TSyTtBiQRlhxboGCgsunvCXxE6iVONKvu7cLylrfwwD,2024/2/13 21:52
+user_behavior,545,hover,0,User hovered over an input field,table,HK4bHcUjOvC6sFHOOWR8iitOffqtmf0TNUSiUAryTSubn1N1Lv,2019/12/25 23:9
+user_behavior,764,hover,0,User hovered over an input field,button,wOOdsyTAijQF3yX2JNGyoZl6qrrXB3LXHn0ZJJoQR4lKs8AZL4,2020/2/8 14:52
+user_behavior,801,drag,0,User hovered over an input field,input,f4x0AKRpioBY3v9BL52AFULtE7dCLepQ7KExjlKrycfpxcR75H,2024/7/23 11:25
+user_behavior,829,scroll,0,User hovered over an input field,button,FVBjS9OdiXNzjPCzbEe6ALrY0oEKhmVK5mSNkuOshsQp5iM6NO,2024/12/15 19:5
+user_behavior,346,hover,0,User hovered over an input field,form,BCzcxJS9TcNah5QwZY6TBKKCVSqZaHAA9XAvxiuek5erZUMOJG,2022/10/18 4:23
+user_behavior,550,hover,0,User dragged a form element,button,Omeck1CFoKZrUSv9HgLlNgJLlEcbiRPU4RUeImHVWucEcxDKBd,2020/5/4 18:34
+user_behavior,622,click,6,User scrolled through a table,form,3w6LoLvqkHX5rh5VjqmTQnDSuVwKIb2BvWcJyvXI2KBjPw2WMd,2022/6/4 6:59
+user_behavior,949,scroll,0,User clicked on a button,button,ubQPWRmkc9S3JhamD19d4DuiAtRiOZx7YeMKTZUTYAMwHNI8EF,2020/1/12 14:14
