@@ -11,23 +11,31 @@
 #include <atomic>
 #include <iostream>
 
+using namespace std;
+
 int main() {
 
     std::vector<const std::type_info *> types2 = {&typeid(int), &typeid(std::string), &typeid(std::string)};
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     //ConsumerProducerQueue<DataFrame *> queue_select(15);
     //ConsumerProducerQueue<DataFrame *> queue_filter(15);
-    ConsumerProducerQueue<DataFrame *> queue_join(15);
+    ConsumerProducerQueue<DataFrame *> queue_join1(15);
+    ConsumerProducerQueue<DataFrame *> queue_join2(15);
+
+    std::vector<ConsumerProducerQueue<DataFrame *>> queues_out_join;
+    queues_out_join.push_back(std::move(queue_join1));
+    queues_out_join.push_back(std::move(queue_join2));
 
     FileReader csvReader;
     //auto selector = SelectHandler(&queue_reader, &queue_select);
     //auto filter = FilterHandler(&queue_select, &queue_filter);
-    auto joiner = JoinHandler(&queue_reader, &queue_join);
-    auto printer = printHandler(&queue_join);
+    auto joiner = JoinHandler(&queue_reader, &queues_out_join);
+    auto printer1 = printHandler(&queue_join1);
+    auto printer2 = printHandler(&queue_join2);
 
     DataFrame* df_ptr = new DataFrame();
 
-    vector<int> id_data = {1, 2, 3, 4};
+    vector<int> id_data = {1, 500, 312, 4};
     vector<string> semana_data = {"segunda-feira", "sexta-feira", "abelha", "vespa"};
     vector<string> demanda_uni_equil_data = {"rainha", "operaria", "operaria", "linda"};
     vector<string> time_data = {"12:00", "13:00", "14:00", "15:00"};
@@ -63,10 +71,13 @@ int main() {
         });
     }
 
-    threads.emplace_back([&printer] {
-        printer.print();
+    threads.emplace_back([&printer1] {
+        printer1.print();
     });
 
+    threads.emplace_back([&printer2] {
+        printer2.print();
+    });
 
     for (auto &t: threads) {
         t.join();
