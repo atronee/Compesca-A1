@@ -131,7 +131,7 @@ std::vector<DataVariant> DataFrame::get_row(int index) const {
     if (index < 0 || index >= n_rows)
         throw std::invalid_argument("Index out of bounds");
 
-    std::vector<DataVariant> row_data(column_order.size());
+    std::vector<DataVariant> row_data;
     for (const auto& column : column_order) {
         row_data.push_back(data.at(column)[index]);
     }

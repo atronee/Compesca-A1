@@ -318,90 +318,357 @@ void printHandler::print() {
     }
 }
 
-void JoinHandler::join(DataFrame* df1, string main_column_name, string join_column_name){
-    size_t type = df1->get_column_type(main_column_name);
+bool compareTm(const std::tm& lhs, const std::tm& rhs) {
+    return lhs.tm_year == rhs.tm_year &&
+           lhs.tm_mon == rhs.tm_mon &&
+           lhs.tm_mday == rhs.tm_mday &&
+           lhs.tm_hour == rhs.tm_hour &&
+           lhs.tm_min == rhs.tm_min &&
+           lhs.tm_sec == rhs.tm_sec;
+}
 
+
+    void JoinHandler::join_int(DataFrame* df1, string main_column_name, string join_column_name){
     vector<int> main_column = df1->get_column<int>(main_column_name);
-    vector<string> column_order_m = df1->get_column_order();
-    for (int i = 0; i < column_order_m.size(); i++) {
-        std::cout<<column_order_m[i]<<std::endl;
-    }
-
-
-    
-    vector<string> empty_string = {};
-    vector<int> empty_int = {};
-    vector<float> empty_float = {};
-    vector<std::tm> empty_tm = {};
     while (true) {
         DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
         if (incoming_df == nullptr) {
             queue_out->push(nullptr);
             break; // Stop if no more data
         }
-        DataFrame* result_df = new DataFrame(); // Placeholder for the join result
-        // Get the column to join on from the main DataFrame
-        vector<int> incoming_column = incoming_df->get_column<int>(join_column_name); // Get the column to join on from the incoming DataFrame
-        vector<string> column_order = incoming_df->get_column_order();
-        for(int i = 0; i<column_order.size(); i++){
-            std::cout<<column_order[i]<<std::endl;
-        }
-        //Add the columns from the main DataFrame to the result DataFrame
-        int p =0;
-        for (const auto& col_name : column_order_m) {
-                size_t type = df1->get_column_type(col_name);
-                if (type == 0) {
-                    result_df->add_column(col_name, empty_int);
-                } else if (type == 1) {
-                    result_df->add_column(col_name, empty_string);
-                }
-            p++;
-        }
 
-        // Add all columns from the incoming DataFrame, excluding the join column
-        for (const auto& col_name : column_order) {
-            if (col_name != join_column_name) {
-                size_t type = incoming_df->get_column_type(col_name);
-                if (type == 0) {
-                    result_df->add_column(col_name, empty_int);
-                } else if (type == 1) {
-                    result_df->add_column(col_name, empty_string);
+        vector<int> incoming_column = incoming_df->get_column<int>(join_column_name);
+
+        auto column_types_m = df1->get_column_types();
+        vector<string> column_order_m = df1->get_column_order();
+        auto column_types = df1->get_column_types();
+        vector<string> column_order = incoming_df->get_column_order();
+
+        // join the contents of column_order and column_order_m
+        int join_column_index = std::find(column_order.begin(), column_order.end(), join_column_name) - column_order.begin();
+        column_order.erase(column_order.begin() + join_column_index);
+        column_order_m.insert(column_order_m.end(), column_order.begin(), column_order.end());
+
+
+        // std::cout<<column_order_m.size()<<std::endl;
+        // for(int i=0; i<column_order_m.size(); i++){
+        //     std::cout<<column_order_m[i]<<std::endl;
+        // }
+
+        //types for the result df
+        std::vector<const std::type_info *> types;
+        size_t type;
+        for (const auto& col_name : column_order_m) {
+            try
+            {
+                type = df1->get_column_type(col_name);
+            }
+            catch(const std::exception& e)
+            {
+                try
+                {
+                    type = incoming_df->get_column_type(col_name);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
                 }
             }
-            p++;
+            if (type == 0) {
+                types.push_back(&typeid(int));
+            } else if (type == 1) {
+                types.push_back(&typeid(float));
+            } else if (type == 2) {
+                types.push_back(&typeid(std::string));
+            } else if (type == 3) {
+                types.push_back(&typeid(std::tm));
+            }
         }
-        std::cout<<p<<std::endl;
+        // Create a new DataFrame to hold the result
+        DataFrame* result_df = new DataFrame(column_order_m, types);
 
-        //find index of join column
-        int join_column_index = std::find(column_order.begin(), column_order.end(), join_column_name) - column_order.begin();
-        for (int i = 0; i < main_column.size(); i++) {
-            for(int j = 0; j<incoming_column.size(); j++){
-                int main_value= std::any_cast<int>(main_column[i]);
-                int incoming_value= std::any_cast<int>(incoming_column[j]);
-                    if (main_value == incoming_value) {
-                        // Retrieve the full rows as vectors of DataVariant
-                        vector<DataVariant> row_data = df1->get_row(i); // Main DataFrame row
-                        vector<DataVariant> incoming_row_data = incoming_df->get_row(j); // Incoming DataFrame row
+        // Get the column to join on from the main DataFrame
 
-                        std::cout<<row_data.size()<<std::endl;
-                        std::cout<<incoming_row_data.size()<<std::endl;
+        for (size_t i = 0; i < main_column.size(); ++i) {
+            for (size_t j = 0; j < incoming_column.size(); ++j) {
+                if (main_column[i] == incoming_column[j]) {
+                    vector<DataVariant> row_data = df1->get_row(i); // Main DataFrame row
+                    vector<DataVariant> incoming_row_data = incoming_df->get_row(j); // Incoming DataFrame row
 
-                        // Create a new vector to hold the combined row data
-                        vector<DataVariant> combined_row_data = row_data;
+                    incoming_row_data.erase(incoming_row_data.begin() + join_column_index);
+                    row_data.insert(row_data.end(), incoming_row_data.begin(), incoming_row_data.end()); 
 
-                        // Insert elements from the incoming_row_data, excluding the join column index
-                        // Assuming 'join_column_index' is the index of the join column in incoming_row_data
-                        incoming_row_data.erase(incoming_row_data.begin() + join_column_index); // Remove the join column from incoming row
-                        combined_row_data.insert(combined_row_data.end(), incoming_row_data.begin(), incoming_row_data.end()); 
-        
-                        std::cout<<combined_row_data.size()<<std::endl;
-                        // Add the combined row to the result DataFrame
-                        result_df->add_row(combined_row_data);
-                        } // Add the row data from the main DataFrame to the result DataFrame
-        }
-        }
+                    result_df->add_row(row_data);
+                }
+            }
+        } 
         queue_out->push(result_df); // Push result to output queue
         // free the result df
-        delete result_df;
     }
+};
+
+void JoinHandler::join_float(DataFrame* df1, string main_column_name, string join_column_name){
+    vector<float> main_column = df1->get_column<float>(main_column_name);
+    while (true) {
+        DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
+        if (incoming_df == nullptr) {
+            queue_out->push(nullptr);
+            break; // Stop if no more data
+        }
+
+        vector<float> incoming_column = incoming_df->get_column<float>(join_column_name);
+
+        auto column_types_m = df1->get_column_types();
+        vector<string> column_order_m = df1->get_column_order();
+        auto column_types = df1->get_column_types();
+        vector<string> column_order = incoming_df->get_column_order();
+
+        // join the contents of column_order and column_order_m
+        int join_column_index = std::find(column_order.begin(), column_order.end(), join_column_name) - column_order.begin();
+        column_order.erase(column_order.begin() + join_column_index);
+        column_order_m.insert(column_order_m.end(), column_order.begin(), column_order.end());
+
+
+        // std::cout<<column_order_m.size()<<std::endl;
+        // for(int i=0; i<column_order_m.size(); i++){
+        //     std::cout<<column_order_m[i]<<std::endl;
+        // }
+
+        //types for the result df
+        std::vector<const std::type_info *> types;
+        size_t type;
+        for (const auto& col_name : column_order_m) {
+            try
+            {
+                type = df1->get_column_type(col_name);
+            }
+            catch(const std::exception& e)
+            {
+                try
+                {
+                    type = incoming_df->get_column_type(col_name);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                }
+            }
+            if (type == 0) {
+                types.push_back(&typeid(int));
+            } else if (type == 1) {
+                types.push_back(&typeid(float));
+            } else if (type == 2) {
+                types.push_back(&typeid(std::string));
+            } else if (type == 3) {
+                types.push_back(&typeid(std::tm));
+            }
+        }
+        // Create a new DataFrame to hold the result
+        DataFrame* result_df = new DataFrame(column_order_m, types);
+
+        // Get the column to join on from the main DataFrame
+
+        for (size_t i = 0; i < main_column.size(); ++i) {
+            for (size_t j = 0; j < incoming_column.size(); ++j) {
+                if (main_column[i] == incoming_column[j]) {
+                    vector<DataVariant> row_data = df1->get_row(i); // Main DataFrame row
+                    vector<DataVariant> incoming_row_data = incoming_df->get_row(j); // Incoming DataFrame row
+
+                    incoming_row_data.erase(incoming_row_data.begin() + join_column_index);
+                    row_data.insert(row_data.end(), incoming_row_data.begin(), incoming_row_data.end()); 
+
+                    result_df->add_row(row_data);
+                }
+            }
+        } 
+        queue_out->push(result_df); // Push result to output queue
+        // free the result df
+    }
+};
+
+
+void JoinHandler::join_string(DataFrame* df1, string main_column_name, string join_column_name){
+    vector<string> main_column = df1->get_column<string>(main_column_name);
+    while (true) {
+        DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
+        if (incoming_df == nullptr) {
+            queue_out->push(nullptr);
+            break; // Stop if no more data
+        }
+
+        vector<string> incoming_column = incoming_df->get_column<string>(join_column_name);
+
+        auto column_types_m = df1->get_column_types();
+        vector<string> column_order_m = df1->get_column_order();
+        auto column_types = df1->get_column_types();
+        vector<string> column_order = incoming_df->get_column_order();
+
+        // join the contents of column_order and column_order_m
+        int join_column_index = std::find(column_order.begin(), column_order.end(), join_column_name) - column_order.begin();
+        column_order.erase(column_order.begin() + join_column_index);
+        column_order_m.insert(column_order_m.end(), column_order.begin(), column_order.end());
+
+
+        // std::cout<<column_order_m.size()<<std::endl;
+        // for(int i=0; i<column_order_m.size(); i++){
+        //     std::cout<<column_order_m[i]<<std::endl;
+        // }
+
+        //types for the result df
+        std::vector<const std::type_info *> types;
+        size_t type;
+        for (const auto& col_name : column_order_m) {
+            try
+            {
+                type = df1->get_column_type(col_name);
+            }
+            catch(const std::exception& e)
+            {
+                try
+                {
+                    type = incoming_df->get_column_type(col_name);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                }
+            }
+            if (type == 0) {
+                types.push_back(&typeid(int));
+            } else if (type == 1) {
+                types.push_back(&typeid(float));
+            } else if (type == 2) {
+                types.push_back(&typeid(std::string));
+            } else if (type == 3) {
+                types.push_back(&typeid(std::tm));
+            }
+        }
+        // Create a new DataFrame to hold the result
+        DataFrame* result_df = new DataFrame(column_order_m, types);
+
+        // Get the column to join on from the main DataFrame
+
+        for (size_t i = 0; i < main_column.size(); ++i) {
+            for (size_t j = 0; j < incoming_column.size(); ++j) {
+                if (main_column[i] == incoming_column[j]) {
+                    vector<DataVariant> row_data = df1->get_row(i); // Main DataFrame row
+                    vector<DataVariant> incoming_row_data = incoming_df->get_row(j); // Incoming DataFrame row
+
+                    incoming_row_data.erase(incoming_row_data.begin() + join_column_index);
+                    row_data.insert(row_data.end(), incoming_row_data.begin(), incoming_row_data.end()); 
+
+                    result_df->add_row(row_data);
+                }
+            }
+        } 
+        queue_out->push(result_df); // Push result to output queue
+        // free the result df
+    }
+};
+
+
+void JoinHandler::join_time(DataFrame* df1, string main_column_name, string join_column_name){
+    vector<std::tm> main_column = df1->get_column<std::tm>(main_column_name);
+    while (true) {
+        DataFrame* incoming_df = queue_in->pop(); // Get data from the input queue
+        if (incoming_df == nullptr) {
+            queue_out->push(nullptr);
+            break; // Stop if no more data
+        }
+
+        vector<std::tm> incoming_column = incoming_df->get_column<std::tm>(join_column_name);
+
+        auto column_types_m = df1->get_column_types();
+        vector<string> column_order_m = df1->get_column_order();
+        auto column_types = df1->get_column_types();
+        vector<string> column_order = incoming_df->get_column_order();
+
+        // join the contents of column_order and column_order_m
+        int join_column_index = std::find(column_order.begin(), column_order.end(), join_column_name) - column_order.begin();
+        column_order.erase(column_order.begin() + join_column_index);
+        column_order_m.insert(column_order_m.end(), column_order.begin(), column_order.end());
+
+
+        // std::cout<<column_order_m.size()<<std::endl;
+        // for(int i=0; i<column_order_m.size(); i++){
+        //     std::cout<<column_order_m[i]<<std::endl;
+        // }
+
+        //types for the result df
+        std::vector<const std::type_info *> types;
+        size_t type;
+        for (const auto& col_name : column_order_m) {
+            try
+            {
+                type = df1->get_column_type(col_name);
+            }
+            catch(const std::exception& e)
+            {
+                try
+                {
+                    type = incoming_df->get_column_type(col_name);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                }
+            }
+            if (type == 0) {
+                types.push_back(&typeid(int));
+            } else if (type == 1) {
+                types.push_back(&typeid(float));
+            } else if (type == 2) {
+                types.push_back(&typeid(std::string));
+            } else if (type == 3) {
+                types.push_back(&typeid(std::tm));
+            }
+        }
+        // Create a new DataFrame to hold the result
+        DataFrame* result_df = new DataFrame(column_order_m, types);
+
+        // Get the column to join on from the main DataFrame
+
+        for (size_t i = 0; i < main_column.size(); ++i) {
+            for (size_t j = 0; j < incoming_column.size(); ++j) {
+                bool is_equal = compareTm(main_column[i], incoming_column[j]);
+                if (is_equal) {
+                    vector<DataVariant> row_data = df1->get_row(i); // Main DataFrame row
+                    vector<DataVariant> incoming_row_data = incoming_df->get_row(j); // Incoming DataFrame row
+
+                    incoming_row_data.erase(incoming_row_data.begin() + join_column_index);
+                    row_data.insert(row_data.end(), incoming_row_data.begin(), incoming_row_data.end()); 
+
+                    result_df->add_row(row_data);
+                }
+            }
+        } 
+        queue_out->push(result_df); // Push result to output queue
+        // free the result df
+    }
+};
+    
+
+void JoinHandler::join(DataFrame* df1, string main_column_name, string join_column_name){
+    size_t type;
+    type = df1->get_column_type(main_column_name);
+
+    if (type == 0) {
+        join_int(df1, main_column_name, join_column_name);
+    } else if (type == 1) {
+        join_float(df1, main_column_name, join_column_name);
+    } else if (type == 2) {
+        join_string(df1, main_column_name, join_column_name);
+    } else if (type == 3) {
+        join_time(df1, main_column_name, join_column_name);
+    }
+
+    // if (column_type == 0) {
+    //     join_int(df1, main_column_name, join_column_name);
+    // } else if (column_type == 1) {
+    //     join_float(df1, main_column_name, join_column_name);
+    // } else if (column_type == 2) {
+    //     join_string(df1, main_column_name, join_column_name);
+    // } else if (column_type == 3) {
+    //     join_time(df1, main_column_name, join_column_name);
+    // }
 }

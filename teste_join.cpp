@@ -28,18 +28,21 @@ int main() {
     DataFrame* df_ptr = new DataFrame();
 
     vector<int> id_data = {1, 2, 3, 4};
-    vector<string> semana_data = {"abelha", "vespa", "abelha", "vespa"};
+    vector<string> semana_data = {"segunda-feira", "sexta-feira", "abelha", "vespa"};
     vector<string> demanda_uni_equil_data = {"rainha", "operaria", "operaria", "linda"};
+    vector<string> time_data = {"12:00", "13:00", "14:00", "15:00"};
 
     df_ptr->add_column("id", id_data);
-    df_ptr->add_column("bicho", semana_data);
+    df_ptr->add_column("dia_semana", semana_data);
     df_ptr->add_column("polia", demanda_uni_equil_data);
+    df_ptr->add_column("time", time_data);
 
     std::vector<std::thread> threads;
-
+    ConsumerProducerQueue<std::string> queue(15);
+    queue.push("testData/data2.csv");
     int end = 0;
-    threads.emplace_back([&csvReader, &types2, &end, &queue_reader] {
-        csvReader.read("testData/data2.csv", types2, ',', 0, end, std::ref(queue_reader), true, 10);
+    threads.emplace_back([&csvReader, &types2, &end, &queue_reader, &queue] {
+        csvReader.read(types2, ',', 0, end, std::ref(queue_reader), std::ref(queue), true, 10);
     });
 
     // for (int i = 0; i < 2; i++) {
@@ -54,7 +57,7 @@ int main() {
     //     });
     // }
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 1; i++) {
         threads.emplace_back([df_ptr, &joiner] {
             joiner.join(df_ptr, "id", "id");
         });
