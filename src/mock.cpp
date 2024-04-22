@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "mock.h"
-#include "../sqlite3.h"
+#include "../libs/sqlite3.h"
 
 // Function to generate a random integer within a range
 int getRandomInt(int min, int max) {
