@@ -9,7 +9,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <ext/stdio_filebuf.h>
-// #include <../sqlite3.h>
 #include "ConsumerProducerQueue.h"
 
 void FileReader::read(std::vector<const std::type_info*>& types, char delimiter,int start, int & end,
@@ -32,6 +31,10 @@ void FileReader::read(std::vector<const std::type_info*>& types, char delimiter,
             queue_out.push(nullptr);  // Add a nullptr to the queue
             break;
         }
+        if (filename.find(filenameFormat) != 0) {
+            continue;
+        }
+
         int fd = open(filename.c_str(), O_RDONLY);  // Open the file with POSIX open
         if (fd == -1) {          // Check if file opening failed
             std::cerr << "Error opening CSV file: " << filename << std::endl;
@@ -122,105 +125,3 @@ void FileReader::read(std::vector<const std::type_info*>& types, char delimiter,
         close(fd);
     }
 }
-/*
-void DbReader::readDb(const std::string& filename, ConsumerProducerQueue<DataFrame*>& queue, bool read_in_blocks,
-                    int block_size, std::vector<const std::type_info*>& types) {
-    /*
-     * Function to read data from an SQLite database and store it in a queue of DataFrames
-     * Parameters:
-     * - dbPath: path to the SQLite database file
-     * - query: SQL query to fetch data from the database
-     * - types: vector of type_info pointers specifying the types of data to read
-     * - queue: reference to the queue to store the data
-     */
-/*
-    sqlite3* db;
-    int rc = sqlite3_open(filename.c_str(), &db);  // Open the SQLite database
-    if (rc != SQLITE_OK) {
-        std::cerr << "Error opening SQLite database: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return;
-    }
-
-    std::string query = "SELECT * FROM data";  // SQL query to fetch all data from the table
-
-    sqlite3_stmt* stmt;
-    rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);  // Prepare the SQL query
-    if (rc != SQLITE_OK) {
-        std::cerr << "Error preparing SQL statement: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return;
-    }
-
-    // Bind any parameters if needed
-    // Example: sqlite3_bind_int(stmt, 1, parameterValue);
-
-    std::vector<std::string> column_order;  // Vector to store column names
-    bool header = true;
-    int cols = sqlite3_column_count(stmt);  // Get the number of columns in the result set
-
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {  // Execute the query and fetch rows
-        std::vector<DataVariant> row_data;  // Vector to store data for the current row
-
-        if (header) {  // If it's the first row (header)
-            for (int i = 0; i < cols; ++i) {
-                const char* columnName = sqlite3_column_name(stmt, i);
-                column_order.push_back(columnName);
-            }
-            header = false;
-        }
-
-        for (int i = 0; i < cols; ++i) {  // Iterate over columns
-            switch (sqlite3_column_type(stmt, i)) {  // Determine column type
-                case SQLITE_INTEGER:
-                    row_data.push_back(sqlite3_column_int(stmt, i));
-                    break;
-                case SQLITE_FLOAT:
-                    row_data.push_back(sqlite3_column_double(stmt, i));
-                    break;
-                case SQLITE_TEXT:
-                    row_data.push_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i))));
-                    break;
-                default:
-                    row_data.push_back(DataVariant());  // Add null for unsupported types
-                    break;
-            }
-        }
-
-        if (!header) {
-            DataFrame* df = new DataFrame(column_order, types);
-            df->add_row(row_data);
-            queue.push(df);
-        }
-    }
-
-    sqlite3_finalize(stmt);  // Finalize the prepared statement
-    sqlite3_close(db);  // Close the SQLite database
-}
-
-void DbReader::read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter,
-                    int start, int & end, ConsumerProducerQueue<DataFrame*>& queue,
-                    bool read_in_blocks, int block_size) {
-    // not implemented
-}
-
-int main()
-{
-    // code to test the db reader:
-    //reads file and prints the data
-    ConsumerProducerQueue<DataFrame *> queue_reader(15);
-    DbReader a;
-
-    int end = 0;
-    std::vector<const std::type_info *> types = {&typeid(int), &typeid(std::string), &typeid(std::string), &typeid(std::string), &typeid(std::string), &typeid(std::string)};
-    a.readDb("../mock.db", queue_reader, true, 10, types);
-
-    DataFrame *df;
-
-    while (queue_reader.pop() != nullptr) {
-        df = queue_reader.pop();
-        df->print();
-        delete df;
-    }
-    return 0;
-}*/

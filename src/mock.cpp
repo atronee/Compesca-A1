@@ -105,7 +105,7 @@ std::string orderData()
     int purchaseDay = getRandomInt(1, 30);
     int purchaseMonth = getRandomInt(1, 12);
     int purchaseYear = getRandomInt(2019, 2024);
-    int purchaseHour = getRandomInt(0, 23);
+    int purchaseHour = getRandomInt(10, 23);
     int purchaseMinute = getRandomInt(10, 59);
 
 
