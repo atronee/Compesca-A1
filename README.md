@@ -27,6 +27,8 @@ Certifique-se de ter os seguintes requisitos instalados em sua máquina:
 ## Como usar
 
 1. Clone o repositório do Data Plumber em sua máquina local: ```git clone https://github.com/atronee/Compesca-A1.git```
-2. No diretório do projeto, compile e execute o código-fonte: ```make main```.
+2. No diretório do projeto, compile e execute o código-fonte de sua escolha:
+    - Para criar arquivos de _mock_, execute ```make test_mock```;
+    - Para visualizar o dashboard, execute ```make Dashboard```.
 
 Importante notar que neste repositório também estão disponíveis _drivers_ que testam as funções implementadas por nós. 
