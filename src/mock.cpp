@@ -570,7 +570,7 @@ void request_simulado()
 int main()
 {
     mockCSV();
-    mockLogFiles(10, 5000);
+    mockLogFiles(10, 10);
     mockSqliteTable(80);
 
     return 0;
