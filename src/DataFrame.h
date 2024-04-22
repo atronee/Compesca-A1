@@ -35,8 +35,9 @@ private:
     std::unordered_map<std::string, size_t> column_types;
     std::vector<std::string> column_order;
     int n_rows;
+    std::time_t creation_time;
 public:
-    DataFrame() : n_rows(0) {};
+    DataFrame() : n_rows(0), creation_time(std::time(nullptr)) {};
 
     DataFrame(const std::vector<std::string>& column_names, std::vector< const std::type_info*>& column_types);
 
@@ -61,6 +62,14 @@ public:
     void diff_columns(const std::string& column_name, const std::string& other_column_name);
 
     int sum_column(const std::string& column_name);
+
+    std::time_t get_creation_time() const {
+        return creation_time;
+    }
+
+    void set_creation_time(std::time_t time) {
+        creation_time = time;
+    }
 
     template <typename T>
     void update_column(const std::string &column_name, const std::vector<T> &new_column_data) {

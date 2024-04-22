@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <ctime>
 #include <mutex>
+#include "DataFrameVersionManager.h"
 
 using std::vector;
 using std::string;
@@ -70,6 +71,8 @@ public:
 
 
     void join(DataFrame* df1, string main_column, string join_column);
+
+    void join(DataFrameVersionManager* dfvm, string main_column, string join_column);
 
 };
 
