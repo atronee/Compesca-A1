@@ -778,6 +778,27 @@ bool compareTm(const std::tm& lhs, const std::tm& rhs) {
     }
 };
 
+void FinalHandler::aggregate() {
+    DataFrame* DF = nullptr;
+    //concatenate everything in queue_in
+    while(true) {
+        DataFrame* df = queue_in->pop();
+        if (df == nullptr) {
+            break;
+        }
+        // concatenate df into DF
+        if (DF == nullptr) {
+            DF = df;
+        } else {
+            DF->concatenate(*df);
+            free(df);
+        }
+    }
+
+    queue_out->push(DF);
+    queue_out->push(nullptr);
+}
+
 // void JoinHandler::join_float(DataFrame* df1, string main_column_name, string join_column_name){
 //     vector<float> main_column = df1->get_column<float>(main_column_name);
 //     while (true) {
