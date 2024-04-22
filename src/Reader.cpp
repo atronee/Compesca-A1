@@ -4,7 +4,10 @@
 #include <sstream>                 
 #include <iostream>               
 #include <typeinfo>                
-#include <vector>                  
+#include <vector>       
+#include <ctime> 
+#include <iomanip> 
+#include <chrono>            
 
 void FileReader::read(const std::string& filename, std::vector<const std::type_info*>& types, char delimiter,
                       int start, int & end, ConsumerProducerQueue<DataFrame*>& queue,
@@ -57,7 +60,21 @@ void FileReader::read(const std::string& filename, std::vector<const std::type_i
                     } else if (*types[i] == typeid(float)) {
                         row_data.push_back(std::stof(row[i]));   
                     } else if (*types[i] == typeid(std::string)) {
-                        row_data.push_back(row[i]);               
+                        row_data.push_back(row[i]);     
+                    } else if (*types[i] == typeid(std::tm)) {
+                        // Converter a string de data para um struct std::tm
+                        
+                        std::istringstream ss(row[i]);
+                        std::tm tm_date = {};
+                        ss >> std::get_time(&tm_date, "%d/%m/%Y");  
+
+                        // Verificar se a conversão foi bem-sucedida
+                        if (ss.fail()) {
+                            std::cerr << "Error converting date string to std::tm" << std::endl;
+    
+                        } else {
+                            row_data.push_back(tm_date);
+                        }         
                     } else {
                         //TODO: Add more types as needed (data)
                         row_data.push_back(row[i]);               
