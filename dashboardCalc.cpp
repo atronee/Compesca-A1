@@ -114,7 +114,7 @@ void insertRandomData(const std::string& dbPath, int numRecords) {
 
 int main() {
     const std::string databasePath = "data/test.db";
-    const std::string sqlQuery = "SELECT 10 FROM your_table;";
+    const std::string sqlQuery = "SELECT 10 FROM M;";
 
     initializeDatabase(databasePath);
     insertRandomData(databasePath, 50);
