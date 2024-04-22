@@ -10,6 +10,11 @@
 #include "Handlers.h"
 #include <any>
 #include <iostream>
+#include <sqlite3.h>
+#include <fstream>
+#include <sys/file.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 using std::vector;
 using std::string;
@@ -219,26 +224,8 @@ bool compareTm(const std::tm& lhs, const std::tm& rhs) {
            lhs.tm_sec == rhs.tm_sec;
 }
 
-void GroupByHandler::group_by(string column, string operation) {
-    DataFrame* DF = nullptr;
-    //concatenate everything in queue_in
-    while(true) {
-        DataFrame* df = queue_in->pop();
-        if (df == nullptr) {
-            break;
-        }
-        // concatenate df into DF
-        if (DF == nullptr) {
-            DF = df;
-        } else {
-            DF->concatenate(*df);
-            free(df);
-        }
-    }
-
+DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation) {
     DataFrame* new_df;
-
-    // group all rows by column
     if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
         vector<int> column_data = DF->get_column<int>(column);
         std::unordered_map<int, vector<int>> groups;
@@ -348,11 +335,11 @@ void GroupByHandler::group_by(string column, string operation) {
         }
         vector<string> new_column_order = DF->get_column_order();
         vector<const std::type_info *> new_column_types;
-        for (const auto& some_column : new_column_order) {
+        for (const auto &some_column: new_column_order) {
             new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
         }
         new_df = new DataFrame(new_column_order, new_column_types);
-        for (const auto& group : groups) {
+        for (const auto &group: groups) {
             vector<DataVariant> row_data;
             for (size_t i = 0; i < DF->get_column_order().size(); ++i) {
                 string this_column = DF->get_column_order()[i];
@@ -365,19 +352,19 @@ void GroupByHandler::group_by(string column, string operation) {
                             row_data.push_back((int) group.second.size());
                         } else if (operation == "sum") {
                             int sum = 0;
-                            for (size_t i : group.second) {
+                            for (size_t i: group.second) {
                                 sum += this_column_data[i];
                             }
                             row_data.push_back(sum);
                         } else if (operation == "mean") {
                             float sum = 0;
-                            for (size_t i : group.second) {
+                            for (size_t i: group.second) {
                                 sum += this_column_data[i];
                             }
                             row_data.push_back(sum / group.second.size());
                         } else if (operation == "min") {
                             int min = this_column_data[group.second[0]];
-                            for (size_t i : group.second) {
+                            for (size_t i: group.second) {
                                 if (this_column_data[i] < min) {
                                     min = this_column_data[i];
                                 }
@@ -385,7 +372,7 @@ void GroupByHandler::group_by(string column, string operation) {
                             row_data.push_back(min);
                         } else if (operation == "max") {
                             int max = this_column_data[group.second[0]];
-                            for (size_t i : group.second) {
+                            for (size_t i: group.second) {
                                 if (this_column_data[i] > max) {
                                     max = this_column_data[i];
                                 }
@@ -400,19 +387,19 @@ void GroupByHandler::group_by(string column, string operation) {
                             row_data.push_back((int) group.second.size());
                         } else if (operation == "sum") {
                             float sum = 0;
-                            for (size_t i : group.second) {
+                            for (size_t i: group.second) {
                                 sum += this_column_data[i];
                             }
                             row_data.push_back(sum);
                         } else if (operation == "mean") {
                             float sum = 0;
-                            for (size_t i : group.second) {
+                            for (size_t i: group.second) {
                                 sum += this_column_data[i];
                             }
                             row_data.push_back(sum / group.second.size());
                         } else if (operation == "min") {
                             float min = this_column_data[group.second[0]];
-                            for (size_t i : group.second) {
+                            for (size_t i: group.second) {
                                 if (this_column_data[i] < min) {
                                     min = this_column_data[i];
                                 }
@@ -420,7 +407,7 @@ void GroupByHandler::group_by(string column, string operation) {
                             row_data.push_back(min);
                         } else if (operation == "max") {
                             float max = this_column_data[group.second[0]];
-                            for (size_t i : group.second) {
+                            for (size_t i: group.second) {
                                 if (this_column_data[i] > max) {
                                     max = this_column_data[i];
                                 }
@@ -429,7 +416,8 @@ void GroupByHandler::group_by(string column, string operation) {
                         } else {
                             throw std::invalid_argument("Invalid operation");
                         }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
+                    } else if (DF->get_column_type(this_column) ==
+                               type_to_index[std::type_index(typeid(std::string))]) {
                         if (operation == "count") {
                             row_data.push_back((int) group.second.size());
                         } else {
@@ -442,60 +430,29 @@ void GroupByHandler::group_by(string column, string operation) {
             }
             new_df->add_row(row_data);
         }
-    } else if(DF->get_column_type(column) == type_to_index[std::type_index(typeid(std::string))]) {
-        vector<string> column_data = DF->get_column<string>(column);
-        std::unordered_map<string, vector<int>> groups;
-        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
-            groups[column_data[i]].push_back(i);
-        }
-        vector<string> new_column_order = DF->get_column_order();
-        vector<const std::type_info *> new_column_types;
-        for (const auto& some_column : new_column_order) {
-            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
-        }
-        new_df = new DataFrame(new_column_order, new_column_types);
-        for (const auto& group : groups) {
-            vector<DataVariant> row_data;
-            for (size_t i = 0; i < DF->get_column_order().size(); ++i) {
-                string this_column = DF->get_column_order()[i];
-                if (this_column == column) {
-                    row_data.push_back(group.first);
-                } else {
-                    if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(int))]) {
-                        vector<int> this_column_data = DF->get_column<int>(this_column);
-                        if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
-                        } else {
-                            throw std::invalid_argument("Invalid operation");
-                        }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(float))]) {
-                        vector<float> this_column_data = DF->get_column<float>(this_column);
-                        if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
-                        } else {
-                            throw std::invalid_argument("Invalid operation");
-                        }
-                    } else if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(std::string))]) {
-                        vector<string> this_column_data = DF->get_column<string>(this_column);
-                        if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
-                        } else {
-                            throw std::invalid_argument("Invalid operation");
-                        }
-                    } else {
-                        throw std::invalid_argument("Invalid column type");
-                    }
-                }
-            }
-            new_df->add_row(row_data);
-        }
-    } else {
+    }
+    else {
         throw std::invalid_argument("Invalid column type");
     }
+    return new_df;
+}
 
-    free(DF);
-    queue_out->push(new_df);
-    queue_out->push(nullptr);
+
+void GroupByHandler::group_by(string column, string operation) {
+
+    while(true) {
+        DataFrame* DF = queue_in->pop();
+        if (DF == nullptr) {
+            queue_out->push(nullptr);
+            break;
+        }
+
+        DataFrame *new_df = groupBy(DF, column, operation);
+
+        new_df->set_creation_time(DF->get_creation_time());
+        delete DF;
+        queue_out->push(new_df);
+    }
 }
 
 //make a function to compare two strings that represent dates in the format YYYY/MM/DD HH:MM
@@ -523,115 +480,110 @@ bool compareDates(const std::string& date1, const std::string& date2) {
     return minute1 < minute2;
 }
 
-void SortHandler::sort(string column, string order) {
-    DataFrame* DF = nullptr;
-    //concatenate everything in queue_in
-    while(true) {
-        DataFrame* df = queue_in->pop();
-        if (df == nullptr) {
-            break;
-        }
-        // concatenate df into DF
-        if (DF == nullptr) {
-            DF = df;
+void SortHandler::sort(string& column, string& order) {
+    while (true) {
+        DataFrame *new_df;
+        DataFrame *DF = queue_in->pop();
+        // sort all rows by column
+        if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
+            vector<int> column_data = DF->get_column<int>(column);
+            std::vector<size_t> indices(column_data.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            if (order == "asc") {
+                std::sort(indices.begin(), indices.end(),
+                          [&column_data](size_t i1, size_t i2) { return column_data[i1] < column_data[i2]; });
+            } else if (order == "desc") {
+                std::sort(indices.begin(), indices.end(),
+                          [&column_data](size_t i1, size_t i2) { return column_data[i1] > column_data[i2]; });
+            } else {
+                throw std::invalid_argument("Invalid order");
+            }
+            vector<string> new_column_order = DF->get_column_order();
+            vector<const std::type_info *> new_column_types;
+            for (const auto &some_column: new_column_order) {
+                new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+            }
+            new_df = new DataFrame(new_column_order, new_column_types);
+            for (size_t i: indices) {
+                new_df->add_row(DF->get_row(i));
+            }
+        } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
+            vector<float> column_data = DF->get_column<float>(column);
+            std::vector<size_t> indices(column_data.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            if (order == "asc") {
+                std::sort(indices.begin(), indices.end(),
+                          [&column_data](size_t i1, size_t i2) { return column_data[i1] < column_data[i2]; });
+            } else if (order == "desc") {
+                std::sort(indices.begin(), indices.end(),
+                          [&column_data](size_t i1, size_t i2) { return column_data[i1] > column_data[i2]; });
+            } else {
+                throw std::invalid_argument("Invalid order");
+            }
+            vector<string> new_column_order = DF->get_column_order();
+            vector<const std::type_info *> new_column_types;
+            for (const auto &some_column: new_column_order) {
+                new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+            }
+            new_df = new DataFrame(new_column_order, new_column_types);
+            for (size_t i: indices) {
+                new_df->add_row(DF->get_row(i));
+            }
+        } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(std::string))]) {
+            vector<string> column_data = DF->get_column<string>(column);
+            std::vector<size_t> indices(column_data.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            if (order == "asc") {
+                std::sort(indices.begin(), indices.end(),
+                          [&column_data](size_t i1, size_t i2) { return column_data[i1] < column_data[i2]; });
+            } else if (order == "desc") {
+                std::sort(indices.begin(), indices.end(),
+                          [&column_data](size_t i1, size_t i2) { return column_data[i1] > column_data[i2]; });
+            } else {
+                throw std::invalid_argument("Invalid order");
+            }
+            vector<string> new_column_order = DF->get_column_order();
+            vector<const std::type_info *> new_column_types;
+            for (const auto &some_column: new_column_order) {
+                new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+            }
+            new_df = new DataFrame(new_column_order, new_column_types);
+            for (size_t i: indices) {
+                new_df->add_row(DF->get_row(i));
+            }
+        } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(std::tm))]) {
+            vector<std::tm> column_data = DF->get_column<std::tm>(column);
+            std::vector<size_t> indices(column_data.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            if (order == "asc") {
+                std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {
+                    return std::mktime(&column_data[i1]) < std::mktime(&column_data[i2]);
+                });
+            } else if (order == "desc") {
+                std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {
+                    return std::mktime(&column_data[i1]) > std::mktime(&column_data[i2]);
+                });
+            } else {
+                throw std::invalid_argument("Invalid order");
+            }
+            vector<string> new_column_order = DF->get_column_order();
+            vector<const std::type_info *> new_column_types;
+            for (const auto &some_column: new_column_order) {
+                new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+            }
+            new_df = new DataFrame(new_column_order, new_column_types);
+            for (size_t i: indices) {
+                new_df->add_row(DF->get_row(i));
+            }
         } else {
-            DF->concatenate(*df);
-            free(df);
+            throw std::invalid_argument("Invalid column type");
         }
+        new_df->set_creation_time(DF->get_creation_time());
+        delete DF;
+        queue_out->push(new_df);
+
     }
-
-    DataFrame* new_df;
-
-    // sort all rows by column
-    if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
-        vector<int> column_data = DF->get_column<int>(column);
-        std::vector<size_t> indices(column_data.size());
-        std::iota(indices.begin(), indices.end(), 0);
-        if (order == "asc") {
-            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] < column_data[i2];});
-        } else if (order == "desc") {
-            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] > column_data[i2];});
-        } else {
-            throw std::invalid_argument("Invalid order");
-        }
-        vector<string> new_column_order = DF->get_column_order();
-        vector<const std::type_info *> new_column_types;
-        for (const auto& some_column : new_column_order) {
-            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
-        }
-        new_df = new DataFrame(new_column_order, new_column_types);
-        for (size_t i : indices) {
-            new_df->add_row(DF->get_row(i));
-        }
-    } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
-        vector<float> column_data = DF->get_column<float>(column);
-        std::vector<size_t> indices(column_data.size());
-        std::iota(indices.begin(), indices.end(), 0);
-        if (order == "asc") {
-            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] < column_data[i2];});
-        } else if (order == "desc") {
-            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] > column_data[i2];});
-        } else {
-            throw std::invalid_argument("Invalid order");
-        }
-        vector<string> new_column_order = DF->get_column_order();
-        vector<const std::type_info *> new_column_types;
-        for (const auto& some_column : new_column_order) {
-            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
-        }
-        new_df = new DataFrame(new_column_order, new_column_types);
-        for (size_t i : indices) {
-            new_df->add_row(DF->get_row(i));
-        }
-    } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(std::string))]) {
-        vector<string> column_data = DF->get_column<string>(column);
-        std::vector<size_t> indices(column_data.size());
-        std::iota(indices.begin(), indices.end(), 0);
-        if (order == "asc") {
-            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] < column_data[i2];});
-        } else if (order == "desc") {
-            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return column_data[i1] > column_data[i2];});
-        } else {
-            throw std::invalid_argument("Invalid order");
-        }
-        vector<string> new_column_order = DF->get_column_order();
-        vector<const std::type_info *> new_column_types;
-        for (const auto& some_column : new_column_order) {
-            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
-        }
-        new_df = new DataFrame(new_column_order, new_column_types);
-        for (size_t i : indices) {
-            new_df->add_row(DF->get_row(i));
-        }
-    } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(std::tm))]) {
-        vector<std::tm> column_data = DF->get_column<std::tm>(column);
-        std::vector<size_t> indices(column_data.size());
-        std::iota(indices.begin(), indices.end(), 0);
-        if (order == "asc") {
-            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return std::mktime(&column_data[i1]) < std::mktime(&column_data[i2]);});
-        } else if (order == "desc") {
-            std::sort(indices.begin(), indices.end(), [&column_data](size_t i1, size_t i2) {return std::mktime(&column_data[i1]) > std::mktime(&column_data[i2]);});
-        } else {
-            throw std::invalid_argument("Invalid order");
-        }
-        vector<string> new_column_order = DF->get_column_order();
-        vector<const std::type_info *> new_column_types;
-        for (const auto& some_column : new_column_order) {
-            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
-        }
-        new_df = new DataFrame(new_column_order, new_column_types);
-        for (size_t i : indices) {
-            new_df->add_row(DF->get_row(i));
-        }
-    } else {
-        throw std::invalid_argument("Invalid column type");
-    }
-
-    free(DF);
-    queue_out->push(new_df);
-    queue_out->push(nullptr);
 }
-
 
 void printHandler::print() {
     while(true) {
@@ -725,25 +677,170 @@ void printHandler::print() {
     }
 };
 
-void FinalHandler::aggregate() {
-    DataFrame* DF = nullptr;
-    //concatenate everything in queue_in
+DataFrame* FinalHandler::aggregate_sort(DataFrame* df, DataFrame* fileDF, string& column, string& order){
+    std::unordered_map<std::string, size_t> column_types = df->get_column_types();
+    DataFrame* result_df = new DataFrame(df->get_column_order(), column_types);
+
+    int i = 0, j = 0;
+    while (i < df->get_number_of_rows() && j < fileDF->get_number_of_rows()) {
+        bool bigger = false;
+        if (auto intPtr = std::get_if<int>(&df->get_row(i)[df->get_column_index(column)])) {
+            if (order == "asc") {
+                bigger = *intPtr < std::get<int>(fileDF->get_row(j)[fileDF->get_column_index(column)]);
+            } else if (order == "desc") {
+                bigger = *intPtr > std::get<int>(fileDF->get_row(j)[fileDF->get_column_index(column)]);
+            }
+        }
+        else if (auto floatPtr = std::get_if<float>(&df->get_row(i)[df->get_column_index(column)])) {
+            if (order == "asc") {
+                bigger = *floatPtr < std::get<float>(fileDF->get_row(j)[fileDF->get_column_index(column)]);
+            } else if (order == "desc") {
+                bigger = *floatPtr > std::get<float>(fileDF->get_row(j)[fileDF->get_column_index(column)]);
+            }
+        }
+        else if (auto strPtr = std::get_if<string>(&df->get_row(i)[df->get_column_index(column)])) {
+            if (order == "asc") {
+                bigger = *strPtr < std::get<string>(fileDF->get_row(j)[fileDF->get_column_index(column)]);
+            } else if (order == "desc") {
+                bigger = *strPtr > std::get<string>(fileDF->get_row(j)[fileDF->get_column_index(column)]);
+            }
+        }
+        else if (auto tmPtr = std::get_if<std::tm>(&df->get_row(i)[df->get_column_index(column)])) {
+            if (order == "asc") {
+                bigger = compareTm(*tmPtr, std::get<std::tm>(fileDF->get_row(j)[fileDF->get_column_index(column)]));
+            } else if (order == "desc") {
+                bigger = !compareTm(*tmPtr, std::get<std::tm>(fileDF->get_row(j)[fileDF->get_column_index(column)]));
+            }
+        }
+        if (bigger){
+            result_df->add_row(df->get_row(i++));
+        }
+        else
+            result_df->add_row(fileDF->get_row(j++));
+    }
+
+    while (i < df->get_number_of_rows()) {
+        result_df->add_row(df->get_row(i++));
+    }
+
+    while (j < fileDF->get_number_of_rows()) {
+        result_df->add_row(fileDF->get_row(j++));
+    }
+
+    return result_df;
+}
+
+void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, bool groupFlag,
+                             string columnSort, string columnGroup, string groupOperation,
+                             string sortOrder) {
+    /*
+     * filepath: path to the file where the final DataFrame will be saved
+     * table: name of the table
+     * sortFlag: true if the DataFrame should be sorted
+     * groupFlag: true if the DataFrame should be grouped
+     * columnSort: column to sort by
+     * columnGroup: column to group by
+     * groupOperation: operation to perform on the grouped DataFrame
+     * sortOrder: order to sort the DataFrame
+     */
     while(true) {
         DataFrame* df = queue_in->pop();
         if (df == nullptr) {
             break;
         }
-        // concatenate df into DF
-        if (DF == nullptr) {
-            DF = df;
-        } else {
-            DF->concatenate(*df);
-            free(df);
+        std::unordered_map<string, std::size_t> column_types = df->get_column_types();
+        vector<string> column_order = df->get_column_order();
+        auto fileDF = new DataFrame();
+        for (const auto & i : column_order) {
+            if (column_types[i] == type_to_index[std::type_index(typeid(int))]) {
+                fileDF->add_column(i, vector<int>{});
+            } else if (column_types[i] == type_to_index[std::type_index(typeid(float))]) {
+                fileDF->add_column(i, vector<float>{});
+            } else if (column_types[i] == type_to_index[std::type_index(typeid(std::string))]) {
+                fileDF->add_column(i, vector<string>{});
+            } else if (column_types[i] == type_to_index[std::type_index(typeid(std::tm))]) {
+                fileDF->add_column(i, vector<std::tm>{});
+            }
         }
+        std::ifstream file(filePath);
+
+        if (file.good()) {
+            // Read data from SQLite file
+            sqlite3 *db;
+            sqlite3_stmt *stmt;
+
+            if (sqlite3_open(filePath.c_str(), &db) == SQLITE_OK) {
+                // Get the file descriptor and apply a shared lock
+                int fd = -1;
+                sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
+                if (fd == -1) {
+                    std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
+                    sqlite3_close(db);
+                    return;
+                }
+                if (flock(fd, LOCK_SH) != 0) {
+                    std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
+                    close(fd);
+                    sqlite3_close(db);
+                    return;
+                }
+
+                std::string sql = "SELECT * FROM " + table;
+                if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+
+                    while (sqlite3_step(stmt) == SQLITE_ROW) {
+                        vector<DataVariant> row_data;
+                        for(int i = 0; i < column_order.size(); ++i) {
+                            if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(int))]) {
+                                row_data.emplace_back(sqlite3_column_int(stmt, i));
+                            } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(float))]) {
+                                row_data.emplace_back(static_cast<float>(sqlite3_column_double(stmt, i)));
+                            } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(std::string))]) {
+                                row_data.emplace_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i))));
+                            } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(std::tm))]) {
+                                std::tm tm{};
+                                strptime(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i)), "%Y-%m-%d %H:%M:%S", &tm);
+                                row_data.emplace_back(tm);
+                            }
+                        }
+                        fileDF->add_row(row_data);
+                    }
+                }
+                sqlite3_finalize(stmt);
+            }
+            sqlite3_close(db);
+        }
+        if(!sortFlag && !groupFlag){
+            fileDF->concatenate(*df);
+        }
+        else if (sortFlag && groupFlag) {
+            DataFrame* new_df = groupBy(fileDF, columnGroup, groupOperation);
+            delete fileDF;
+            fileDF = new_df;
+            ConsumerProducerQueue<DataFrame*> q_in(2);
+            ConsumerProducerQueue<DataFrame*> q_out(2);
+            SortHandler sh(&q_in,&q_out);
+            q_in.push(fileDF);
+            q_in.push(nullptr);
+            sh.sort(columnGroup, sortOrder);
+            delete fileDF;
+            fileDF = q_out.pop();
+        }
+        else if(groupFlag){
+            DataFrame* new_df = groupBy(fileDF, columnGroup, groupOperation);
+            delete fileDF;
+            fileDF = new_df;
+        }
+        else{
+            DataFrame* new_df = aggregate_sort(df, fileDF, columnSort, sortOrder);
+            delete fileDF;
+            fileDF = new_df;
+        }
+
+
     }
 
-    queue_out->push(DF);
-    queue_out->push(nullptr);
+
 }
 
 // void JoinHandler::join_float(DataFrame* df1, string main_column_name, string join_column_name){
@@ -1084,6 +1181,8 @@ void JoinHandler::join(DataFrameVersionManager* dfvm, std::string main_column_na
                 }
             }
         }
+        result_df->set_creation_time(incoming_df->get_creation_time());
+        delete incoming_df;
         queue_out->push(result_df);
         // Push result to output queue
         // free the result df

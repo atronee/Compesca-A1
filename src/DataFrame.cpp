@@ -14,7 +14,8 @@
 
 
 
-DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<const std::type_info*>& column_types) : n_rows(0) {
+DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<const std::type_info*>& column_types) :
+    n_rows(0), creation_time(std::time(nullptr)) {
     /*
      * Constructor to create a DataFrame with the specified column names and types.
      */
@@ -29,9 +30,39 @@ DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<c
         this->column_order.push_back(column_names[i]);
         this->data[column_names[i]] = std::vector<DataVariant>();
     }
+
+}
+
+DataFrame::DataFrame(const std::vector<std::string>& column_names, std::unordered_map<std::string, std::size_t>& column_types)
+    : n_rows(0), creation_time(std::time(nullptr)), column_types(column_types){
+    /*
+     * Constructor to create a DataFrame with the specified column names and types.
+     */
+    if (column_names.size() != column_types.size())
+        throw std::invalid_argument("Number of column names does not match number of column types");
+
+    for (const auto & column_name : column_names) {
+        if (this->column_types.find(column_name) != this->column_types.end())
+            throw std::invalid_argument("Column name already exists");
+
+        this->column_order.push_back(column_name);
+        this->data[column_name] = std::vector<DataVariant>();
+    }
 }
 
 
+int DataFrame::get_column_index(const std::string& column_name) {
+    /*
+     * returns the index of the specified column. The column name should exist.
+     */
+    for (int i = 0; i < column_order.size(); i++) {
+        if (column_order[i] == column_name) {
+            return i;
+        }
+    }
+    throw std::invalid_argument("get_column_index: Column name does not exist");
+
+}
 
 size_t DataFrame::get_column_type(const std::string& column_name) {
     /*

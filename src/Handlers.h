@@ -48,7 +48,7 @@ public:
     SortHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
     : Handler(queue_in, queue_out) {};
 
-    void sort(string column, string order);
+    void sort(string& column, string& order);
 };
 
 class printHandler : public Handler {
@@ -77,9 +77,13 @@ public:
 };
 
 class FinalHandler : public Handler {
+private:
+    DataFrame* aggregate_sort(DataFrame* df, DataFrame* fileDF, string& column, string& order);
 public:
     FinalHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
     : Handler(queue_in, queue_out) {};
 
-    void aggregate();
+    void aggregate(string& filePath, string& table, bool sortFlag = false, bool groupFlag = false,
+                   string columnSort = "", string columnGroup = "", string groupOperation = "count",
+                   string sortOrder = "asc");
 };

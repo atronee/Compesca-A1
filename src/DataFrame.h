@@ -41,11 +41,15 @@ public:
 
     DataFrame(const std::vector<std::string>& column_names, std::vector< const std::type_info*>& column_types);
 
+    DataFrame(const std::vector<std::string>& column_names, std::unordered_map<std::string, std::size_t>& column_types);
+
     size_t get_column_type(const std::string& column_name);
 
     const std::unordered_map<std::string, size_t>& get_column_types() const {
         return column_types;
     }
+
+    int get_column_index(const std::string& column_name);
 
     std::vector<DataVariant> get_row(int index) const;
 
