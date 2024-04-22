@@ -30,5 +30,3 @@ Certifique-se de ter os seguintes requisitos instalados em sua máquina:
 2. No diretório do projeto, compile e execute o código-fonte de sua escolha:
     - Para criar arquivos de _mock_, execute ```make test_mock```;
     - Para visualizar o dashboard, execute ```make Dashboard```.
-
-Importante notar que neste repositório também estão disponíveis _drivers_ que testam as funções implementadas por nós. 

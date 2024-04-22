@@ -241,7 +241,7 @@ void mockCSV(const int numRecords = 1000)
         return;
     }
 
-    stockFile << "ID PRODUTO,QUANTIDADE\n";
+    stockFile << "ID PRODUTO,QUANTIDADE_STOCK\n";
 
     for (int record = 1; record <= 7; ++record) {
         std::string stock = stockData(record);
@@ -562,10 +562,15 @@ void mockSqliteTable(const int lines)
     sqlite3_close(db);
 }
 
+void request_simulado()
+{
+
+}
+
 int main()
 {
     mockCSV();
-    mockLogFiles(10, 5000);
+    mockLogFiles(10, 100);
     mockSqliteTable(80);
 
     return 0;
