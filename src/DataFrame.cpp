@@ -50,6 +50,26 @@ DataFrame::DataFrame(const std::vector<std::string>& column_names, std::unordere
     }
 }
 
+DataFrame::DataFrame(const std::vector<std::string> &column_names, std::vector<size_t> &column_types) :
+        n_rows(0), creation_time(std::time(nullptr)) {
+    /*
+     * Constructor to create a DataFrame with the specified column names and types.
+     */
+    if (column_names.size() != column_types.size())
+        throw std::invalid_argument("Number of column names does not match number of column types");
+
+    for (size_t i = 0; i < column_names.size(); ++i) {
+        if (this->column_types.find(column_names[i]) != this->column_types.end())
+            throw std::invalid_argument("Column name already exists");
+
+        this->column_types[column_names[i]] =  column_types[i];
+        this->column_order.push_back(column_names[i]);
+        this->data[column_names[i]] = std::vector<DataVariant>();
+    }
+
+}
+
+
 
 int DataFrame::get_column_index(const std::string& column_name) {
     /*

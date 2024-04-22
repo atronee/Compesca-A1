@@ -234,9 +234,10 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
             groups[column_data[i]].push_back(i);
         }
         vector<string> new_column_order = DF->get_column_order();
-        vector<const std::type_info *> new_column_types;
+        vector<std::size_t> new_column_types;
+        new_column_types.reserve(new_column_order.size());
         for (const auto& some_column : new_column_order) {
-            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+            new_column_types.push_back((DF->get_column_type(some_column)));
         }
         new_df = new DataFrame(new_column_order, new_column_types);
         for (const auto& group : groups) {
@@ -335,9 +336,9 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
             groups[column_data[i]].push_back(i);
         }
         vector<string> new_column_order = DF->get_column_order();
-        vector<const std::type_info *> new_column_types;
+        vector<size_t> new_column_types;
         for (const auto &some_column: new_column_order) {
-            new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
+            new_column_types.push_back(DF->get_column_type(some_column));
         }
         new_df = new DataFrame(new_column_order, new_column_types);
         for (const auto &group: groups) {
@@ -345,18 +346,18 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
             for (size_t i = 0; i < DF->get_column_order().size(); ++i) {
                 string this_column = DF->get_column_order()[i];
                 if (this_column == column) {
-                    row_data.push_back(group.first);
+                    row_data.emplace_back(group.first);
                 } else {
                     if (DF->get_column_type(this_column) == type_to_index[std::type_index(typeid(int))]) {
                         vector<int> this_column_data = DF->get_column<int>(this_column);
                         if (operation == "count") {
-                            row_data.push_back((int) group.second.size());
+                            row_data.emplace_back((int) group.second.size());
                         } else if (operation == "sum") {
                             int sum = 0;
                             for (size_t i: group.second) {
                                 sum += this_column_data[i];
                             }
-                            row_data.push_back(sum);
+                            row_data.emplace_back(sum);
                         } else if (operation == "mean") {
                             float sum = 0;
                             for (size_t i: group.second) {
