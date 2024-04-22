@@ -140,7 +140,7 @@ std::string orderData()
 }
 
 
-void mockCSV(const int numRecords = 1000)
+void mockCSV(const int numRecords)
 {
     // Seed the random number generator
     srand(static_cast<unsigned int>(time(nullptr)));
@@ -399,7 +399,7 @@ void writeColumnNames(std::ofstream& outputFile, LogType fileType) {
     }
 }
 
-void mockLogFiles(int filesPerType, int linesPerFile) {
+void mockLogFiles(int filesPerType, int linesPerFile, int startFileIndex) {
     srand(static_cast<unsigned int>(time(nullptr)));
 
     // Output directory path
@@ -432,7 +432,7 @@ void mockLogFiles(int filesPerType, int linesPerFile) {
                 return;
         }
 
-        for (int fileIndex = 1; fileIndex <= filesPerType; ++fileIndex) {
+        for (int fileIndex = startFileIndex; fileIndex <= filesPerType; ++fileIndex) {
             std::string filename = outputDir + typeLabel + "_logs_" + std::to_string(fileIndex) + ".txt";
 
             // Open the output file with POSIX open
@@ -567,11 +567,11 @@ void request_simulado()
 
 }
 
-int main()
-{
-    mockCSV();
-    mockLogFiles(10, 100);
-    mockSqliteTable(80);
-
-    return 0;
-}
+//int main()
+//{
+//    mockCSV();
+//    mockLogFiles(10, 100);
+//    mockSqliteTable(80);
+//
+//    return 0;
+//}
