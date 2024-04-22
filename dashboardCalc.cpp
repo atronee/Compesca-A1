@@ -12,12 +12,9 @@
 #include <iostream>
 #include "src/triggers.h"
 
-std::vector<ConsumerProducerQueue<std::string>> queuesFiles;
-
-void pipeline(){
+int main() {
     // answer the questions save the results of a "log"/ dashboard file
     // 1º question: Número de produtos visualizados por minuto
-    // 2º question: Número de produtos comprados por minuto.
 
     // let's use the logs named userBehavior_1..10.csv
 
@@ -25,20 +22,16 @@ void pipeline(){
                                                              &typeid(int), &typeid(std::string), &typeid(std::string),
                                                              &typeid(std::string), &typeid(std::string)};
 
-
     // create a reader object
     FileReader csvReader;
     // creates the queues
-    ConsumerProducerQueue<DataFrame *> queue_files(15);
-    queuesFiles.emplace_back(queue_files);
+    ConsumerProducerQueue<std::string> queue_files(15);
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
     ConsumerProducerQueue<DataFrame *> queue_filter(15);
 
-    std::vector<std::thread> threads;
-
     EventBasedTrigger eventTrigger;
-    threads.emplace_back([&eventTrigger, &queue_files] {
+    std::thread eventTriggerThread([&eventTrigger, &queue_files] {
         eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files);
     });
 
@@ -50,11 +43,11 @@ void pipeline(){
     auto filter = FilterHandler(&queue_select, &queue_filter);
     auto printer = printHandler(&queue_filter);
 
-
+    std::vector<std::thread> threads;
 
     int end = 0;
-    threads.emplace_back([&csvReader, &typesUserBehavior, &end, &queue_reader, &queue_files] {
-        csvReader.read(typesUserBehavior, ',', 0, end, std::ref(queue_reader), std::ref(queue_files), true, 10);
+    threads.emplace_back([&csvReader, &typesUserBehavior, &end, &queue_reader,  &queue_files] {
+        csvReader.read(typesUserBehavior, ',', 0, end, std::ref(queue_reader), std::ref(queue_files), true, 10, "user_behavior");
     });
 
     std::cout<<"Selecting\n"<<std::endl;
@@ -78,22 +71,37 @@ void pipeline(){
         printer.print();
     });
 
-
-
     for (auto &t: threads) {
         t.join();
     }
 
-}
-*/
-int main()
-{
-    pipeline();
-    EventBasedTrigger eventTrigger;
-    std::thread eventTriggerThread([&eventTrigger] {
-        eventTrigger.triggerOnChangeInFile("./data", pipeline, queuesFiles);
+
+    // 6º question: Número de produtos vendidos sem disponibilidade em estoque
+
+    FileReader csvReader6;
+
+
+    ConsumerProducerQueue<std::string> queue_files6(15);
+    ConsumerProducerQueue<DataFrame *> queue_reader6(15);
+    ConsumerProducerQueue<DataFrame *> queue_select6(15);
+    ConsumerProducerQueue<DataFrame *> queue_filter6(15);
+
+
+    EventBasedTrigger eventTrigger6;
+    std::thread eventTriggerThread6([&eventTrigger6, &queue_files6] {
+        eventTrigger6.triggerOnApperanceOfNewLogFile("./data", queue_files6);
     });
 
+    std::vector<const std::type_info *> order_types = {&typeid(int), &typeid(int),
+                                                       &typeid(int), &typeid(int), 
+                                                       &typeid(std::string), &typeid(std::string), 
+                                                       &typeid(std::string), &typeid(std::string)};
+    
+    int end6 = 0;
+    threads.emplace_back([&csvReader6, &order_types, &end6, &queue_reader6,  &queue_files6] {
+        csvReader6.read(order_types, ',', 0, end6, std::ref(queue_reader6), std::ref(queue_files6), true, 10, "order");
+    });
+    
     return 0;
 }
 
