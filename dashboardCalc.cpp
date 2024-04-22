@@ -94,7 +94,7 @@ int main() {
     });
 
     std::vector<const std::type_info *> order_types = {&typeid(int), &typeid(int),
-                                                       &typeid(int), &typeid(int), 
+                                                       &typeid(int), 
                                                        &typeid(std::string), &typeid(std::string), 
                                                        &typeid(std::string), &typeid(std::string)};
     
@@ -105,7 +105,6 @@ int main() {
 
     auto selector6 = SelectHandler(&queue_reader6, &queue_select6);
     auto filter6 = FilterHandler(&queue_select6, &queue_filter6);
-
 
     for (int i = 0; i < 2; i++) {
         threads.emplace_back([&selector6] {
@@ -125,6 +124,8 @@ int main() {
     threads.emplace_back([&printer6] {
         printer6.print();
     });
+
+    std::cout<<"Printed"<<std::endl;
 
     for (auto &t: threads) {
         t.join();
