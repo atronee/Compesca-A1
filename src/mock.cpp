@@ -68,7 +68,7 @@ std::string productData()
     const std::vector<std::string> images = {"bike.jpg", "car.jpg", "motorcycle.jpg", "scooter.jpg", "skateboard.jpg",
                                              "surfboard.jpg", "snowboard.jpg"};
     const std::vector<std::string> descriptions = {"A bike is a vehicle with two wheels that you ride by sitting on its seat and pushing two pedals with your feet.",
-                                                   "A car is a road vehicle with an engine, four wheels, and seats for a small number of people.",
+                                                   "A car is a road vehicle with an engine four wheels, and seats for a small number of people.",
                                                    "A motorcycle is a two-wheeled vehicle with an engine that you sit on while driving.",
                                                    "A scooter is a small motorbike with a low seat and small wheels.",
                                                    "A skateboard is a short narrow board with two small wheels fixed to the bottom of either end.",
