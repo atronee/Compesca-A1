@@ -44,7 +44,6 @@ void mock_files()
     {
         mockCSV();
         mockLogFiles(10, 100, i);
-
     }
 }
 
@@ -66,33 +65,57 @@ sqlite3 *openDatabase(const string &dbPath)
 #include <functional>
 
 // ainda precisamos fazer com que o execute query funcione de forma generica ou encapsular um execute query diferente dentro de cada void pipeline_i()
-void executeQuery(sqlite3 *db, const string &sql, std::function<void(int, double)> callback)
+static int callback1(void *data, int argc, char **argv, char **azColName)
 {
+    int *count = static_cast<int *>(data);
+    double *minutes = static_cast<double *>(data);
+
+    if (argc == 2)
+    {
+        *count = argv[0] ? atoi(argv[0]) : 0;
+        *minutes = argv[1] ? atof(argv[1]) : 0.0;
+        std::cout << "Total number of records: " << *count << std::endl;
+        std::cout << "Difference in dates (minutes): " << *minutes << std::endl;
+    }
+    return 0;
+}
+
+// Function to execute a SQL query and store results
+bool executeQuery1(const std::string &sql, int &count, double &minutes, std::string *dbPath)
+{
+    sqlite3 *db = openDatabase(*dbPath);
     char *errorMessage = nullptr;
-
-    int rc = sqlite3_exec(
-        db, sql.c_str(), [](void *cb, int argc, char **argv, char **azColName) -> int
-        {
-        if (argc == 2) {
-            int count = argv[0] ? atoi(argv[0]) : 0;
-            double seconds = argv[1] ? atof(argv[1]) : 0.0;
-            double minutes = seconds / 60.0;
-            auto func = *static_cast<std::function<void(int, double)>*>(cb);
-            func(count, minutes);
-        }
-        return 0; },
-        &callback, &errorMessage);
-
+    int rc = sqlite3_exec(db, sql.c_str(), callback1, &count, &errorMessage);
     if (rc != SQLITE_OK)
     {
         std::cerr << "SQL error: " << errorMessage << std::endl;
         sqlite3_free(errorMessage);
+        sqlite3_close(db);
+        return false;
+    }
+    sqlite3_close(db);
+    return true;
+}
+
+void worker1(string *data, string dbPath, int &count, double &minutes, string sql)
+{
+    while (true)
+    {
+        executeQuery1(sql, count, minutes, &dbPath);
+        data[0] = std::to_string(count);
+        data[1] = std::to_string(minutes);
+        data[2] = std::to_string(count / minutes);
+        //closedb
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        
     }
 }
 
+
 std::vector<std::thread> pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files)
 {
-    if (queue_files == nullptr) return {};
+    if (queue_files == nullptr)
+        return {};
     std::vector<std::thread> threads;
     // Question 1 - Número de produtos visualizados por minutos
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
@@ -111,14 +134,14 @@ std::vector<std::thread> pipeline1(string *data, ConsumerProducerQueue<std::stri
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end]
-                                { csvReader1.read(',', 0, end, queue_reader, *queue_files, true, 40, "user_behavior_logs"); });
+                               { csvReader1.read(',', 0, end, queue_reader, *queue_files, true, 40, "user_behavior_logs"); });
     }
 
     SelectHandler selectHandler(&queue_reader, &queue_select);
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &selectHandler]
-                                { selectHandler.select({"Button Product Id", "Date"}); });
+                               { selectHandler.select({"Button Product Id", "Date"}); });
     }
 
     std::cout << "Select Handler created" << std::endl;
@@ -127,7 +150,7 @@ std::vector<std::thread> pipeline1(string *data, ConsumerProducerQueue<std::stri
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &filterHandler]
-                                { filterHandler.filter("Button Product Id", "!=", "0"); });
+                               { filterHandler.filter("Button Product Id", "!=", "0"); });
     }
 
     std::cout << "Filter Handler created" << std::endl;
@@ -139,7 +162,7 @@ std::vector<std::thread> pipeline1(string *data, ConsumerProducerQueue<std::stri
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler, &dbPath, &tableName]
-                                { finalHandler.aggregate(dbPath, tableName); });
+                               { finalHandler.aggregate(dbPath, tableName); });
     }
 
     return threads;
@@ -374,84 +397,89 @@ void pipeline7(string *data, ConsumerProducerQueue<std::string> *queue_files, st
     // ainda preciso criar o sql para essa pipeline
 }
 
-void clearScreen() {
-    // Clear the console depending on the operating system
-    #if defined(_WIN32) || defined(_WIN64)
-        system("cls");
-    #else
-        system("clear");
-    #endif
+void clearScreen()
+{
+// Clear the console depending on the operating system
+#if defined(_WIN32) || defined(_WIN64)
+    system("cls");
+#else
+    system("clear");
+#endif
 }
 
 void dashboard(string *data1, string *data2, string *data4, string *data5, string *data7)
 {
-std::string dashboard = 
-  "  _____                _____   _    _   ____     ____               _____    _____    \n"
-  " |  __ \\      /\\      / ____| | |  | | |  _ \\   / __ \\      /\\     |  __ \\  |  __ \\   \n"
-  " | |  | |    /  \\    | (___   | |__| | | |_) | | |  | |    /  \\    | |__) | | |  | |  \n"
-  " | |  | |   / /\\ \\    \\___ \\  |  __  | |  _ <  | |  | |   / /\\ \\   |  _  /  | |  | |  \n"
-  " | |__| |  / ____ \\   ____) | | |  | | | |_) | | |__| |  / ____ \\  | | \\ \\  | |__| |  \n"
-  " |_____/  /_/    \\_\\ |_____/  |_|  |_| |____/   \\____/  /_/    \\_\\ |_|  \\_\\ |_____/   \n"
-  "                                                                                      \n"
-  "                                                                                      \n";
 
-    
-  clearScreen();
-    std::cout << dashboard << std::endl;
-
-    // Print the results of the pipelines
-
-    // Print the results of pipeline 1
-    if (data1 != nullptr)
+    while (true)
     {
-        std::cout << "Question 1 - Número de produtos visualizados por minutos" << std::endl;
-        std::cout << "Total number of records: " << data1[0] << std::endl;
-        std::cout << "Difference in dates (minutes): " << data1[1] << std::endl;
-        std::cout << "Ratio of records to time difference: " << data1[2] << std::endl;
+        std::string dashboard =
+            "  _____                _____   _    _   ____     ____               _____    _____    \n"
+            " |  __ \\      /\\      / ____| | |  | | |  _ \\   / __ \\      /\\     |  __ \\  |  __ \\   \n"
+            " | |  | |    /  \\    | (___   | |__| | | |_) | | |  | |    /  \\    | |__) | | |  | |  \n"
+            " | |  | |   / /\\ \\    \\___ \\  |  __  | |  _ <  | |  | |   / /\\ \\   |  _  /  | |  | |  \n"
+            " | |__| |  / ____ \\   ____) | | |  | | | |_) | | |__| |  / ____ \\  | | \\ \\  | |__| |  \n"
+            " |_____/  /_/    \\_\\ |_____/  |_|  |_| |____/   \\____/  /_/    \\_\\ |_|  \\_\\ |_____/   \n"
+            "                                                                                      \n"
+            "                                                                                      \n";
+
+        clearScreen();
+        std::cout << dashboard << std::endl;
+
+        // Print the results of the pipelines
+
+        // Print the results of pipeline 1
+        if (data1 != nullptr)
+        {
+            std::cout << "Question 1 - Número de produtos visualizados por minutos" << std::endl;
+            std::cout << "Total number of records: " << data1[0] << std::endl;
+            std::cout << "Difference in dates (minutes): " << data1[1] << std::endl;
+            std::cout << "Ratio of records to time difference: " << data1[2] << std::endl;
+        }
+
+        // Print the results of pipeline 2
+        if (data2 != nullptr)
+        {
+            std::cout << "Question 2 - Número de produtos comprados por minuto" << std::endl;
+            std::cout << "Total number of records: " << data2[0] << std::endl;
+            std::cout << "Difference in dates (minutes): " << data2[1] << std::endl;
+            std::cout << "Ratio of records to time difference: " << data2[2] << std::endl;
+        }
+
+        // Print the results of pipeline 4
+        if (data4 != nullptr)
+        {
+            std::cout << "Question 4 - Ranking dos produtos mais comprados" << std::endl;
+            std::cout << "Total number of records: " << data4[0] << std::endl;
+            std::cout << "Difference in dates (minutes): " << data4[1] << std::endl;
+            std::cout << "Ratio of records to time difference: " << data4[2] << std::endl;
+        }
+
+        // Print the results of pipeline 5
+        if (data5 != nullptr)
+        {
+            std::cout << "Question 5 - Ranking dos produtos mais visualizados" << std::endl;
+            std::cout << "Total number of records: " << data5[0] << std::endl;
+            std::cout << "Difference in dates (minutes): " << data5[1] << std::endl;
+            std::cout << "Ratio of records to time difference: " << data5[2] << std::endl;
+        }
+
+        // Print the results of pipeline 7
+
+        if (data7 != nullptr)
+        {
+            std::cout << "Question 7 - Número de usuários únicos visualizando cada produto por minuto" << std::endl;
+            std::cout << "Total number of records: " << data7[0] << std::endl;
+            std::cout << "Difference in dates (minutes): " << data7[1] << std::endl;
+            std::cout << "Ratio of records to time difference: " << data7[2] << std::endl;
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(10));
     }
-
-    // Print the results of pipeline 2
-    if (data2 != nullptr)
-    {
-        std::cout << "Question 2 - Número de produtos comprados por minuto" << std::endl;
-        std::cout << "Total number of records: " << data2[0] << std::endl;
-        std::cout << "Difference in dates (minutes): " << data2[1] << std::endl;
-        std::cout << "Ratio of records to time difference: " << data2[2] << std::endl;
-    }
-
-    // Print the results of pipeline 4
-    if (data4 != nullptr)
-    {
-        std::cout << "Question 4 - Ranking dos produtos mais comprados" << std::endl;
-        std::cout << "Total number of records: " << data4[0] << std::endl;
-        std::cout << "Difference in dates (minutes): " << data4[1] << std::endl;
-        std::cout << "Ratio of records to time difference: " << data4[2] << std::endl;
-    }
-
-    // Print the results of pipeline 5
-    if (data5 != nullptr)
-    {
-        std::cout << "Question 5 - Ranking dos produtos mais visualizados" << std::endl;
-        std::cout << "Total number of records: " << data5[0] << std::endl;
-        std::cout << "Difference in dates (minutes): " << data5[1] << std::endl;
-        std::cout << "Ratio of records to time difference: " << data5[2] << std::endl;
-    }
-
-    // Print the results of pipeline 7
-
-    if (data7 != nullptr)
-    {
-        std::cout << "Question 7 - Número de usuários únicos visualizando cada produto por minuto" << std::endl;
-        std::cout << "Total number of records: " << data7[0] << std::endl;
-        std::cout << "Difference in dates (minutes): " << data7[1] << std::endl;
-        std::cout << "Ratio of records to time difference: " << data7[2] << std::endl;
-    }
-
 }
 
 int main()
 {
-        
+
     string *data1 = new string[3];
     string *data2 = new string[3];
     string *data4 = new string[3];
@@ -478,37 +506,22 @@ int main()
     data7[1] = "60";
     data7[2] = "23.83";
 
-    dashboard(data1, data2, data4, data5, data7);
-    auto init_time = std::chrono::system_clock::now();
-    while (true)
-    {
-    if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - init_time).count() > 30)
-    {
-        dashboard(data1, data2, data4, data5, data7);
-        init_time = std::chrono::system_clock::now();
-    }
-    }
-    // ConsumerProducerQueue<std::string> queue_files1(15);
-    // ConsumerProducerQueue<std::string> queue_files2(15);
-    // ConsumerProducerQueue<std::string> queue_files4(15);
-    // ConsumerProducerQueue<std::string> queue_files5(15);
-    // ConsumerProducerQueue<std::string> queue_files7(15);
+    ConsumerProducerQueue<std::string> queue_files1(15);
+    ConsumerProducerQueue<std::string> queue_files2(15);
+    ConsumerProducerQueue<std::string> queue_files4(15);
+    ConsumerProducerQueue<std::string> queue_files5(15);
+    ConsumerProducerQueue<std::string> queue_files7(15);
 
-    // mock_files();
+    mock_files();
 
-    // // vector of threads
-    // std::vector<std::thread> threads;
-    // EventBasedTrigger eventTrigger1;
-    // for (int i = 0; i < 1; i++)
-    // {
-    //     threads.emplace_back([i, &eventTrigger1, &queue_files1]
-    //                          { eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1); });
-    // }
-    
-    // // std::this_thread::sleep_for(std::chrono::seconds(2));
-    // // for (int i = 0; i < 15; i++){
-    // //     queue_files1.push("STOP");
-    // // }
+    // vector of threads
+    std::vector<std::thread> threads;
+    EventBasedTrigger eventTrigger1;
+    for (int i = 0; i < 1; i++)
+    {
+        threads.emplace_back([i, &eventTrigger1, &queue_files1]
+                             { eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1); });
+    }
 
     // // EventBasedTrigger eventTrigger2;
     // // for (int i = 0; i < 1; i++)
@@ -535,7 +548,6 @@ int main()
     // //                          { eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7); });
     // // }
 
-    string *data1;
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
     ConsumerProducerQueue<DataFrame *> queue_filter(15);
@@ -583,74 +595,34 @@ int main()
                                { finalHandler.aggregate(dbPath1, tableName); });
     }
 
-    // // pipeline2
-    // // string *data2;
-    // // pipeline2(data2, &queue_files2, &threads); // this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
+    string dbPath = "./mydatabase.db";
+    int count = 12;
+    double minutes = 13;
+    threads.emplace_back([&data1, &dbPath, &count, &minutes]
+                         {
+                             std::string sql = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+                             worker1(data1, dbPath, count, minutes, sql);
+                         });
 
-    // // // pipeline4
-    // // string *data4;
-    // // pipeline4(data4, &queue_files4, &threads); // this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
+    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]{
+    //  Call the dashboard function here
+        dashboard(data1, data2, data4, data5, data7);
+    });
 
-    // // // pipeline5
-    // // string *data5;
-    // // pipeline5(data5, &queue_files5, &threads); // this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
+    // std::cout << "Num threads: " << threads.size() << std::endl;
+    int i = 1;
+    const auto interval = std::chrono::milliseconds(2000);
 
-    // // // pipeline7
-    // // string *data7;
-    // // pipeline7(data7, &queue_files7, &threads); // this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
-
-    // // use datas to print the dashboard with the results of the pipelines
-    // // everytime some of the variables are updated we should clean the terminal and print the new dashboard
-    // // dashboard(data1, data2, data4, data5, data7);
-
-    std::cout << "Num threads: " << threads.size() << std::endl;
-    int i=1;
-    const auto interval = std::chrono::milliseconds (2000);
-
+    // Open the database
     for (auto &t : threads)
     {
-        std::cout << "joining thread " << i << std::endl;
-        if(t.joinable()){
+        // std::cout << "joining thread " << i << std::endl;
+        if (t.joinable())
+        {
             t.join();
         }
         i++;
     }
 
-    // std::cout << "got here" << std::endl;
-
-
-    // auto handleResults = [](int rowCount, double dateDiffMinutes)
-    // {
-    //     double ratio = rowCount / dateDiffMinutes;
-    //     std::cout << "Total number of records: " << rowCount << std::endl;
-    //     std::cout << "Difference in dates (minutes): " << dateDiffMinutes << std::endl;
-    //     std::cout << "Ratio of records to time difference: " << ratio << std::endl;
-    // };
-
-    // std::cout << "got here" << std::endl;
-    // string dbPath = "./mydatabase.db";
-    // // Open the database
-    // sqlite3 *db = openDatabase(dbPath);
-    // if (db != nullptr)
-    // {
-    //     string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
-    //     executeQuery(db, query, handleResults);
-
-    //     //     // Close the database
-    //     sqlite3_close(db);
-    // }
-
-    std::vector<std::thread> loop_threads;
-    auto init_time = std::chrono::system_clock::now();
-    //put the dashboard in a thread
-
-    string *data2;
-    string *data4;
-    string *data5;
-    string *data7;
-    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]{
-        // Call the dashboard function here
-        dashboard(data1, data2, data4, data5, data7);
-    });
+    return 0;
 }
-
