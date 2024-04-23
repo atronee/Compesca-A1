@@ -112,7 +112,7 @@ void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, st
     for (int i = 0; i < 1; i++)
     {
         (*threads).emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end]
-                                { csvReader1.read(',', 0, end, queue_reader, *queue_files, true, 3, "user_behavior_logs"); });
+                                { csvReader1.read(',', 0, end, queue_reader, *queue_files, true, 40, "user_behavior_logs"); });
     }
 
     SelectHandler selectHandler(&queue_reader, &queue_select);
@@ -453,10 +453,17 @@ int main()
     // everytime some of the variables are updated we should clean the terminal and print the new dashboard
     // dashboard(data1, data2, data4, data5, data7);
 
+    std::cout << "got here" << std::endl;
+    int i=1;
     for (auto &t : threads)
     {
+        std::cout << "joining thread " << i << std::endl;
         t.join();
+        i++;
     }
+
+    std::cout << "got here" << std::endl;
+
 
     auto handleResults = [](int rowCount, double dateDiffMinutes)
     {
