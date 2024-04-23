@@ -229,10 +229,13 @@ void mockCSV(int index, const int numRecords)
     // Seed the random number generator
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-
     // Output directory path
     const std::string outputDir = "data/";
+
+    // Deletes any existing files in the output directory if it exists
+    if (std::filesystem::exists(outputDir)) {
+        std::filesystem::remove_all(outputDir);
+    }
 
     // Create the output directory if it doesn't exist
     std::filesystem::create_directory(outputDir);

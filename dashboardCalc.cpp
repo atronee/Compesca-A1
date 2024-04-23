@@ -349,7 +349,7 @@ int main()
     data7[2] = "23.83";
 
     std::vector<std::unique_ptr<ConsumerProducerQueue<std::string>>> queue_files;
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 8; i++)
     {
         queue_files.push_back(std::make_unique<ConsumerProducerQueue<std::string>>(100));
     }
@@ -449,7 +449,79 @@ int main()
                              {
                                  std::string sql = "SELECT SUM(QUANTIDADE), (strftime('%s', MAX(DATA_DE_COMPRA)) - strftime('%s', MIN(DATA_DE_COMPRA))) / 60.0 AS DateDiffInMinutes FROM Table2;";
                                  worker2(data2, dbPath2, count2, minutes2, sql); });
+    // PIPELINE 3 --------------------------------------------------------------------------------------------
 
+    ConsumerProducerQueue<DataFrame *> queue_reader3(100);
+    ConsumerProducerQueue<DataFrame *> queue_select3(100);
+    ConsumerProducerQueue<DataFrame *> queue_filter3(100);
+    ConsumerProducerQueue<DataFrame *> queue_groupby3(100);
+    FileReader csvReader3;
+
+    ConsumerProducerQueue<DataFrame *> queue_select3_1(100);
+    ConsumerProducerQueue<DataFrame *> queue_reader3_1(100);
+    FileReader csvReader3_1;
+
+    int end3 = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &csvReader3, &queue_files, &queue_reader3, &end3]
+                               { csvReader3.read(',', 0, end3, queue_reader3, *queue_files[2], true, 40, "user_behavior_logs"); });
+
+    }
+
+    SelectHandler selectHandler3(&queue_reader3, &queue_select3);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &selectHandler3]
+                               { selectHandler3.select({"User Author Id", "Button Product Id"}); });
+    }
+
+    FilterHandler filterHandler3(&queue_select3, &queue_filter3);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &filterHandler3]
+                               { filterHandler3.filter("Button Product Id", "!=", "0"); });
+    }
+
+    GroupByHandler groupByHandler3(&queue_filter3, &queue_groupby3);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &groupByHandler3]
+                               { groupByHandler3.group_by("Button Product Id", "count"); });
+    }
+
+    string dbPath3 = "./mydatabase3.db";
+    string tableName3 = "Table3";
+    FinalHandler finalHandler3(&queue_groupby3, nullptr);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &finalHandler3, &dbPath3, &tableName3]
+                               { finalHandler3.aggregate(dbPath3, tableName3); });
+    }
+
+    //Auxiliar
+    int end3_1 = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &csvReader3_1, &queue_files, &queue_reader3_1, &end3_1]
+                               { csvReader3_1.read(',', 0, end3_1, queue_reader3_1, *queue_files[3], true, 40, "user_behavior_logs"); });
+
+    }
+
+    SelectHandler selectHandler3_1(&queue_reader3_1, &queue_select3_1);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &selectHandler3_1]
+                               { selectHandler3_1.select({"Date"}); });
+    }
+
+    string tableName3_1 = "Table3_1";
+    FinalHandler finalHandler3_1(&queue_select3_1, nullptr);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &finalHandler3_1, &dbPath3, &tableName3_1]
+                               { finalHandler3_1.aggregate(dbPath3, tableName3_1); });
+    }
 
     //Question 4 - Ranking dos produtos mais comprados -----------------------------------------------------------
 
@@ -462,7 +534,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &csvReader4, &queue_files, &queue_reader4, &end4]
-                               { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[2], false, true, "order"); });
+                               { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[4], false, true, "order"); });
     }
 
     SelectHandler selectHandler4(&queue_reader4, &queue_select4);
@@ -508,7 +580,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &csvReader5, &queue_files, &queue_reader5, &end5]
-                               { csvReader5.read(',', 0, end5, queue_reader5, *queue_files[3], false, true, "user_behavior_logs"); });
+                               { csvReader5.read(',', 0, end5, queue_reader5, *queue_files[5], false, true, "user_behavior_logs"); });
     }
 
     SelectHandler selectHandler5(&queue_reader5, &queue_select5);
@@ -564,7 +636,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &csvReader7, &queue_files, &queue_reader7, &end7]
-                               { csvReader7.read(',', 0, end7, queue_reader7, *queue_files[4], false, true, "order"); });
+                               { csvReader7.read(',', 0, end7, queue_reader7, *queue_files[6], false, true, "order"); });
     }
 
     SelectHandler selectHandler7(&queue_reader7, &queue_select7);
@@ -586,7 +658,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &dfvm_reader7, &queue_files, &queue_readerdfvm7, &endr7]
-                               { dfvm_reader7.read(',', 0, endr7, queue_readerdfvm7, *queue_files[5], false, true, "stock"); });
+                               { dfvm_reader7.read(',', 0, endr7, queue_readerdfvm7, *queue_files[7], false, true, "stock"); });
     }
 
     DataFrameVersionManager dfvm7(&queue_readerdfvm7);
