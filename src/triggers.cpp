@@ -37,6 +37,8 @@ void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::pa
                 queue_files.push(entry.path().string());
             }
         }
+        queue_files.push("STOP");
+        break;
     }
 }
 

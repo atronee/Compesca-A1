@@ -167,7 +167,15 @@ void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, st
         string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
         executeQuery(db, query, handleResults);
 
-        // Close the database
+    //     // Close the database
+    //     sqlite3_close(db);
+    // }
+
+    // Assume dbPath is defined and correct
+    sqlite3* db;
+    int rc = sqlite3_open(dbPath.c_str(), &db);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error opening database: " << sqlite3_errmsg(db) << std::endl;
         sqlite3_close(db);
     }
 }

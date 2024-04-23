@@ -9,7 +9,7 @@
 #include "Handlers.h"
 #include <any>
 #include <iostream>
-#include <sqlite3.h>
+#include "../libs/sqlite3.h"
 #include <fstream>
 #include <sys/file.h>
 #include <fcntl.h>
@@ -755,6 +755,7 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
             queue_out->push(nullptr);
             break;
         }
+        df->print();
         if(!sortFlag && !groupFlag){
             write_to_sqlite(df, filePath, table, false);
         }
