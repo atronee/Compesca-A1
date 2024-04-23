@@ -15,6 +15,14 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         // creates a sqlite db
         sqlite3 *db;
         sqlite3_stmt *stmt;
+        int fd = open(filePath.c_str(), O_RDWR);
+        if (fd == -1) {
+            return;
+        }
+        if (flock(fd, LOCK_EX) != 0) {
+            close(fd);
+            return;
+        }
         // Open the SQLite database
         if (sqlite3_open(filePath.c_str(), &db) != SQLITE_OK) {
             std::cerr << "Error opening SQLite database: " << sqlite3_errmsg(db) << "\n";
@@ -27,7 +35,7 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         sql += ")";
 
         // Get the file descriptor and apply a lock
-        int fd = -1;
+
 
         std::vector<std::string> column_order = fileDF->get_column_order();
         std::unordered_map<std::string, size_t> column_types = fileDF->get_column_types();
@@ -50,18 +58,7 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         }
         sql_create.pop_back();  // Remove the last comma
         sql_create += ");";
-        sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
-        if (fd == -1) {
-            std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
-            sqlite3_close(db);
-            return;
-        }
-        if (flock(fd, LOCK_EX) != 0) {
-            std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
-            close(fd);
-            sqlite3_close(db);
-            return;
-        }
+
 
 
             char *errMsg;
