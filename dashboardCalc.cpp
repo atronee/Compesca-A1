@@ -514,7 +514,7 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler4, &dbPath4, &tableName4]
-                                { finalHandler4.aggregate(dbPath4, tableName4, true, false, "count", "", "", "DESC"); });
+                                { finalHandler4.aggregate(dbPath4, tableName4, false, true, "count", "", "count", "DESC"); });
     }
 
     std::cout<<"got here"<<std::endl;
