@@ -25,10 +25,7 @@ void FileReader::read(char delimiter,int start, int & end,
             queue_out.push(nullptr);
             break;
         }
-        if (filename.find(filenameFormat) != std::string::npos) {
 
-            continue;
-        }
 
         int fd = open(filename.c_str(), O_RDONLY);
         if (fd == -1) {
@@ -134,7 +131,7 @@ void FileReader::read(char delimiter,int start, int & end,
                 line_count++;
 
                 if (line_count == block_size && read_in_blocks) {
-                    if (filename.find(filenameFormat) == std::string::npos) {
+                    if (filename.find(filenameFormat) != std::string::npos) {
                         queue_out.push(df);
                     }
 
@@ -147,8 +144,8 @@ void FileReader::read(char delimiter,int start, int & end,
         }
 
         if (df != nullptr && df->get_number_of_rows()) {
-            if (filename.find(filenameFormat) == std::string::npos) {
-                df->print();
+            if (filename.find(filenameFormat) != std::string::npos) {
+
                 queue_out.push(df);
             }
             dataframes[std::filesystem::path(filename)].emplace_back(df);
