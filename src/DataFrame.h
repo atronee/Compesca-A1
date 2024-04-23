@@ -193,6 +193,23 @@ public:
         n_rows += df.n_rows;
     }
 
+    template<typename T>
+    T get_value(const std::string& column_name, int index){
+        /*
+         * Returns the value at the specified index in the specified column.
+         */
+        if (data.find(column_name) == data.end())
+            throw std::invalid_argument("Column name does not exist");
+
+        if (index >= n_rows)
+            throw std::invalid_argument("Index out of range");
+
+        if (type_to_index[typeid(T)] != column_types[column_name])
+            throw std::invalid_argument("Type of value does not match type of column");
+
+        return std::get<T>(data[column_name][index]);
+    }
+
 };
 
 #endif // DATAFRAME_H
