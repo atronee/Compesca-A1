@@ -13,6 +13,7 @@
 #include "src/DataFrameVersionManager.h"
 #include "src/triggers.h"
 #include "src/mock.h"
+#include "libs/sqlite3.h"
 
 void mock_files(){
     for (int i = 0; i<1000; i+=10){
@@ -22,8 +23,6 @@ void mock_files(){
         std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }
-#include "libs/sqlite3.h"
-
 
 static int callback(void *data, int argc, char **argv, char **azColName) {
     int i;
@@ -120,17 +119,76 @@ void insertRandomData(const std::string& dbPath, int numRecords) {
     sqlite3_close(db);
 }
 
+// void pipeline(vector<ConsumerProducerQueue<std::string>*> queues_de_entrada, vector<ConsumerProducerQueue<DataFrame*>*> queues_de_saida, vector<Handler*> handlers){
+//     std::vector<std::thread> threads;
+//     for (int i = 0; i < queues_de_entrada.size(); i++){
+//         threads.emplace_back([queues_de_entrada, queues_de_saida, handlers, i] {
+            
+            
+//             ;
+//         });
+//     }
+//     for (auto &t: threads) {
+//         t.join();
+//     }
+// }
+
+
 
 
 
 int main() {
-    const std::string databasePath = "data/test.db";
-    const std::string sqlQuery = "SELECT 10 FROM M;";
+    
 
-    initializeDatabase(databasePath);
-    insertRandomData(databasePath, 50);
+    //Question 1 - Número de produtos visualizados por minuto
+    ConsumerProducerQueue<std::string> queue_files1(15);
+    ConsumerProducerQueue<DataFrame *> queue_reader1(15);
+    ConsumerProducerQueue<DataFrame *> queue_select1(15);
+    ConsumerProducerQueue<DataFrame *> queue_filter1(15);
 
-    queryDatabase(databasePath, sqlQuery);
+
+    EventBasedTrigger eventTrigger;
+    std::thread eventTriggerThread([&eventTrigger, &queue_files1] {
+        eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files1);
+    });
+
+    // std::this_thread::sleep_for(std::chrono::seconds(10));
+    // queue_files1.push("STOP");
+
+    std::vector<const std::type_info *> typesUserBehavior = {&typeid(std::string), &typeid(int), &typeid(std::string),
+                                                             &typeid(int), &typeid(std::string), &typeid(std::string),
+                                                             &typeid(std::string), &typeid(std::tm)};
+
+    FileReader csvReader1;
+
+    auto selector1 = SelectHandler(&queue_reader1, &queue_select1);
+
+    auto filter1 = FilterHandler(&queue_select1, &queue_filter1);
+
+    std::vector<std::thread> threads;
+
+    int end = 0;
+    threads.emplace_back([&csvReader1, &typesUserBehavior, &end, &queue_reader1,  &queue_files1] {
+        csvReader1.read(typesUserBehavior, ',', 0, end, std::ref(queue_reader1), std::ref(queue_files1), true, 10, "user_behavior");
+    });
+
+    for (int i = 0; i < 2; i++) {
+        threads.emplace_back([&selector1] {
+            selector1.select({"Button Product Id", "Date"});
+        });
+    }
+
+
+    for (int i = 0; i < 2; i++) {
+        threads.emplace_back([&filter1] {
+            filter1.filter("Button Product Id", "!=", "0");
+        });
+    }
+
+    DataFrame* df1 = queue_filter1.pop();
+
+
+    
     return 0;
 }
 
