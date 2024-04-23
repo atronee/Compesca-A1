@@ -192,7 +192,45 @@ void worker2(string *data, string dbPath, int &count, double &minutes, string sq
     }
 }
 
+static int callback3(void *data, int argc, char **argv, char **azColName)
+{
+    std::string *resultStr = static_cast<std::string *>(data);
+    if (argc == 2 && argv[0] && argv[1])
+    {
+        *resultStr += argv[0]; // Button_Product_Id
+        *resultStr += ","; // Separator
+        double newValue = atof(argv[1]) * 24 * 60; // Convert days to minutes
+        *resultStr += std::to_string(newValue); // New column value
+        *resultStr += "\n"; // New line
+    }
+    return 0;
+}
 
+bool executeQuery3(const std::string &sql, std::string &result, std::string *dbPath)
+{
+    sqlite3 *db = openDatabase(*dbPath);
+    char *errorMessage = nullptr;
+    int rc = sqlite3_exec(db, sql.c_str(), callback3, &result, &errorMessage);
+    if (rc != SQLITE_OK)
+    {
+        std::cerr << "SQL error: " << errorMessage << std::endl;
+        sqlite3_free(errorMessage);
+        sqlite3_close(db);
+        return false;
+    }
+    sqlite3_close(db);
+    return true;
+}
+
+void worker3(std::string &result, std::string dbPath, std::string &sql)
+{
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    while (true)
+    {
+        executeQuery3(sql, result, &dbPath);
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
+}
 
 // Function to execute the SQL query
 int callback4(void *data, int argc, char **argv, char **azColName) {
@@ -313,13 +351,6 @@ void worker5(std::string &data, const std::string &dbPath, const std::string &sq
     }
 }
 
-
-#include <iostream>
-#include <sqlite3.h>
-#include <chrono>
-#include <thread>
-#include <string>
-
 // Callback function to handle summing all values of a column
 int callback7(void *data, int argc, char **argv, char **azColName) {
     std::string &result = *static_cast<std::string *>(data);
@@ -372,7 +403,45 @@ void worker7(std::string &data, const std::string &dbPath, const std::string &sq
     }
 }
 
+static int callback6(void *data, int argc, char **argv, char **azColName)
+{
+    std::string *resultStr = static_cast<std::string *>(data);
+    if (argc == 2 && argv[0] && argv[1])
+    {
+        int countCompra = atof(argv[0]);
+        int countVizualizations = atof(argv[1]);
+        int newValue = (countCompra - countVizualizations) / countCompra;
+        *resultStr += std::to_string(newValue); // New column value
+        *resultStr += "\n"; // New line
+    }
+    return 0;
+}
+bool executeQuery6(const std::string &sql, std::string &result, std::string *dbPath)
+{
+    sqlite3 *db = openDatabase(*dbPath);
+    char *errorMessage = nullptr;
+    int rc = sqlite3_exec(db, sql.c_str(), callback6, &result, &errorMessage);
+    if (rc != SQLITE_OK)
+    {
+        std::cerr << "SQL error: " << errorMessage << std::endl;
+        sqlite3_free(errorMessage);
+        sqlite3_close(db);
+        return false;
+    }
+    sqlite3_close(db);
+    return true;
+}
 
+void worker6(std::string &result, std::string dbPath, std::string &sql)
+{
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    while (true)
+    {
+        executeQuery6(sql, result, &dbPath);
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
+}
 
 void clearScreen()
 {
@@ -470,6 +539,11 @@ int main()
     string data4  = "";
     string data5  = "";
     string data7  = "";
+    string data3  = "--------------------------------------------";
+    string data4  = "--------------------------------------------";
+    string data5  = "--------------------------------------------";
+    string data6  = "--------------------------------------------";
+    string *data7 = new string[3];
 
     data1[0] = "100";
     data1[1] = "10";
@@ -481,7 +555,7 @@ int main()
 
 
     std::vector<std::unique_ptr<ConsumerProducerQueue<std::string>>> queue_files;
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 9; i++)
     {
         queue_files.push_back(std::make_unique<ConsumerProducerQueue<std::string>>(100));
     }
@@ -605,7 +679,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &selectHandler3]
-                               { selectHandler3.select({"User Author Id", "Button Product Id"}); });
+                               { selectHandler3.select({"Button Product Id"}); });
     }
 
     FilterHandler filterHandler3(&queue_select3, &queue_filter3);
@@ -628,7 +702,7 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler3, &dbPath3, &tableName3]
-                               { finalHandler3.aggregate(dbPath3, tableName3); });
+                               { finalHandler3.aggregate(dbPath3, tableName3, false, true, "", "Button Product Id", "count", ""); });
     }
 
     //Auxiliar
@@ -753,6 +827,92 @@ int main()
                               std::string sql = "SELECT * FROM Table5 ORDER BY count DESC;";
                               worker5(data5, dbPath5, sql); });
 
+    // Question 6 - Média de vizualizações antes da compra ---------------------------------
+    ConsumerProducerQueue<DataFrame *> queue_reader6(100);
+    ConsumerProducerQueue<DataFrame *> queue_select6(100);
+    ConsumerProducerQueue<DataFrame *> queue_filter6(100);
+    ConsumerProducerQueue<DataFrame *> queue_groupby6(100);
+
+    FileReader csvReader6;
+    int end6 = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &csvReader6, &queue_files, &queue_reader6, &end6]
+                               { csvReader6.read(',', 0, end6, queue_reader6, *queue_files[6], false, true, "order"); });
+    }
+
+    SelectHandler selectHandler6(&queue_reader6, &queue_select6);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &selectHandler6]
+                               { selectHandler6.select({"Button Product Id"}); });
+    }
+
+    FilterHandler filterHandler6(&queue_select6, &queue_select6);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &filterHandler6]
+                               { filterHandler6.filter("Button Product Id", "!=", "0"); });
+    }
+
+    GroupByHandler groupByHandler6(&queue_select6, &queue_groupby6);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &groupByHandler6]
+                               { groupByHandler6.group_by("Button Product Id", "sum"); });
+    }
+
+    string dbPath6 = "./mydatabase6.db";
+    string tableName6 = "Table6";
+    FinalHandler finalHandler6(&queue_join6, nullptr);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &finalHandler6, &dbPath6, &tableName6]
+                               { finalHandler6.aggregate(dbPath6, tableName6, false, true, "", "Button Product Id", "sum", ""); });
+    }
+
+//Auxiliar
+
+    ConsumerProducerQueue<DataFrame *> queue_reader6_1(100);
+    ConsumerProducerQueue<DataFrame *> queue_select6_1(100);
+    ConsumerProducerQueue<DataFrame *> queue_groupby6_1(100);
+
+    FileReader csvReader6_1;
+    int end6_1 = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &csvReader6_1, &queue_files, &queue_reader6_1, &end6_1]
+                               { csvReader6_1.read(',', 0, end6_1, queue_reader6_1, *queue_files[7], false, true, "order"); });
+    }
+
+    SelectHandler selectHandler6_1(&queue_reader6_1, &queue_select6_1);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &selectHandler6_1]
+                               { selectHandler6_1.select({"ID PRODUTO"});
+    }
+
+    GroupByHandler groupByHandler6_1(&queue_select6_1, &queue_groupby6_1);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &groupByHandler6_1]
+                               { groupByHandler6_1.group_by("ID PRODUTO", "sum"); });
+    }
+
+    string tableName6_1 = "Table6_1";
+    FinalHandler finalHandler6_1(&queue_groupby6_1, nullptr);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &finalHandler6_1, &dbPath6, &tableName6_1]
+                               { finalHandler6_1.aggregate(dbPath6, tableName6_1, false, true, "", "ID PRODUTO", "sum", ""); });
+    }
+
+    threads.emplace_back([&data6, &dbPath6]
+                         {
+                             std::string sql = "SELECT (Table6_1.count - Table6.count) / Table6_1.count AS NewValue FROM table1 INNER JOIN table2 ON Table6_1.ID PRODUTO = Table6.Button Product Id;";
+                             worker6(data6, dbPath6, sql); });
+        std::string query =
+
 
     // Question 7 - Numero de produtos sem estoque ---------------------------------
 
@@ -770,7 +930,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &csvReader7, &queue_files, &queue_reader7, &end7]
-                               { csvReader7.read(',', 0, end7, queue_reader7, *queue_files[6], false, true, "order"); });
+                               { csvReader7.read(',', 0, end7, queue_reader7, *queue_files[8], false, true, "order"); });
     }
 
     SelectHandler selectHandler7(&queue_reader7, &queue_select7);
