@@ -602,6 +602,11 @@ int main()
                                { finalHandler3_1.aggregate(dbPath3, tableName3_1); });
     }
 
+    threads.emplace_back([&data3, &dbPath3]
+                         {
+                             std::string sql = "SELECT Table3.count/((CAST(SUBSTR(timediff(Max(Date), MIN(Date)), 11, 2) AS INTEGER) * 24 * 60) + (CAST(SUBSTR(timediff(Max(Date), MIN(Date)), 14, 2) AS INTEGER) * 60) + (CAST(SUBSTR(timediff(Max(Date), MIN(Date)), 17, 2) AS INTEGER))) FROM Table3, Table3_1;";
+                             worker3(data3, dbPath3, sql); });
+
     //Question 4 - Ranking dos produtos mais comprados -----------------------------------------------------------
 
     ConsumerProducerQueue<DataFrame *> queue_reader4(100);
