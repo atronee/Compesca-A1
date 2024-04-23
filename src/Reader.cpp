@@ -134,9 +134,9 @@ void FileReader::read(char delimiter,int start, int & end,
                     if (filename.find(filenameFormat) != std::string::npos) {
                         queue_out.push(df);
                     }
-
+                    dataframes_mtx.lock();
                     dataframes[std::filesystem::path(filename)].emplace_back(df);
-
+                    dataframes_mtx.unlock();
                     line_count = 0;
                     df = new DataFrame(column_order, types);
                 }
@@ -148,7 +148,9 @@ void FileReader::read(char delimiter,int start, int & end,
 
                 queue_out.push(df);
             }
+            dataframes_mtx.lock();
             dataframes[std::filesystem::path(filename)].emplace_back(df);
+            dataframes_mtx.unlock();
         }
 
         end = file.tellg();
