@@ -4,7 +4,13 @@
 #include <iostream>
 #include <string>
 
+int getRandomNormalizedInt(int, int);
+
 int getRandomInt(int, int);
+
+std::string getRandomNowBasedDate(int, int, int, int, int, int);
+
+std::string getRandomDate(int, int, int, int, int, int, int, int, int, int, int, int);
 
 std::string getRandomString(int);
 

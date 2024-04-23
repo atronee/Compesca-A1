@@ -12,23 +12,121 @@
 #include <cmath>
 #include "mock.h"
 #include "../libs/sqlite3.h"
+#include <chrono>
+#include <math.h>
 
 // Function to generate a random integer within a range
-int getRandomInt(int min, int max) {
-// Seed the random number generator
-    // uniform (0,1) variable
+int getRandomNormalizedInt(int min, int max) {
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(min, max);
 
-    double beta = 2.0;
-    double alpha = 2.0;
+    double beta = 200.0; // beta distribution parameter
+    double alpha = 1.0;
     double u = dis(gen);
     double v = dis(gen);
     double x = std::pow(u, 1.0/alpha)+0.001;
     double y = std::pow(v, 1.0/beta)+0.001;
-    return min + (max - min) * x / (x + y);
+    return round(min + (max - min) * x / (x + y));
+}
+
+int getRandomInt(int min, int max) {
+    return min + (rand() % (max - min + 1));
+}
+
+std::string getRandomNowBasedDate(int minYear, int minMonth, int minDay, int minHour, int minMinute, int minSecond)
+{
+    auto now = std::chrono::system_clock::now();
+
+    // Convert the current time to a time_t object (seconds since epoch)
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+
+    // Convert the current time to a local time struct tm
+    std::tm* localTime = std::localtime(&currentTime);
+
+    // Extract individual components of the current time
+
+    int year = getRandomNormalizedInt(minYear, localTime->tm_year + 1900);
+    int month = getRandomNormalizedInt(minMonth, localTime->tm_mon + 1);
+    int day = getRandomNormalizedInt(minDay, localTime->tm_mday+1);
+    int hour = getRandomNormalizedInt(minHour, localTime->tm_hour);
+    int minute = getRandomNormalizedInt(minMinute, localTime->tm_min);
+    int second = getRandomNormalizedInt(minSecond, localTime->tm_sec);
+
+    std::string dayStr = std::to_string(day);
+    std::string monthStr = std::to_string(month);
+    std::string yearStr = std::to_string(year);
+    std::string hourStr = std::to_string(hour);
+    std::string minuteStr = std::to_string(minute);
+    std::string secondStr = std::to_string(second);
+
+    if(day<10)
+    {
+        dayStr = "0" + std::to_string(day);
+    }
+    if(month<10)
+    {
+        monthStr = "0" + std::to_string(month);
+    }
+    if(hour<10)
+    {
+        hourStr = "0" + std::to_string(hour);
+    }
+    if(minute<10)
+    {
+        minuteStr = "0" + std::to_string(minute);
+    }
+    if(second<10)
+    {
+        secondStr = "0" + std::to_string(second);
+    }
+    return yearStr + "-" + monthStr + "-" + dayStr + " " + hourStr + ":" + minuteStr + ":" + secondStr;
+
+}
+
+std::string getRandomDate(int minYear, int minMonth, int minDay, int minHour, int minMinute, int minSecond,
+                          int maxYear, int maxMonth, int maxDay, int maxHour, int maxMinute, int maxSecond)
+{
+
+    // Extract individual components of the current time
+
+    int year = getRandomNormalizedInt(minYear, maxYear);
+    int month = getRandomNormalizedInt(minMonth, maxMonth);
+    int day = getRandomNormalizedInt(minDay, maxDay);
+    int hour = getRandomNormalizedInt(minHour, maxHour);
+    int minute = getRandomNormalizedInt(minMinute, maxMinute);
+    int second = getRandomNormalizedInt(minSecond, maxSecond);
+
+    std::string dayStr = std::to_string(day);
+    std::string monthStr = std::to_string(month);
+    std::string yearStr = std::to_string(year);
+    std::string hourStr = std::to_string(hour);
+    std::string minuteStr = std::to_string(minute);
+    std::string secondStr = std::to_string(second);
+
+    if(day<10)
+    {
+        dayStr = "0" + std::to_string(day);
+    }
+    if(month<10)
+    {
+        monthStr = "0" + std::to_string(month);
+    }
+    if(hour<10)
+    {
+        hourStr = "0" + std::to_string(hour);
+    }
+    if(minute<10)
+    {
+        minuteStr = "0" + std::to_string(minute);
+    }
+    if(second<10)
+    {
+        secondStr = "0" + std::to_string(second);
+    }
+    return yearStr + "-" + monthStr + "-" + dayStr + " " + hourStr + ":" + minuteStr + ":" + secondStr;
+
 }
 
 
@@ -56,23 +154,16 @@ std::string consumerData(bool isSqlFlag = false) {
 
     int userId = getRandomInt(1, 1000);
 
-    int bornDay = getRandomInt(1, 30);
-    int bornMonth = getRandomInt(1, 12);
-    int bornYear = getRandomInt(1950, 2000);
+    std::string bornDate = getRandomDate(1950, 1, 1, 0, 0, 0, 2000, 12, 31, 0, 0, 0);
+    std::string registerDate = getRandomDate(2019, 1, 1, 0, 0, 0, 2021, 12, 31, 0, 0, 0);
 
-    int registerDay = getRandomInt(1, 30);
-    int registerMonth = getRandomInt(1, 12);
-    int registerYear = getRandomInt(2019, 2024);
     if (isSqlFlag)
     {
         return "INSERT INTO Consumer (ID, NOME, SOBRENOME, ENDEREÇO, DATA_DE_NASCIMENTO, DATA_DE_CADASTRO) VALUES (" +
-        std::to_string(userId) + ", '" + name + "', '" + surName + "', '" + city + "', '" +std::to_string(bornDay) +
-        "/" + std::to_string(bornMonth) + "/" + std::to_string(bornYear) + "', '"+ std::to_string(registerDay) +
-        "/" + std::to_string(registerMonth) + "/" + std::to_string(registerYear) + "');";
+        std::to_string(userId) + ", '" + name + "', '" + surName + "', '" + city + "', '" +
+        bornDate + "', '" + registerDate + "');";
     }
-    return std::to_string(userId)+","+ name + "," + surName + "," + city + "," + std::to_string(bornDay) + "/" +
-    std::to_string(bornMonth) +"/" + std::to_string(bornYear) + "," + std::to_string(registerDay) + "/" +
-    std::to_string(registerMonth) + "/" + std::to_string(registerYear);
+    return std::to_string(userId)+","+ name + "," + surName + "," + city + "," + bornDate + "," + registerDate;
 }
 
 // PRODUTO
@@ -96,7 +187,7 @@ std::string productData()
     std::string name = names[product];
     std::string image = images[product];
     std::string description = descriptions[product];
-    int price = getRandomInt(100, 1000);
+    int price = getRandomNormalizedInt(100, 1000);
 
     return std::to_string(productId) + "," +name + "," + image + "," + std::to_string(price) + "," + description;
 }
@@ -105,7 +196,7 @@ std::string productData()
 //ID, Quantidade
 std::string stockData(int productId)
 {
-    int quantity = getRandomInt(1, 1000);
+    int quantity = getRandomNormalizedInt(1, 1000);
     return std::to_string(productId) + "," + std::to_string(quantity);
 }
 
@@ -118,41 +209,16 @@ std::string orderData()
     int productId = getRandomInt(1, 7);
     int quantity = getRandomInt(1, 10);
 
-    int purchaseDay = getRandomInt(1, 30);
-    int purchaseMonth = getRandomInt(1, 12);
-    int purchaseYear = getRandomInt(2019, 2024);
-    int purchaseHour = getRandomInt(10, 23);
-    int purchaseMinute = getRandomInt(10, 59);
+    std::string purchaseDate = getRandomNowBasedDate(2019, 1, 1, 0, 0, 0);
 
+    std::string paymentDate = getRandomNowBasedDate(2019, 1, 1, 0, 0, 0);
+    
+    std::string shippingDate = getRandomNowBasedDate(2019, 1, 1, 0, 0, 0);
 
-    int paymentDay = getRandomInt(purchaseDay, 30);
-    int paymentMonth = getRandomInt(purchaseMonth, 12);
-    int paymentYear = getRandomInt(purchaseYear, 2024);
-    int paymentHour = getRandomInt(purchaseHour, 23);
-    int paymentMinute = getRandomInt(purchaseMinute, 59);
-
-
-    int shippingDay = getRandomInt(paymentDay, 30);
-    int shippingMonth = getRandomInt(paymentMonth, 12);
-    int shippingYear = getRandomInt(paymentYear, 2024);
-    int shippingHour = getRandomInt(paymentHour, 23);
-    int shippingMinute = getRandomInt(paymentMinute, 59);
-
-    int deliveryDay = getRandomInt(shippingDay, 30);
-    int deliveryMonth = getRandomInt(shippingMonth, 12);
-    int deliveryYear = getRandomInt(shippingYear, 2024);
-    int deliveryHour = getRandomInt(shippingHour, 23);
-    int deliveryMinute = getRandomInt(shippingMinute, 59);
+    std::string deliveryDate = getRandomNowBasedDate(2019, 1, 1, 0, 0, 0);
 
     return std::to_string(userId) + "," + std::to_string(productId) + "," + std::to_string(quantity) + "," +
-    std::to_string(purchaseYear) + "/" + std::to_string(purchaseMonth) + "/" + std::to_string(purchaseDay) +
-    " " + std::to_string(purchaseHour) + ":" + std::to_string(purchaseMinute) + "," +
-    std::to_string(paymentYear) + "/" + std::to_string(paymentMonth) + "/" + std::to_string(paymentDay) +
-    " " + std::to_string(paymentHour) + ":" + std::to_string(paymentMinute) + "," +
-    std::to_string(shippingYear) + "/" + std::to_string(shippingMonth) + "/" + std::to_string(shippingDay) +
-    " " + std::to_string(shippingHour) + ":" + std::to_string(shippingMinute) + "," +
-    std::to_string(deliveryYear) + "/" + std::to_string(deliveryMonth) + "/" + std::to_string(deliveryDay) +
-    " " + std::to_string(deliveryHour) + ":" + std::to_string(deliveryMinute);
+    purchaseDate + "," + paymentDate + "," + shippingDate + "," + deliveryDate;
 }
 
 
@@ -322,12 +388,10 @@ const std::vector<std::string> actions = {"create", "read", "update", "delete"};
     int userAuthorId = getRandomInt(0, 1000);
     std::string actionDescription = actionOnSystem[getRandomInt(0, actionOnSystem.size() - 1)];
 
-    int day = getRandomInt(1, 30);
-    int month = getRandomInt(1, 12);
-    int year = getRandomInt(2019, 2024);
+    std::string date = getRandomNowBasedDate(2019, 1, 1, 0, 0, 0);
 
     return "audit," + std::to_string(userAuthorId) + "," + action + "," + actionDescription + "," + textContent +
-    "," + std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(year);
+    "," + date;
 }
 
 std::string generateLogUserBehavior()
@@ -346,16 +410,11 @@ std::string generateLogUserBehavior()
     // if the user clicked on a button, then the column buttonProductId will have the product id else it will be id 0
     int buttonProductId = action == "click" ? getRandomInt(1, 7) : 0;
 
-    int Minute = getRandomInt(0, 59);
-    int hour = getRandomInt(0, 23);
-    int day = getRandomInt(1, 30);
-    int month = getRandomInt(1, 12);
-    int year = getRandomInt(2019, 2024);
+    std::string date = getRandomNowBasedDate(2019, 1, 1, 0, 0, 0);
 
     return "user_behavior," + std::to_string(userAuthorId) + "," + action + ","+
     std::to_string(buttonProductId)+  "," + stimulus + "," + component + "," + textContent + "," +
-    std::to_string(year) + "/" + std::to_string(month) + "/" + std::to_string(day) + " " +
-    std::to_string(hour) + ":" + std::to_string(Minute);
+    date;
 }
 
 std::string generateLogFailureNotification()
@@ -371,12 +430,9 @@ std::string generateLogFailureNotification()
     std::string severity = severities[getRandomInt(0, severities.size() - 1)];
     std::string message = messages[comp];
 
-    int day = getRandomInt(1, 30);
-    int month = getRandomInt(1, 12);
-    int year = getRandomInt(2019, 2024);
+    std::string date = getRandomNowBasedDate(2019, 1, 1, 0, 0, 0);
 
-    return "failure," + component + "," + message + "," + severity + "," + textContent + "," + std::to_string(day) + "/" +
-    std::to_string(month) + "/" + std::to_string(year);
+    return "failure," + component + "," + message + "," + severity + "," + textContent + "," + date;
 }
 
 std::string generateLogDebug()
@@ -386,12 +442,9 @@ std::string generateLogDebug()
 
     std::string message = messages[getRandomInt(0, messages.size() - 1)];
 
-    int day = getRandomInt(1, 30);
-    int month = getRandomInt(1, 12);
-    int year = getRandomInt(2019, 2024);
+    std::string date = getRandomNowBasedDate(2019, 1, 1, 0, 0, 0);
 
-    return "debug," + message + "," + textContent + "," + std::to_string(day) + "/" + std::to_string(month) + "/" +
-    std::to_string(year);
+    return "debug," + message + "," + textContent + "," + date;
 }
 
 // Mocks the behavior of a continuous status machine that constantly creates log files
