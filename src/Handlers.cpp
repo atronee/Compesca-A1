@@ -27,6 +27,10 @@ void SelectHandler::select(vector<string> columns) {
             queue_out->push(nullptr);
             break;
         }
+        if (!df->get_number_of_rows()){
+            delete df;
+            continue;
+        }
         // select the columns
         auto df_cols = df->get_column_order();
         for (auto column : df_cols) {
@@ -45,46 +49,50 @@ void FilterHandler::filter(string column, string operation, string value) {
             queue_out->push(nullptr);
             break;
         }
+        if (!df->get_number_of_rows()){
+            delete df;
+            continue;
+        }
         if (df->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
             vector<int> column_data = df->get_column<int>(column);
             if (operation == "==") {
                 for (size_t i = 0; i < df->get_number_of_rows(); ++i) {
-                    if (!(column_data[i] == std::stoi(value))) {
+                    if (!(column_data[i] == std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == "!=") {
                 for (size_t i = 0; i < df->get_number_of_rows(); ++i) {
-                    if (!(column_data[i] != std::stoi(value))) {
+                    if (!(column_data[i] != std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == "<") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (!(column_data[i] < std::stoi(value))) {
+                    if (!(column_data[i] < std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == ">") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (!(column_data[i] > std::stoi(value))) {
+                    if (!(column_data[i] > std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == "<=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (!(column_data[i] <= std::stoi(value))) {
+                    if (!(column_data[i] <= std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == ">=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (!(column_data[i] >= std::stoi(value))) {
+                    if (!(column_data[i] >= std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
@@ -463,6 +471,10 @@ void GroupByHandler::group_by(string column, string operation) {
             queue_out->push(nullptr);
             break;
         }
+        if (!DF->get_number_of_rows()){
+            delete DF;
+            continue;
+        }
 
         DataFrame *new_df = groupBy(DF, column, operation);
 
@@ -501,6 +513,14 @@ void SortHandler::sort(string& column, string& order) {
     while (true) {
         DataFrame *new_df;
         DataFrame *DF = queue_in->pop();
+        if (DF == nullptr) {
+            queue_out->push(nullptr);
+            break;
+        }
+        if (!DF->get_number_of_rows()){
+            delete DF;
+            continue;
+        }
         // sort all rows by column
         if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
             vector<int> column_data = DF->get_column<int>(column);
@@ -765,6 +785,11 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
         if (df == nullptr) {
             break;
         }
+        if (!df->get_number_of_rows()){
+            delete df;
+            continue;
+        }
+
         if(!sortFlag && !groupFlag){
             write_to_sqlite(df, filePath, table, false);
         }
