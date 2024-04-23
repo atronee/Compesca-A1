@@ -504,6 +504,8 @@ int main()
 
     std::cout << "Num threads: " << threads.size() << std::endl;
     int i=1;
+    const auto interval = std::chrono::milliseconds (2000);
+
     for (auto &t : threads)
     {
         std::cout << "joining thread " << i << std::endl;

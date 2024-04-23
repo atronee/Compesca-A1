@@ -26,7 +26,6 @@ void FileReader::read(char delimiter,int start, int & end,
             break;
         }
 
-
         int fd = open(filename.c_str(), O_RDONLY);
         if (fd == -1) {
             std::cerr << "Error opening CSV file: " << filename << std::endl;
