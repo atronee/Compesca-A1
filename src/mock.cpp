@@ -14,6 +14,8 @@
 #include "../libs/sqlite3.h"
 #include <chrono>
 #include <math.h>
+#include <thread>
+#include "ConsumerProducerQueue.h"
 
 // Function to generate a random integer within a range
 int getRandomNormalizedInt(int min, int max) {
@@ -631,12 +633,65 @@ void mockSqliteTable(const int lines)
     sqlite3_close(db);
 }
 
+void mockRandomRequest(ConsumerProducerQueue<std::string> &queue, int interval)
+{
+    // Output directory path
+    const std::string outputDir = "request/";
+    std::filesystem::create_directory(outputDir);
+    srand(static_cast<unsigned int>(time(nullptr)));
+    int linesPerFile = getRandomInt(100, 1000);
+    int fileIndex = 1;
+    while (true) {
+        std::string filename = outputDir + "user_behavior" + "_rqt_" + std::to_string(fileIndex) + ".txt";
+
+        // Open the output file with POSIX open
+        int fd = open(filename.c_str(), O_WRONLY | O_CREAT, 0644);
+        if (fd == -1) {
+            std::cerr << "Error opening output file: " << filename << "\n";
+            return;
+        }
+
+        flock(fd, LOCK_EX);
+
+        // Open the output file
+        std::ofstream outputFile(filename);
+        if (!outputFile.is_open()) {
+            std::cerr << "Error opening output file: " << filename << "\n";
+            return;
+        }
+
+        // Write column names
+        outputFile << "Type,User Author Id,Action,Button Product Id,Stimulus,Component,Text Content,Date\n";
+
+        // Write log messages
+        for (int line = 1; line <= linesPerFile; ++line) {
+            std::string logMessage;
+            logMessage = generateLogUserBehavior();
+            outputFile << logMessage << "\n";
+        }
+
+        // Close the output file
+        outputFile.close();
+        flock(fd, LOCK_UN);
+        close(fd);
+        fileIndex++;
+        queue.push(filename);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval));
+    }
+}
 
 int main()
 {
     mockCSV();
     mockLogFiles(10, 100);
     mockSqliteTable(80);
+    ConsumerProducerQueue<std::string> queue;
+    std::thread t1(mockRandomRequest, std::ref(queue), 1000);
+    std::thread t2(mockRandomRequest, std::ref(queue), 2000);
+
+    t1.join();
+    t2.join();
 
     return 0;
 }
