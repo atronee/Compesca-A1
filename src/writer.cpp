@@ -27,6 +27,28 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
 
         // Get the file descriptor and apply a lock
         int fd = -1;
+
+        std::vector<std::string> column_order = fileDF->get_column_order();
+        std::unordered_map<std::string, size_t> column_types = fileDF->get_column_types();
+
+        // Create table if it doesn't exist
+        std::string sql_create = "CREATE TABLE IF NOT EXISTS " + table + " (";
+        for (const auto &col: column_order) {
+            if (column_types[col] == type_to_index[std::type_index(typeid(int))]) {
+                sql_create += col + " INTEGER,";
+            } else if (column_types[col] == type_to_index[std::type_index(typeid(float))]) {
+                sql_create += col + " REAL,";
+            } else if (column_types[col] == type_to_index[std::type_index(typeid(std::string))]) {
+                sql_create += col + " TEXT,";
+            } else {
+                // For other data types, you can store them as BLOB or TEXT,
+                // depending on how you want to handle them.
+                sql_create += col + " TEXT,";
+
+            }
+        }
+        sql_create.pop_back();  // Remove the last comma
+        sql_create += ");";
         sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
         if (fd == -1) {
             std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
@@ -39,6 +61,16 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
             sqlite3_close(db);
             return;
         }
+
+
+            char *errMsg;
+            if (sqlite3_exec(db, sql_create.c_str(), nullptr, nullptr, &errMsg) != SQLITE_OK) {
+                std::cerr << "SQL error: " << errMsg << "\n";
+                sqlite3_free(errMsg);
+                sqlite3_close(db);
+                return;
+            }
+
         if (deleteFlag) {
             // Clear the table
             std::string sql_clear = "DELETE FROM " + table;

@@ -78,7 +78,7 @@ public:
 
 class FinalHandler : public Handler {
 private:
-    DataFrame* aggregate_sort(DataFrame* df, DataFrame* fileDF, string& column, string& order);
+    static DataFrame* aggregate_sort(DataFrame* df, DataFrame* fileDF, string& column, string& order);
 public:
     FinalHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
     : Handler(queue_in, queue_out) {};
