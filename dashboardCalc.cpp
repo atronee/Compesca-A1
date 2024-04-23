@@ -44,8 +44,7 @@ void mock_files()
     {
         mockCSV();
         mockLogFiles(10, 100, i);
-        mockSqliteTable(80);
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+
     }
 }
 
@@ -91,10 +90,10 @@ void executeQuery(sqlite3 *db, const string &sql, std::function<void(int, double
     }
 }
 
-void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, std::vector<std::thread> *threads)
+std::vector<std::thread> pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files)
 {
-    if (queue_files == nullptr) return;
-    if (threads == nullptr) return;
+    if (queue_files == nullptr) return {};
+    std::vector<std::thread> threads;
     // Question 1 - Número de produtos visualizados por minutos
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
@@ -111,23 +110,23 @@ void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, st
     int end = 0;
     for (int i = 0; i < 1; i++)
     {
-        (*threads).emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end]
+        (threads).emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end]
                                 { csvReader1.read(',', 0, end, queue_reader, *queue_files, true, 40, "user_behavior_logs"); });
     }
 
     SelectHandler selectHandler(&queue_reader, &queue_select);
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 1; i++)
     {
-        (*threads).emplace_back([i, &selectHandler]
+        (threads).emplace_back([i, &selectHandler]
                                 { selectHandler.select({"Button Product Id", "Date"}); });
     }
 
     std::cout << "Select Handler created" << std::endl;
 
     FilterHandler filterHandler(&queue_select, &queue_filter);
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 1; i++)
     {
-        (*threads).emplace_back([i, &filterHandler]
+        (threads).emplace_back([i, &filterHandler]
                                 { filterHandler.filter("Button Product Id", "!=", "0"); });
     }
 
@@ -139,10 +138,11 @@ void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, st
     FinalHandler finalHandler(&queue_filter, nullptr);
     for (int i = 0; i < 1; i++)
     {
-        (*threads).emplace_back([i, &finalHandler, &dbPath, &tableName]
+        (threads).emplace_back([i, &finalHandler, &dbPath, &tableName]
                                 { finalHandler.aggregate(dbPath, tableName); });
     }
 
+    return threads;
 
     // for(auto& t : *threads){
     //     t.join();
@@ -431,7 +431,52 @@ int main()
     // }
 
     string *data1;
-    pipeline1(data1, &queue_files1, &threads); // this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
+    ConsumerProducerQueue<DataFrame *> queue_reader(15);
+    ConsumerProducerQueue<DataFrame *> queue_select(15);
+    ConsumerProducerQueue<DataFrame *> queue_filter(15);
+
+    // check the arguments of the read function
+    /*
+    ===========
+    ===========
+    ===========
+    ===========
+    ===========*/
+    FileReader csvReader1;
+    int end = 0;
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &csvReader1, &queue_files1, &queue_reader, &end]
+                               { csvReader1.read(',', 0, end, queue_reader, queue_files1, true, 40, "user_behavior_logs"); });
+    }
+
+    SelectHandler selectHandler(&queue_reader, &queue_select);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &selectHandler]
+                               { selectHandler.select({"Button Product Id", "Date"}); });
+    }
+
+    std::cout << "Select Handler created" << std::endl;
+
+    FilterHandler filterHandler(&queue_select, &queue_filter);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &filterHandler]
+                               { filterHandler.filter("Button Product Id", "!=", "0"); });
+    }
+
+    std::cout << "Filter Handler created" << std::endl;
+
+    // ao inves de salvar no database esse poderia ir só para o repositório e eu pego do repositório o df para terminar a pergunta
+    string dbPath1 = "./mydatabase.db";
+    string tableName = "Table1";
+    FinalHandler finalHandler(&queue_filter, nullptr);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &finalHandler, &dbPath1, &tableName]
+                               { finalHandler.aggregate(dbPath1, tableName); });
+    }
 
     // pipeline2
     // string *data2;
@@ -453,12 +498,14 @@ int main()
     // everytime some of the variables are updated we should clean the terminal and print the new dashboard
     // dashboard(data1, data2, data4, data5, data7);
 
-    std::cout << "got here" << std::endl;
+    std::cout << "Num threads: " << threads.size() << std::endl;
     int i=1;
     for (auto &t : threads)
     {
         std::cout << "joining thread " << i << std::endl;
-        t.join();
+        if(t.joinable()){
+            t.join();
+        }
         i++;
     }
 

@@ -752,7 +752,6 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
     while(true) {
         DataFrame* df = queue_in->pop();
         if (df == nullptr) {
-            queue_out->push(nullptr);
             break;
         }
         if(!df->get_number_of_rows()){
