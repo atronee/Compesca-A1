@@ -87,3 +87,11 @@ public:
                    string columnSort = "", string columnGroup = "", string groupOperation = "count",
                    string sortOrder = "asc");
 };
+
+class DiffHandler : public Handler {
+public:
+    DiffHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
+    : Handler(queue_in, queue_out) {};
+
+    void diff(string column1, string column2, string new_column);
+};
