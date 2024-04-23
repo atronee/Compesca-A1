@@ -93,6 +93,8 @@ void executeQuery(sqlite3 *db, const string &sql, std::function<void(int, double
 
 void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, std::vector<std::thread> *threads)
 {
+    if (queue_files == nullptr) return;
+    if (threads == nullptr) return;
     // Question 1 - Número de produtos visualizados por minutos
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
@@ -152,32 +154,24 @@ void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, st
     // informação em uma variavel passada para a pipeline1 e depois printar no final
     // da main a resposta de todas as perguntas, possivelmente em uma area completa que será o dashboard
     // limpariamos o terminal antes de cada print.
-    auto handleResults = [](int rowCount, double dateDiffMinutes)
-    {
-        double ratio = rowCount / dateDiffMinutes;
-        std::cout << "Total number of records: " << rowCount << std::endl;
-        std::cout << "Difference in dates (minutes): " << dateDiffMinutes << std::endl;
-        std::cout << "Ratio of records to time difference: " << ratio << std::endl;
-    };
+    // auto handleResults = [](int rowCount, double dateDiffMinutes)
+    // {
+    //     double ratio = rowCount / dateDiffMinutes;
+    //     std::cout << "Total number of records: " << rowCount << std::endl;
+    //     std::cout << "Difference in dates (minutes): " << dateDiffMinutes << std::endl;
+    //     std::cout << "Ratio of records to time difference: " << ratio << std::endl;
+    // };
 
-    // Open the database
-    sqlite3 *db = openDatabase(dbPath);
-    if (db != nullptr)
-    {
-        string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
-        executeQuery(db, query, handleResults);
+    // // Open the database
+    // sqlite3 *db = openDatabase(dbPath);
+    // if (db != nullptr)
+    // {
+    //     string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+    //     executeQuery(db, query, handleResults);
 
-    //     // Close the database
+    //     //     // Close the database
     //     sqlite3_close(db);
     // }
-
-    // Assume dbPath is defined and correct
-    sqlite3* db;
-    int rc = sqlite3_open(dbPath.c_str(), &db);
-    if (rc != SQLITE_OK) {
-        std::cerr << "Error opening database: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-    }
 }
 
 void pipeline2(string *data, ConsumerProducerQueue<std::string> *queue_files, std::vector<std::thread> *threads)
@@ -399,64 +393,85 @@ int main()
     // vector of threads
     std::vector<std::thread> threads;
     EventBasedTrigger eventTrigger1;
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 1; i++)
     {
         threads.emplace_back([i, &eventTrigger1, &queue_files1]
                              { eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1); });
     }
-    EventBasedTrigger eventTrigger2;
-    for (int i = 0; i < 5; i++)
-    {
-        threads.emplace_back([i, &eventTrigger2, &queue_files2]
-                             { eventTrigger2.triggerOnApperanceOfNewLogFile("./logs", queue_files2); });
-    }
-    EventBasedTrigger eventTrigger4;
-    for (int i = 0; i < 5; i++)
-    {
-        threads.emplace_back([i, &eventTrigger4, &queue_files4]
-                             { eventTrigger4.triggerOnApperanceOfNewLogFile("./logs", queue_files4); });
-    }
-    EventBasedTrigger eventTrigger5;
-    for (int i = 0; i < 5; i++)
-    {
-        threads.emplace_back([i, &eventTrigger5, &queue_files5]
-                             { eventTrigger5.triggerOnApperanceOfNewLogFile("./logs", queue_files5); });
-    }
-    EventBasedTrigger eventTrigger7;
-    for (int i = 0; i < 5; i++)
-    {
-        threads.emplace_back([i, &eventTrigger7, &queue_files7]
-                             { eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7); });
-    }
+    // EventBasedTrigger eventTrigger2;
+    // for (int i = 0; i < 1; i++)
+    // {
+    //     threads.emplace_back([i, &eventTrigger2, &queue_files2]
+    //                          { eventTrigger2.triggerOnApperanceOfNewLogFile("./logs", queue_files2); });
+    // }
+    // EventBasedTrigger eventTrigger4;
+    // for (int i = 0; i < 1; i++)
+    // {
+    //     threads.emplace_back([i, &eventTrigger4, &queue_files4]
+    //                          { eventTrigger4.triggerOnApperanceOfNewLogFile("./logs", queue_files4); });
+    // }
+    // EventBasedTrigger eventTrigger5;
+    // for (int i = 0; i < 1; i++)
+    // {
+    //     threads.emplace_back([i, &eventTrigger5, &queue_files5]
+    //                          { eventTrigger5.triggerOnApperanceOfNewLogFile("./logs", queue_files5); });
+    // }
+    // EventBasedTrigger eventTrigger7;
+    // for (int i = 0; i < 1; i++)
+    // {
+    //     threads.emplace_back([i, &eventTrigger7, &queue_files7]
+    //                          { eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7); });
+    // }
 
     string *data1;
     pipeline1(data1, &queue_files1, &threads); // this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
 
     // pipeline2
-    string *data2;
-    pipeline2(data2, &queue_files2, &threads); // this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
+    // string *data2;
+    // pipeline2(data2, &queue_files2, &threads); // this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
 
-    // pipeline4
-    string *data4;
-    pipeline4(data4, &queue_files4, &threads); // this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
+    // // pipeline4
+    // string *data4;
+    // pipeline4(data4, &queue_files4, &threads); // this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
 
-    // pipeline5
-    string *data5;
-    pipeline5(data5, &queue_files5, &threads); // this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
+    // // pipeline5
+    // string *data5;
+    // pipeline5(data5, &queue_files5, &threads); // this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
 
-    // pipeline7
-    string *data7;
-    pipeline7(data7, &queue_files7, &threads); // this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
+    // // pipeline7
+    // string *data7;
+    // pipeline7(data7, &queue_files7, &threads); // this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
 
     // use datas to print the dashboard with the results of the pipelines
     // everytime some of the variables are updated we should clean the terminal and print the new dashboard
-    dashboard(data1, data2, data4, data5, data7);
+    // dashboard(data1, data2, data4, data5, data7);
 
     auto init_time = std::chrono::system_clock::now();
 
     for (auto &t : threads)
     {
         t.join();
+    }
+
+    auto handleResults = [](int rowCount, double dateDiffMinutes)
+    {
+        double ratio = rowCount / dateDiffMinutes;
+        std::cout << "Total number of records: " << rowCount << std::endl;
+        std::cout << "Difference in dates (minutes): " << dateDiffMinutes << std::endl;
+        std::cout << "Ratio of records to time difference: " << ratio << std::endl;
+    };
+
+    std::cout << "got here" << std::endl;
+    string dbPath = "./mydatabase.db";
+    // Open the database
+    sqlite3 *db = openDatabase(dbPath);
+    if (db != nullptr)
+    {
+        string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+        executeQuery(db, query, handleResults);
+
+        //     // Close the database
+        sqlite3_close(db);
     }
 
     std::vector<std::thread> loop_threads;
@@ -468,73 +483,93 @@ int main()
 
         // pipeline1
         EventBasedTrigger eventTrigger1;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 2; i++)
         {
             loop_threads.emplace_back([i, &eventTrigger1, &queue_files1]
                                       { eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1); });
         }
 
-        EventBasedTrigger eventTrigger2;
-        for (int i = 0; i < 5; i++)
-        {
-            loop_threads.emplace_back([i, &eventTrigger2, &queue_files2]
-                                      { eventTrigger2.triggerOnApperanceOfNewLogFile("./logs", queue_files2); });
-        }
+        // EventBasedTrigger eventTrigger2;
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     loop_threads.emplace_back([i, &eventTrigger2, &queue_files2]
+        //                               { eventTrigger2.triggerOnApperanceOfNewLogFile("./logs", queue_files2); });
+        // }
 
-        EventBasedTrigger eventTrigger4;
-        for (int i = 0; i < 5; i++)
-        {
-            loop_threads.emplace_back([i, &eventTrigger4, &queue_files4]
-                                      { eventTrigger4.triggerOnApperanceOfNewLogFile("./logs", queue_files4); });
-        }
+        // EventBasedTrigger eventTrigger4;
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     loop_threads.emplace_back([i, &eventTrigger4, &queue_files4]
+        //                               { eventTrigger4.triggerOnApperanceOfNewLogFile("./logs", queue_files4); });
+        // }
 
-        EventBasedTrigger eventTrigger5;
-        for (int i = 0; i < 5; i++)
-        {
-            loop_threads.emplace_back([i, &eventTrigger5, &queue_files5]
-                                      { eventTrigger5.triggerOnApperanceOfNewLogFile("./logs", queue_files5); });
-        }
+        // EventBasedTrigger eventTrigger5;
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     loop_threads.emplace_back([i, &eventTrigger5, &queue_files5]
+        //                               { eventTrigger5.triggerOnApperanceOfNewLogFile("./logs", queue_files5); });
+        // }
 
-        EventBasedTrigger eventTrigger7;
-        for (int i = 0; i < 5; i++)
-        {
-            loop_threads.emplace_back([i, &eventTrigger7, &queue_files7]
-                                      { eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7); });
-        }
+        // EventBasedTrigger eventTrigger7;
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     loop_threads.emplace_back([i, &eventTrigger7, &queue_files7]
+        //                               { eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7); });
+        // }
 
         // check if the time is greater than 10 seconds
         auto current_time = std::chrono::system_clock::now();
         auto diff = std::chrono::duration_cast<std::chrono::seconds>(current_time - init_time).count();
-        if (diff > 90)
+        if (diff > 30)
         {
             string *data1;
             pipeline1(data1, &queue_files1, &loop_threads); // this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
 
-            // pipeline2
-            string *data2;
-            pipeline2(data2, &queue_files2, &loop_threads); // this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
+            // // pipeline2
+            // string *data2;
+            // pipeline2(data2, &queue_files2, &loop_threads); // this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
 
-            // pipeline4
-            string *data4;
-            pipeline4(data4, &queue_files4, &loop_threads); // this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
+            // // pipeline4
+            // string *data4;
+            // pipeline4(data4, &queue_files4, &loop_threads); // this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
 
-            // pipeline5
-            string *data5;
-            pipeline5(data5, &queue_files5, &loop_threads); // this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
+            // // pipeline5
+            // string *data5;
+            // pipeline5(data5, &queue_files5, &loop_threads); // this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
 
-            // pipeline7
-            string *data7;
-            pipeline7(data7, &queue_files7, &loop_threads); // this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
+            // // pipeline7
+            // string *data7;
+            // pipeline7(data7, &queue_files7, &loop_threads); // this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
 
-            // use datas to print the dashboard with the results of the pipelines
+            // // use datas to print the dashboard with the results of the pipelines
 
             for (auto &thread : loop_threads)
             {
                 thread.join();
             }
 
-            // everytime some of the variables are updated we should clean the terminal and print the new dashboard
-            dashboard(data1, data2, data4, data5, data7);
+            // // everytime some of the variables are updated we should clean the terminal and print the new dashboard
+            // dashboard(data1, data2, data4, data5, data7);
+
+            auto handleResults = [](int rowCount, double dateDiffMinutes)
+            {
+                double ratio = rowCount / dateDiffMinutes;
+                std::cout << "Total number of records: " << rowCount << std::endl;
+                std::cout << "Difference in dates (minutes): " << dateDiffMinutes << std::endl;
+                std::cout << "Ratio of records to time difference: " << ratio << std::endl;
+            };
+
+            string dbPath = "./mydatabase.db";
+            // Open the database
+            sqlite3 *db = openDatabase(dbPath);
+            if (db != nullptr)
+            {
+                string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+                executeQuery(db, query, handleResults);
+
+                //     // Close the database
+                sqlite3_close(db);
+            }
 
             init_time = std::chrono::system_clock::now();
         }
