@@ -3,8 +3,15 @@
 
 #include <iostream>
 #include <string>
+#include "ConsumerProducerQueue.h"
+
+int getRandomNormalizedInt(int, int);
 
 int getRandomInt(int, int);
+
+std::string getRandomNowBasedDate(int, int, int, int, int, int);
+
+std::string getRandomDate(int, int, int, int, int, int, int, int, int, int, int, int);
 
 std::string getRandomString(int);
 
@@ -32,5 +39,7 @@ void mockLogFiles(int, int, int);
 
 std::string createConsumerTable();
 void mockSqliteTable(int);
+
+void mockRandomRequest(ConsumerProducerQueue<std::string>&, int);
 
 #endif //COMPESCA_A1_MOCK_H
