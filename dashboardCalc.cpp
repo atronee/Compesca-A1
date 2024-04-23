@@ -83,23 +83,12 @@ void executeQuery(sqlite3* db, const string& sql, std::function<void(int, double
     }
 }
 
-void pipeline1(string* data){
-    //Question 1 - Número de produtos visualizados por minuto
-    ConsumerProducerQueue<std::string> queue_files(15);
+void pipeline1(string* data, ConsumerProducerQueue<std::string>* queue_files, std::vector<std::thread>* threads){
+    //Question 1 - Número de produtos visualizados por minutos
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
     ConsumerProducerQueue<DataFrame *> queue_filter(15);
     
-    //vector of threads
-    std::vector<std::thread> threads;
-
-    EventBasedTrigger eventTrigger;
-    for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &eventTrigger, &queue_files] {
-            eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files);
-        });
-    }
-
     //check the arguments of the read function
     /*
     ===========
@@ -110,14 +99,14 @@ void pipeline1(string* data){
     FileReader csvReader1;
     int end = 0;
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end] {
-            csvReader1.read(',', 0, end, queue_reader, queue_files, true, 3, "user_behavior_logs");
+        (*threads).emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end] {
+            csvReader1.read(',', 0, end, queue_reader, *queue_files, true, 3, "user_behavior_logs");
         });
     }
 
     SelectHandler selectHandler(&queue_reader, &queue_select);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &selectHandler] {
+        (*threads).emplace_back([i, &selectHandler] {
             selectHandler.select({"Button Product Id","Date"});
         });
     }
@@ -126,7 +115,7 @@ void pipeline1(string* data){
 
     FilterHandler filterHandler(&queue_select, &queue_filter);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &filterHandler] {
+        (*threads).emplace_back([i, &filterHandler] {
             filterHandler.filter("Button Product Id", "!=", "0");
         });
     }
@@ -138,17 +127,17 @@ void pipeline1(string* data){
     string tableName = "Table1";
     FinalHandler finalHandler(&queue_filter, nullptr);
     for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &finalHandler, &dbPath, &tableName] {
+        (*threads).emplace_back([i, &finalHandler, &dbPath, &tableName] {
             finalHandler.aggregate(dbPath, tableName, false,false,"", "", "", "");
         });
     }
     
 
-    for(auto& t : threads){
-        t.join();
-        std::cout<<"Thread joined"<<std::endl;
-    }
-    std::cout<<"Threads joined"<<std::endl;
+    // for(auto& t : threads){
+    //     t.join();
+    //     std::cout<<"Thread joined"<<std::endl;
+    // }
+    // std::cout<<"Threads joined"<<std::endl;
 
 
     //isso vai ser passado para o executeQuery e vai printar a resposta da pergunta
@@ -176,33 +165,23 @@ void pipeline1(string* data){
 
 }
 
-void pipeline2(string* data){
+void pipeline2(string* data, ConsumerProducerQueue<std::string>* queue_files, std::vector<std::thread>* threads){
     //Question 2 - Número de produtos comprados por minuto
-    ConsumerProducerQueue<std::string> queue_files(15);
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
     
-    //vector of threads
-    std::vector<std::thread> threads;
-
-    EventBasedTrigger eventTrigger;
-    for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &eventTrigger, &queue_files] {
-            eventTrigger.triggerOnApperanceOfNewLogFile("./log", queue_files);
-        });
-    }
 
     FileReader csvReader;
     int end = 0;
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &csvReader, &queue_files, &queue_reader, &end] {
-            csvReader.read(',', 0, end, queue_reader, queue_files, false, true, "user_behavior_logs");
+        (*threads).emplace_back([i, &csvReader, &queue_files, &queue_reader, &end] {
+            csvReader.read(',', 0, end, queue_reader, *queue_files, false, true, "user_behavior_logs");
         });
     }
 
     SelectHandler selectHandler(&queue_reader, &queue_select);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &selectHandler] {
+        (*threads).emplace_back([i, &selectHandler] {
             selectHandler.select({"QUANTIDADE","DATA DE COMPRA"});
         });
     }
@@ -213,53 +192,41 @@ void pipeline2(string* data){
     string tableName = "Table2";
     FinalHandler finalHandler(&queue_select, nullptr);
     for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &finalHandler, &dbPath, &tableName] {
+        (*threads).emplace_back([i, &finalHandler, &dbPath, &tableName] {
             finalHandler.aggregate(dbPath, tableName, false,false,"", "", "", "");
         });
     }
 
-    for(auto& t : threads){
-        t.join();
-        std::cout<<"Thread joined"<<std::endl;
-    }
-    std::cout<<"Threads joined"<<std::endl;
+    // for(auto& t : threads){
+    //     t.join();
+    //     std::cout<<"Thread joined"<<std::endl;
+    // }
+    // std::cout<<"Threads joined"<<std::endl;
 
     //ainda preciso criar o handle results para essa pipeline
 
     //ainda preicso criar o sql dessa pipeline
 }
 
-void pipeline4(string* data){
-    //Question 4 - Ranking dos produtos mais comprados na ultima hora.
-    ConsumerProducerQueue<std::string> queue_files(15);
+void pipeline4(string* data, ConsumerProducerQueue<std::string>* queue_files, std::vector<std::thread>* threads){
+    //Question 4 - Ranking dos produtos mais comprados
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
-    ConsumerProducerQueue<DataFrame *> queue_filter(15);
     ConsumerProducerQueue<DataFrame *> queue_groupby(15);
     ConsumerProducerQueue<DataFrame *> queue_aggregate(15);
-
-    //vector of threads
-    std::vector<std::thread> threads;
-
-    EventBasedTrigger eventTrigger;
-    for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &eventTrigger, &queue_files] {
-            eventTrigger.triggerOnApperanceOfNewLogFile("./data", queue_files);
-        });
-    }
 
     FileReader csvReader;
     int end = 0;
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &csvReader, &queue_files, &queue_reader, &end] {
-            csvReader.read(',', 0, end, queue_reader, queue_files, false, true, "order");
+        (*threads).emplace_back([i, &csvReader, &queue_files, &queue_reader, &end] {
+            csvReader.read(',', 0, end, queue_reader, *queue_files, false, true, "user_behavior_logs");
         });
     }
 
     SelectHandler selectHandler(&queue_reader, &queue_select);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &selectHandler] {
-            selectHandler.select({"ID PRODUTO","QUANTIDADE"});
+        (*threads).emplace_back([i, &selectHandler] {
+            selectHandler.select({"Button Product Id"});
         });
     }
 
@@ -267,8 +234,8 @@ void pipeline4(string* data){
 
     GroupByHandler groupByHandler(&queue_select, &queue_groupby);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &groupByHandler] {
-            groupByHandler.group_by("ID PRODUTO", "sum");
+        (*threads).emplace_back([i, &groupByHandler] {
+            groupByHandler.group_by("Button Product Id", "count");
         });
     }
 
@@ -278,78 +245,47 @@ void pipeline4(string* data){
     string tableName = "Table4";
     FinalHandler finalHandler(&queue_groupby, nullptr);
     for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &finalHandler, &tableName, &dbPath] {
-            finalHandler.aggregate(dbPath, tableName, true,false,"QUANTIDADE", "", "", "DESC");
+        (*threads).emplace_back([i, &finalHandler, &dbPath, &tableName] {
+            finalHandler.aggregate(dbPath, tableName, true,false,"count", "", "", "DESC");
         });
     }
 
-    for(auto& t : threads){
-        t.join();
-        std::cout<<"Thread joined"<<std::endl;
-    }
-    std::cout<<"Threads joined"<<std::endl;
+    // for(auto& t : threads){
+    //     t.join();
+    //     std::cout<<"Thread joined"<<std::endl;
+    // }
+    // std::cout<<"Threads joined"<<std::endl;
 
     //ainda preciso criar o sql para essa pipeline
 }
 
-void pipeline5(string* data){
-    //Question 5 - Ranking dos produtos mais visualizados na ultima hora.
-    ConsumerProducerQueue<std::string> queue_files(15);
+void pipeline5(string* data, ConsumerProducerQueue<std::string>* queue_files, std::vector<std::thread>* threads){
+    //Question 5 - Ranking dos produtos mais visualizados
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
-    ConsumerProducerQueue<DataFrame *> queue_filter(15);
-    ConsumerProducerQueue<DataFrame *> queue_filter2(15);
     ConsumerProducerQueue<DataFrame *> queue_groupby(15);
     ConsumerProducerQueue<DataFrame *> queue_aggregate(15);
-
-    //vector of threads
-    std::vector<std::thread> threads;
-
-    EventBasedTrigger eventTrigger;
-    for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &eventTrigger, &queue_files] {
-            eventTrigger.triggerOnApperanceOfNewLogFile("./log", queue_files);
-        });
-    }
 
     FileReader csvReader;
     int end = 0;
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &csvReader, &queue_files, &queue_reader, &end] {
-            csvReader.read(',', 0, end, queue_reader, queue_files, false, true, "user_behavior_logs");
+        (*threads).emplace_back([i, &csvReader, &queue_files, &queue_reader, &end] {
+            csvReader.read(',', 0, end, queue_reader, *queue_files, false, true, "user_behavior_logs");
         });
     }
 
     SelectHandler selectHandler(&queue_reader, &queue_select);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &selectHandler] {
-            selectHandler.select({"Button Product Id","Date"});
+        (*threads).emplace_back([i, &selectHandler] {
+            selectHandler.select({"Button Product Id"});
         });
     }
 
     std::cout<<"Select Handler created"<<std::endl;
 
-    FilterHandler filterHandler(&queue_select, &queue_filter);
+    GroupByHandler groupByHandler(&queue_select, &queue_groupby);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &filterHandler] {
-            filterHandler.filter("Date", ">", "2021/04/24 00:00:00");
-        });
-    }
-
-    std::cout<<"Filter Handler created"<<std::endl;
-
-    FilterHandler filterHandler2(&queue_filter, &queue_filter2);
-    for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &filterHandler2] {
-            filterHandler2.filter("Button Product Id", "!=", "0");
-        });
-    }
-
-    std::cout<<"Filter Handler 2 created"<<std::endl;
-
-    GroupByHandler groupByHandler(&queue_filter2, &queue_groupby);
-    for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &groupByHandler] {
+        (*threads).emplace_back([i, &groupByHandler] {
             groupByHandler.group_by("Button Product Id", "count");
         });
     }
@@ -358,55 +294,41 @@ void pipeline5(string* data){
 
     string dbPath = "./mydatabase.db";
     string tableName = "Table5";
-
     FinalHandler finalHandler(&queue_groupby, nullptr);
     for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &finalHandler, &dbPath, &tableName] {
+        (*threads).emplace_back([i, &finalHandler, &dbPath, &tableName] {
             finalHandler.aggregate(dbPath, tableName, true,false,"count", "", "", "DESC");
         });
     }
 
-    for(auto& t : threads){
-        t.join();
-        std::cout<<"Thread joined"<<std::endl;
-    }
+    // for(auto& t : threads){
+    //     t.join();
+    //     std::cout<<"Thread joined"<<std::endl;
+    // }
+    // std::cout<<"Threads joined"<<std::endl;
 
     //ainda preciso criar o sql para essa pipeline
-
 }
 
-void pipeline7(string* data){
-    //Question 7 - Quantidade de produtos vendidos sem estoque
-    ConsumerProducerQueue<std::string> queue_files(15);
+void pipeline7(string* data, ConsumerProducerQueue<std::string>* queue_files, std::vector<std::thread>* threads){
+    //Question 7 - Número de usuários únicos visualizando cada produto por minuto
     ConsumerProducerQueue<DataFrame *> queue_reader(15);
     ConsumerProducerQueue<DataFrame *> queue_select(15);
-    ConsumerProducerQueue<DataFrame *> queue_filter(15);
     ConsumerProducerQueue<DataFrame *> queue_groupby(15);
-    ConsumerProducerQueue<DataFrame *> queue_join(15);
-    ConsumerProducerQueue<DataFrame *> queue_diff(15);
-
-    //vector of threads
-    std::vector<std::thread> threads;
-
-    EventBasedTrigger eventTrigger;
-    for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &eventTrigger, &queue_files] {
-            eventTrigger.triggerOnApperanceOfNewLogFile("./data", queue_files);
-        });
-    }
+    ConsumerProducerQueue<DataFrame *> queue_aggregate(15);
 
     FileReader csvReader;
     int end = 0;
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &csvReader, &queue_files, &queue_reader, &end] {
-            csvReader.read(',', 0, end, queue_reader, queue_files, false, true, "order");
+        (*threads).emplace_back([i, &csvReader, &queue_files, &queue_reader, &end] {
+            csvReader.read(',', 0, end, queue_reader, *queue_files, false, true, "user_behavior_logs");
         });
     }
 
     SelectHandler selectHandler(&queue_reader, &queue_select);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &selectHandler] {
-            selectHandler.select({"ID PRODUTO","QUANTIDADE"});
+        (*threads).emplace_back([i, &selectHandler] {
+            selectHandler.select({"Button Product Id","User Id"});
         });
     }
 
@@ -414,60 +336,32 @@ void pipeline7(string* data){
 
     GroupByHandler groupByHandler(&queue_select, &queue_groupby);
     for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &groupByHandler] {
-            groupByHandler.group_by("ID PRODUTO", "sum");
+        (*threads).emplace_back([i, &groupByHandler] {
+            groupByHandler.group_by("Button Product Id", "count");
         });
     }
 
     std::cout<<"GroupBy Handler created"<<std::endl;
 
-    //substituir o dataframe pelo que vai estar no repositório
-    DataFrame* df1 = new DataFrame();
-
-    JoinHandler joinHandler(&queue_groupby, &queue_join);
-    for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &joinHandler, &df1] {
-            joinHandler.join(df1, "ID PRODUTO", "ID PRODUTO");
-        });
-    }
-
-    std::cout<<"Join Handler created"<<std::endl;
-
-    //diff
-    DiffHandler diffHandler(&queue_join, &queue_diff);
-    for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &diffHandler] {
-            diffHandler.diff("QUANTIDADE", "QUANTIDADE_STOCK", "FALTA");
-        });
-    }
-
-    std::cout<<"Diff Handler created"<<std::endl;
-
-    FilterHandler filterHandler(&queue_diff, nullptr);
-    for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &filterHandler] {
-            filterHandler.filter("FALTA", ">", "0");
-        });
-    }
-
-    std::cout<<"Filter Handler created"<<std::endl;
-
     string dbPath = "./mydatabase.db";
     string tableName = "Table7";
-    FinalHandler finalHandler(&queue_diff, nullptr);
+    FinalHandler finalHandler(&queue_groupby, nullptr);
     for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &finalHandler, &dbPath, &tableName] {
-            finalHandler.aggregate(dbPath, tableName, true,false,"FALTA", "", "", "DESC");
+        (*threads).emplace_back([i, &finalHandler, &dbPath, &tableName] {
+            finalHandler.aggregate(dbPath, tableName, true,false,"count", "", "", "DESC");
         });
     }
-    
-    for(auto& t : threads){
-        t.join();
-        std::cout<<"Thread joined"<<std::endl;
-    }
+
+    // for(auto& t : threads){
+    //     t.join();
+    //     std::cout<<"Thread joined"<<std::endl;
+    // }
+    // std::cout<<"Threads joined"<<std::endl;
 
     //ainda preciso criar o sql para essa pipeline
 }
+
+
 
 void dashboard(string* data1, string* data2, string* data4, string* data5, string* data7){
     //use datas to print the dashboard with the results of the pipelines
@@ -476,39 +370,77 @@ void dashboard(string* data1, string* data2, string* data4, string* data5, strin
 
 int main() {
     
+    ConsumerProducerQueue<std::string> queue_files1(15);
+    ConsumerProducerQueue<std::string> queue_files2(15);
+    ConsumerProducerQueue<std::string> queue_files4(15);
+    ConsumerProducerQueue<std::string> queue_files5(15);
+    ConsumerProducerQueue<std::string> queue_files7(15);
+
     mock_files();
 
-            //new data
-        //generate new data with mock following a trigger possibly wait 30 seconds and then add 100 new lines should be sufficient
-
-        //pipeline1
-
+    //vector of threads
+    std::vector<std::thread> threads;
+    EventBasedTrigger eventTrigger1;
+    for (int i = 0; i < 5; i++){
+        threads.emplace_back([i, &eventTrigger1, &queue_files1] {
+            eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1);
+        });
+    }
+    EventBasedTrigger eventTrigger2;
+    for (int i = 0; i < 5; i++){
+        threads.emplace_back([i, &eventTrigger2, &queue_files2] {
+            eventTrigger2.triggerOnApperanceOfNewLogFile("./logs", queue_files2);
+        });
+    }
+    EventBasedTrigger eventTrigger4;
+    for (int i = 0; i < 5; i++){
+        threads.emplace_back([i, &eventTrigger4, &queue_files4] {
+            eventTrigger4.triggerOnApperanceOfNewLogFile("./logs", queue_files4);
+        });
+    }
+    EventBasedTrigger eventTrigger5;
+    for (int i = 0; i < 5; i++){
+        threads.emplace_back([i, &eventTrigger5, &queue_files5] {
+            eventTrigger5.triggerOnApperanceOfNewLogFile("./logs", queue_files5);
+        });
+    }
+    EventBasedTrigger eventTrigger7;
+    for (int i = 0; i < 5; i++){
+        threads.emplace_back([i, &eventTrigger7, &queue_files7] {
+            eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7);
+        });
+    }    
         
         string* data1;
-        pipeline1(data1); //this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
+        pipeline1(data1, &queue_files1, &threads); //this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
 
         //pipeline2
         string* data2;
-        pipeline2(data2); //this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
+        pipeline2(data2,&queue_files2, &threads); //this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
 
         //pipeline4
         string* data4;
-        pipeline4(data4); //this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
+        pipeline4(data4, &queue_files4, &threads); //this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
 
         //pipeline5
         string* data5;
-        pipeline5(data5); //this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
+        pipeline5(data5, &queue_files5, &threads); //this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
 
         //pipeline7
         string* data7;
-        pipeline7(data7); //this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
+        pipeline7(data7, &queue_files7, &threads); //this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
 
         //use datas to print the dashboard with the results of the pipelines
-
         //everytime some of the variables are updated we should clean the terminal and print the new dashboard
         dashboard(data1, data2, data4, data5, data7);
 
         auto init_time = std::chrono::system_clock::now();
+
+    for(auto& t : threads){
+        t.join();
+    }
+
+        std::vector<std::thread> loop_threads;
 
     while (true)
     {
@@ -516,34 +448,73 @@ int main() {
         //generate new data with mock following a trigger possibly wait 30 seconds and then add 100 new lines should be sufficient
 
         //pipeline1
+        EventBasedTrigger eventTrigger1;
+        for (int i = 0; i < 5; i++){
+            loop_threads.emplace_back([i, &eventTrigger1, &queue_files1] {
+                eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1);
+            });
+        }
+
+        EventBasedTrigger eventTrigger2;
+        for (int i = 0; i < 5; i++){
+            loop_threads.emplace_back([i, &eventTrigger2, &queue_files2] {
+                eventTrigger2.triggerOnApperanceOfNewLogFile("./logs", queue_files2);
+            });
+        }
+
+        EventBasedTrigger eventTrigger4;
+        for (int i = 0; i < 5; i++){
+            loop_threads.emplace_back([i, &eventTrigger4, &queue_files4] {
+                eventTrigger4.triggerOnApperanceOfNewLogFile("./logs", queue_files4);
+            });
+        }
+
+        EventBasedTrigger eventTrigger5;
+        for (int i = 0; i < 5; i++){
+            loop_threads.emplace_back([i, &eventTrigger5, &queue_files5] {
+                eventTrigger5.triggerOnApperanceOfNewLogFile("./logs", queue_files5);
+            });
+        }
+
+        EventBasedTrigger eventTrigger7;
+        for (int i = 0; i < 5; i++){
+            loop_threads.emplace_back([i, &eventTrigger7, &queue_files7] {
+                eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7);
+            });
+        }
 
         //check if the time is greater than 10 seconds
         auto current_time = std::chrono::system_clock::now();
         auto diff = std::chrono::duration_cast<std::chrono::seconds>(current_time - init_time).count();
         if (diff > 90){
             string* data1;
-            pipeline1(data1); //this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
+            pipeline1(data1, &queue_files1, &loop_threads); //this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
 
             //pipeline2
             string* data2;
-            pipeline2(data2); //this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
+            pipeline2(data2, &queue_files2, &loop_threads); //this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
 
             //pipeline4
             string* data4;
-            pipeline4(data4); //this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
+            pipeline4(data4, &queue_files4, &loop_threads); //this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
 
             //pipeline5
             string* data5;
-            pipeline5(data5); //this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
+            pipeline5(data5, &queue_files5, &loop_threads); //this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
 
             //pipeline7
             string* data7;
-            pipeline7(data7); //this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
+            pipeline7(data7, &queue_files7, &loop_threads); //this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
 
             //use datas to print the dashboard with the results of the pipelines
 
+            for(auto& thread : loop_threads){
+                thread.join();
+            }
+
             //everytime some of the variables are updated we should clean the terminal and print the new dashboard
             dashboard(data1, data2, data4, data5, data7);
+            
             init_time = std::chrono::system_clock::now();
         }
 
