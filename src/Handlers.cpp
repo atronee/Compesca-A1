@@ -331,6 +331,9 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
                     }
                 }
             }
+            if (operation == "count") {
+                row_data.push_back((int) group.second.size());
+            }
             new_df->add_row(row_data);
         }
     } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
@@ -343,6 +346,10 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
         vector<size_t> new_column_types;
         for (const auto &some_column: new_column_order) {
             new_column_types.push_back(DF->get_column_type(some_column));
+        }
+        if (operation == "count") {
+            new_column_order.push_back("count");
+            new_column_types.push_back(type_to_index[std::type_index(typeid(int))]);
         }
         new_df = new DataFrame(new_column_order, new_column_types);
         for (const auto &group: groups) {
@@ -754,10 +761,7 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
         if (df == nullptr) {
             break;
         }
-        if(!df->get_number_of_rows()){
-            delete df;
-            continue;
-        }
+
         if(!sortFlag && !groupFlag){
             write_to_sqlite(df, filePath, table, false);
         }
@@ -842,7 +846,11 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
             }
 
             else if (groupFlag) {
-                DataFrame *new_df = groupBy(fileDF, columnGroup, groupOperation);
+                DataFrame *new_df;
+                if(groupOperation == "count")
+                    new_df = groupBy(fileDF, "count", "sum");
+                else
+                    new_df = groupBy(fileDF, columnGroup, groupOperation);
                 delete fileDF;
                 fileDF = new_df;
             } else {
