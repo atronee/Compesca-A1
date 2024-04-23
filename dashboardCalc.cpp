@@ -270,23 +270,63 @@ int main() {
     };
 
     
-    for(auto& t : threads){
-        t.join();
-        std::cout<<"Thread joined"<<std::endl;
-    }
-    std::cout<<"Threads joined"<<std::endl;
+    // for(auto& t : threads){
+    //     t.join();
+    //     std::cout<<"Thread joined"<<std::endl;
+    // }
+    // std::cout<<"Threads joined"<<std::endl;
 
     // Open the database
-    sqlite3* db = openDatabase(dbPath);
-    if (db != nullptr) {
-        string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
-        executeQuery(db, query, handleResults);
+    // sqlite3* db = openDatabase(dbPath);
+    // if (db != nullptr) {
+    //     string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+    //     executeQuery(db, query, handleResults);
 
-        // Close the database
+    //     // Close the database
+    //     sqlite3_close(db);
+    // }
+
+    // Assume dbPath is defined and correct
+    sqlite3* db;
+    int rc = sqlite3_open(dbPath.c_str(), &db);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error opening database: " << sqlite3_errmsg(db) << std::endl;
         sqlite3_close(db);
+        return 1;
+    }
+    std::cout << "Database opened successfully" << std::endl;
+
+    // First query
+    std::string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            std::cout << "Count: " << sqlite3_column_int(stmt, 0) << ", Date Difference in Minutes: " << sqlite3_column_double(stmt, 1) << std::endl;
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "Failed to execute query: " << sqlite3_errmsg(db) << std::endl;
     }
 
+    // Second query to display the entire table
+    std::string displayQuery = "SELECT * FROM Table1;";
+    rc = sqlite3_prepare_v2(db, displayQuery.c_str(), -1, &stmt, nullptr);
+    if (rc == SQLITE_OK) {
+        std::cout << "Query prepared successfully, attempting to fetch data..." << std::endl;
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            int num_cols = sqlite3_column_count(stmt);
+            for (int i = 0; i < num_cols; i++) {
+                std::cout << sqlite3_column_name(stmt, i) << ": " << sqlite3_column_text(stmt, i) << " | ";
+            }
+            std::cout << std::endl;
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "Failed to prepare query: " << sqlite3_errmsg(db) << std::endl;
+    }
 
+    sqlite3_close(db);
+    std::cout << "Database closed." << std::endl;
 
 
     return 0;
