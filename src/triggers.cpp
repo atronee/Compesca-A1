@@ -39,31 +39,3 @@ void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::pa
         }
     }
 }
-
-bool EventBasedTrigger::hasChanged(const std::filesystem::path& folder, const std::string& filename,
-                                   std::filesystem::file_time_type lastProcessedTime) {
-    // Check if the file has changed since the last time it was processed
-    return std::filesystem::last_write_time(folder / filename) > lastProcessedTime;
-}
-
-void EventBasedTrigger::triggerOnChangeInFile(const std::filesystem::path folder, VoidFunctionPtr functionPtr,
-                                                std::vector<ConsumerProducerQueue<std::string>*> queuesToKill) {
-    while (true) {
-        // Check for changes in log files every 5 seconds
-        const auto interval = std::chrono::seconds(1);
-        std::this_thread::sleep_for(interval);
-
-        // Iterate through files in the log folder
-        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-            // Check if the file has changed since the last time it was processed
-            if (hasChanged(folder, entry.path().filename().string(), std::filesystem::last_write_time(entry.path()))) {
-                // Process the changed log file
-                std::cout << "File changed: " << entry.path().filename() << std::endl;
-                for(auto queue : queuesToKill){
-                    queue->push("STOP");
-                }
-                functionPtr();
-            }
-        }
-    }
-}
