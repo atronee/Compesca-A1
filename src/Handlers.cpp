@@ -755,7 +755,10 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
             queue_out->push(nullptr);
             break;
         }
-        df->print();
+        if(!df->get_number_of_rows()){
+            delete df;
+            continue;
+        }
         if(!sortFlag && !groupFlag){
             write_to_sqlite(df, filePath, table, false);
         }
