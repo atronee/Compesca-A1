@@ -16,7 +16,7 @@
 #include "libs/sqlite3.h"
 
 void mock_files(){
-    for (int i = 0; i<1000; i+=10){
+    for (int i = 0; i<1; i+=10){
         mockCSV();
         mockLogFiles(10, 100,i);
         mockSqliteTable(80);
@@ -172,6 +172,29 @@ int main() {
         csvReader1.read(typesUserBehavior, ',', 0, end, std::ref(queue_reader1), std::ref(queue_files1), true, 10, "user_behavior");
     });
 
+<<<<<<< HEAD
+=======
+    threads.emplace_back(mock_files);
+    // wait 5 seconds for the file to be created
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    queue_files6.push("STOP");
+
+    std::vector<const std::type_info *> order_types = {&typeid(int), &typeid(int),
+                                                       &typeid(int), 
+                                                       &typeid(std::string), &typeid(std::string), 
+                                                       &typeid(std::string), &typeid(std::string)};
+    
+    std::vector<const std::type_info *> stock_types = {&typeid(int), &typeid(int)};
+
+    int end6 = 0;
+    threads.emplace_back([&csvReader6, &order_types, &end6, &queue_reader6,  &queue_files6, &stock, &stock_types, &stock_files6, &queue_stock] {
+        csvReader6.read(',', 0, end6, std::ref(queue_reader6), std::ref(queue_files6), true, 10, "order");
+        stock.read(',', 0, end6, std::ref(queue_stock), std::ref(stock_files6), false, 10, "stock");
+    });
+
+    auto selector6 = SelectHandler(&queue_reader6, &queue_select6);
+
+>>>>>>> testing
     for (int i = 0; i < 2; i++) {
         threads.emplace_back([&selector1] {
             selector1.select({"Button Product Id", "Date"});
