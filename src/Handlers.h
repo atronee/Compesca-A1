@@ -95,3 +95,11 @@ public:
 
     void diff(string column1, string column2, string new_column);
 };
+
+class UniqueHandler : public Handler {
+public:
+    UniqueHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
+    : Handler(queue_in, queue_out) {};
+
+    void unique(string column1, string column2);
+};
