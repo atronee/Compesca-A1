@@ -213,62 +213,88 @@ int main() {
     
     mock_files();
 
+    std::cout<<"Mock files created"<<std::endl;
     //Question 1 - Número de produtos visualizados por minuto
     ConsumerProducerQueue<std::string> queue_files1(15);
     ConsumerProducerQueue<DataFrame *> queue_reader1(15);
     ConsumerProducerQueue<DataFrame *> queue_select1(15);
     ConsumerProducerQueue<DataFrame *> queue_filter1(15);
+    ConsumerProducerQueue<DataFrame *> queue_print1(15);
+
+    //vector of threads
+    std::vector<std::thread> threads;
+
+    std::cout<<"Queues created"<<std::endl;
+
+    // std::this_thread::sleep_for(std::chrono::seconds(5));
+    // queue_files1.push("STOP");
 
 
     EventBasedTrigger eventTrigger;
-    std::thread eventTriggerThread([&eventTrigger, &queue_files1] {
-        eventTrigger.triggerOnApperanceOfNewLogFile("./log", queue_files1);
-    });
+    for (int i = 0; i < 10; i++){
+        threads.emplace_back([i, &eventTrigger, &queue_files1] {
+            eventTrigger.triggerOnApperanceOfNewLogFile("./log", queue_files1);
+        });
+    }
+
+    std::cout<<"Event Trigger created"<<std::endl;
 
     FileReader csvReader1;
+    int end1 = 0;
+    for (int i = 0; i < 10; i++){
+        threads.emplace_back([i, &csvReader1, &queue_files1, &queue_reader1, &end1] {
+            csvReader1.read(',', 0, end1, queue_reader1, queue_files1, false, true, "user_behavior_logs");
+        });
+    }
 
-    int end = 0;
-    std::thread readerThread1([&csvReader1, &queue_files1, &queue_reader1, &end] {
-        csvReader1.read(',', 0, end, queue_reader1, queue_files1, false, true, "user_behavior_logs");
-    });
-
+    std::cout<<"Reader created"<<std::endl;
 
     SelectHandler selectHandler1(&queue_reader1, &queue_select1);
-    std::thread selectThread1([&selectHandler1] {
-        selectHandler1.select({"Button Product Id","Date"});
-    });
+    for (int i = 0; i < 10; i++){
+        threads.emplace_back([i, &selectHandler1] {
+            selectHandler1.select({"Button Product Id","Date"});
+        });
+    }
 
+    std::cout<<"Select Handler created"<<std::endl;
 
     FilterHandler filterHandler1(&queue_select1, &queue_filter1);
-    std::thread filterThread1([&filterHandler1]{
-        filterHandler1.filter("Button Product Id", "!=", "0");
-    });
+    for (int i = 0; i < 10; i++){
+        threads.emplace_back([i, &filterHandler1] {
+            filterHandler1.filter("Button Product Id", "!=", "0");
+        });
+    }
+
+    std::cout<<"Filter Handler created"<<std::endl;
 
     string dbPath = "mydatabase.db";
     string tableName = "Table1";
     FinalHandler finalHandler1(&queue_filter1, nullptr);
-    std::thread finalThread1([&finalHandler1, &dbPath, &tableName] {
-        finalHandler1.aggregate(dbPath, tableName, false,false,"", "","", "");
-    });
+    for (int i = 0; i < 10; i++){
+        threads.emplace_back([i, &finalHandler1, &dbPath, &tableName] {
+            finalHandler1.aggregate(dbPath, tableName, false,false,"", "", "", "");
+        });
+    }
 
+    std::cout<<"Final Handler created"<<std::endl;
 
     //ler a table com sqlite
     //encontra o número de linhas
     //encontrar o maior e o menor valor na coluna date
     //calcular a razão entre o número de linhas e a diferença entre o maior e o menor valor na coluna date em minutos
 
-        auto handleResults = [](int rowCount, double dateDiffMinutes) {
+    auto handleResults = [](int rowCount, double dateDiffMinutes) {
         double ratio = rowCount / dateDiffMinutes;
         std::cout << "Total number of records: " << rowCount << std::endl;
         std::cout << "Difference in dates (minutes): " << dateDiffMinutes << std::endl;
         std::cout << "Ratio of records to time difference: " << ratio << std::endl;
     };
 
-    eventTriggerThread.join();
-    readerThread1.join();
-    selectThread1.join();
-    filterThread1.join();
-    finalThread1.join();
+    
+    for(auto& t : threads){
+        t.join();
+    }
+
     // Open the database
     sqlite3* db = openDatabase(dbPath);
     if (db != nullptr) {
@@ -278,6 +304,8 @@ int main() {
         // Close the database
         sqlite3_close(db);
     }
+
+
 
     // //Question 2 - Número de produtos comprados por minuto
     // ConsumerProducerQueue<std::string> queue_files2(15);
