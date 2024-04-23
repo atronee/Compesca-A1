@@ -761,7 +761,6 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
         if (df == nullptr) {
             break;
         }
-
         if(!sortFlag && !groupFlag){
             write_to_sqlite(df, filePath, table, false);
         }
@@ -847,8 +846,10 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
 
             else if (groupFlag) {
                 DataFrame *new_df;
+                fileDF->concatenate(*df);
+                fileDF->print();
                 if(groupOperation == "count")
-                    new_df = groupBy(fileDF, "count", "sum");
+                    new_df = groupBy(fileDF, columnGroup, "sum");
                 else
                     new_df = groupBy(fileDF, columnGroup, groupOperation);
                 delete fileDF;
