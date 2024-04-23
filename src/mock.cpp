@@ -224,10 +224,12 @@ std::string orderData()
 }
 
 
-void mockCSV(const int numRecords)
+void mockCSV(int index, const int numRecords)
 {
     // Seed the random number generator
     srand(static_cast<unsigned int>(time(nullptr)));
+
+    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
     // Output directory path
     const std::string outputDir = "data/";
@@ -236,7 +238,7 @@ void mockCSV(const int numRecords)
     std::filesystem::create_directory(outputDir);
 
     // Generate mock data for the consumer
-    std::string consumerFilename = outputDir + "consumer.csv";
+    std::string consumerFilename = outputDir + "consumer" + std::to_string(index) + ".csv";
 
     // Open the output file with POSIX open
     int fd_consumer = open(consumerFilename.c_str(), O_WRONLY | O_CREAT, 0644);
@@ -272,7 +274,7 @@ void mockCSV(const int numRecords)
     std::cout << "Consumer data generated: " << consumerFilename << "\n";
 
     // Generate mock data for the product
-    std::string productFilename = outputDir + "product.csv";
+    std::string productFilename = outputDir + "product" + std::to_string(index) + ".csv";
 
     // Open the output file with POSIX open
     int fd_product = open(productFilename.c_str(), O_WRONLY | O_CREAT, 0644);
@@ -305,7 +307,7 @@ void mockCSV(const int numRecords)
 
 
     // Generate mock data for the stock
-    std::string stockFilename = outputDir + "stock.csv";
+    std::string stockFilename = outputDir + "stock" + std::to_string(index) + ".csv";
 
     // Open the output file with POSIX open
     int fd_stock = open(stockFilename.c_str(), O_WRONLY | O_CREAT, 0644);
@@ -337,7 +339,7 @@ void mockCSV(const int numRecords)
     close(fd_stock);
 
     // Generate mock data for the order
-    std::string orderFilename = outputDir + "order.csv";
+    std::string orderFilename = outputDir + "order" + std::to_string(index) + ".csv";
 
     // Open the output file with POSIX open
     int fd_order = open(orderFilename.c_str(), O_WRONLY | O_CREAT, 0644);

@@ -42,7 +42,7 @@ void mock_files()
 {
     for (int i = 0; i < 1; i += 10)
     {
-        mockCSV();
+        mockCSV(i/10, 1000);
         mockLogFiles(10, 100, i);
     }
 }
@@ -240,6 +240,8 @@ void pipeline2(string *data, ConsumerProducerQueue<std::string> *queue_files, st
 
     // ainda preicso criar o sql dessa pipeline
 }
+
+
 
 void pipeline4(string *data, ConsumerProducerQueue<std::string> *queue_files, std::vector<std::thread> *threads)
 {
@@ -596,7 +598,46 @@ int main()
                                 { finalHandler2.aggregate(dbPath2, tableName2); });
     }
 
+    // PIPELINE 3 --------------------------------------------------------------------------------------------
+    /*ConsumerProducerQueue<DataFrame *> queue_reader3(100);
+    ConsumerProducerQueue<DataFrame *> queue_select3(100);
 
+    FileReader csvReader3;
+
+    int end = 0;
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &csvReader3, &queue_files, &queue_reader, &end]
+                               { csvReader3.read(',', 0, end, queue_reader, *queue_files[0], true, 40, "user_behavior_logs"); });
+    }
+
+    SelectHandler selectHandler(&queue_reader, &queue_select);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &selectHandler]
+                               { selectHandler.select({"Button Product Id", "Date"}); });
+    }
+
+
+    FilterHandler filterHandler(&queue_select, &queue_filter);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &filterHandler]
+                               { filterHandler.filter("Button Product Id", "!=", "0"); });
+    }
+
+
+    // ao inves de salvar no database esse poderia ir só para o repositório e eu pego do repositório o df para terminar a pergunta
+    string dbPath1 = "./mydatabase.db";
+    string tableName = "Table1";
+    FinalHandler finalHandler(&queue_filter, nullptr);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &finalHandler, &dbPath1, &tableName]
+                               { finalHandler.aggregate(dbPath1, tableName); });
+    }
+
+*/
     // Question 4 - Ranking dos produtos mais comprados -----------------------------------------------------------
 
     ConsumerProducerQueue<DataFrame *> queue_reader4(100);
@@ -679,6 +720,11 @@ int main()
                                 { finalHandler5.aggregate(dbPath5, tableName5, false, true, "", "", "count"); });
     }
 
+    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]{
+        //  Call the dashboard function here
+        dashboard(data1, data2, data4, data5, data7);
+    });
+
     std::cout<<"got here"<<std::endl;
     for (auto &t : threads)
     {
@@ -686,6 +732,7 @@ int main()
             t.join();
         }
     }
+
     return 0;
 
     // Question 7 - Número de usuários únicos visualizando cada produto por minuto ---------------------------------
@@ -737,10 +784,7 @@ int main()
                              worker1(data1, dbPath, count, minutes, sql);
                          });
 
-    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]{
-    //  Call the dashboard function here
-        dashboard(data1, data2, data4, data5, data7);
-    });
+
 
     // std::cout << "Num threads: " << threads.size() << std::endl;
     int i = 1;

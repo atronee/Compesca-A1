@@ -20,7 +20,7 @@ std::string productData();
 std::string stockData(int);
 std::string orderData();
 
-void mockCSV(const int numRecords = 1000);
+void mockCSV(int, const int numRecords = 1000);
 
 std::string generateLogAudit();
 std::string generateLogUserBehavior();
