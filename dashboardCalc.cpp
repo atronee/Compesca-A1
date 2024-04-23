@@ -400,7 +400,10 @@ int main() {
         joinHandler7.join(df1, "ID PRODUTO", "ID PRODUTO");
     });
 
+
+
     //diff handler
+    
 
 
     string dbPath7 = "mydatabase.db";
