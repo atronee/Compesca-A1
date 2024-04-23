@@ -551,7 +551,7 @@ int main()
     data7[2] = "23.83";
 
     std::vector<std::unique_ptr<ConsumerProducerQueue<std::string>>> queue_files;
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 8; i++)
     {
         queue_files.push_back(std::make_unique<ConsumerProducerQueue<std::string>>(100));
     }
@@ -736,7 +736,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &csvReader4, &queue_files, &queue_reader4, &end4]
-                               { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[2], false, true, "order"); });
+                               { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[4], false, true, "order"); });
     }
 
     SelectHandler selectHandler4(&queue_reader4, &queue_select4);
@@ -775,7 +775,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &csvReader5, &queue_files, &queue_reader5, &end5]
-                               { csvReader5.read(',', 0, end5, queue_reader5, *queue_files[3], false, true, "user_behavior_logs"); });
+                               { csvReader5.read(',', 0, end5, queue_reader5, *queue_files[5], false, true, "user_behavior_logs"); });
     }
 
     SelectHandler selectHandler5(&queue_reader5, &queue_select5);
@@ -829,7 +829,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &csvReader7, &queue_files, &queue_reader7, &end7]
-                               { csvReader7.read(',', 0, end7, queue_reader7, *queue_files[4], false, true, "order"); });
+                               { csvReader7.read(',', 0, end7, queue_reader7, *queue_files[6], false, true, "order"); });
     }
 
     SelectHandler selectHandler7(&queue_reader7, &queue_select7);
@@ -851,7 +851,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &dfvm_reader7, &queue_files, &queue_readerdfvm7, &endr7]
-                               { dfvm_reader7.read(',', 0, endr7, queue_readerdfvm7, *queue_files[5], false, true, "stock"); });
+                               { dfvm_reader7.read(',', 0, endr7, queue_readerdfvm7, *queue_files[7], false, true, "stock"); });
     }
 
     DataFrameVersionManager dfvm7(&queue_readerdfvm7);
