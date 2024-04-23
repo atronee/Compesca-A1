@@ -15,7 +15,7 @@
 #include "src/mock.h"
 
 void mock_files(){
-    for (int i = 0; i<1000; i+=10){
+    for (int i = 0; i<1; i+=10){
         mockCSV();
         mockLogFiles(10, 100,i);
         mockSqliteTable(80);
@@ -164,8 +164,8 @@ int main() {
 
     int end6 = 0;
     threads.emplace_back([&csvReader6, &order_types, &end6, &queue_reader6,  &queue_files6, &stock, &stock_types, &stock_files6, &queue_stock] {
-        csvReader6.read(order_types, ',', 0, end6, std::ref(queue_reader6), std::ref(queue_files6), true, 10, "order");
-        stock.read(stock_types, ',', 0, end6, std::ref(queue_stock), std::ref(stock_files6), false, 10, "stock");
+        csvReader6.read(',', 0, end6, std::ref(queue_reader6), std::ref(queue_files6), true, 10, "order");
+        stock.read(',', 0, end6, std::ref(queue_stock), std::ref(stock_files6), false, 10, "stock");
     });
 
     auto selector6 = SelectHandler(&queue_reader6, &queue_select6);
