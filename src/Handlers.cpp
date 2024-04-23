@@ -1012,3 +1012,34 @@ void JoinHandler::join(DataFrame* df1, string main_column_name, string join_colu
     //     join_time(df1, main_column_name, join_column_name);
     // }
 }
+
+void DiffHandler::diff(string column1, string column2, string new_column) {
+    while (true) {
+        DataFrame* df = queue_in->pop();
+        if (df == nullptr) {
+            queue_out->push(nullptr);
+            break;
+        }
+
+        if (df->get_column_type(column1) == type_to_index[std::type_index(typeid(int))] && df->get_column_type(column2) == type_to_index[std::type_index(typeid(int))]) {
+            vector<int> column1_data = df->get_column<int>(column1);
+            vector<int> column2_data = df->get_column<int>(column2);
+            vector<int> new_column_data;
+            for (size_t i = 0; i < df->get_number_of_rows(); ++i) {
+                new_column_data.push_back(column1_data[i] - column2_data[i]);
+            }
+            df->add_column(new_column, new_column_data);
+        } else if (df->get_column_type(column1) == type_to_index[std::type_index(typeid(float))] && df->get_column_type(column2) == type_to_index[std::type_index(typeid(float))]) {
+            vector<float> column1_data = df->get_column<float>(column1);
+            vector<float> column2_data = df->get_column<float>(column2);
+            vector<float> new_column_data;
+            for (size_t i = 0; i < df->get_number_of_rows(); ++i) {
+                new_column_data.push_back(column1_data[i] - column2_data[i]);
+            }
+            df->add_column(new_column, new_column_data);
+        } else {
+            throw std::invalid_argument("Invalid column type");
+        }
+        queue_out->push(df);
+    }
+}
