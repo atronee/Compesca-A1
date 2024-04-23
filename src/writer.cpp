@@ -15,14 +15,14 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         // creates a sqlite db
         sqlite3 *db;
         sqlite3_stmt *stmt;
-        int fd = open(filePath.c_str(), O_RDWR);
-        if (fd == -1) {
-            return;
-        }
-        if (flock(fd, LOCK_EX) != 0) {
-            close(fd);
-            return;
-        }
+//        int fd = open(filePath.c_str(), O_RDWR);
+//        if (fd == -1) {
+//            return;
+//        }
+//        if (flock(fd, LOCK_EX) != 0) {
+//            close(fd);
+//            return;
+//        }
         // Open the SQLite database
         if (sqlite3_open(filePath.c_str(), &db) != SQLITE_OK) {
             std::cerr << "Error opening SQLite database: " << sqlite3_errmsg(db) << "\n";
@@ -122,8 +122,8 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         sqlite3_finalize(stmt);
 
         // Release the lock and close the file
-        flock(fd, LOCK_UN);
-        close(fd);
+//        flock(fd, LOCK_UN);
+//        close(fd);
         sqlite3_close(db);
     }
 }
