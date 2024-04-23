@@ -163,6 +163,8 @@ sqlite3* openDatabase(const string& dbPath) {
         sqlite3_close(db);
         return nullptr;
     }
+    else
+        std::cout << "Opened database successfully" << std::endl;
     return db;
 }
 
@@ -226,14 +228,14 @@ int main() {
 
     std::cout<<"Queues created"<<std::endl;
 
-    // std::this_thread::sleep_for(std::chrono::seconds(5));
-    // queue_files1.push("STOP");
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    queue_files1.push("STOP");
 
 
     EventBasedTrigger eventTrigger;
-    for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 1; i++){
         threads.emplace_back([i, &eventTrigger, &queue_files1] {
-            eventTrigger.triggerOnApperanceOfNewLogFile("./log", queue_files1);
+            eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files1);
         });
     }
 
@@ -241,7 +243,7 @@ int main() {
 
     FileReader csvReader1;
     int end1 = 0;
-    for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 2; i++){
         threads.emplace_back([i, &csvReader1, &queue_files1, &queue_reader1, &end1] {
             csvReader1.read(',', 0, end1, queue_reader1, queue_files1, false, true, "user_behavior_logs");
         });
@@ -250,7 +252,7 @@ int main() {
     std::cout<<"Reader created"<<std::endl;
 
     SelectHandler selectHandler1(&queue_reader1, &queue_select1);
-    for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 2; i++){
         threads.emplace_back([i, &selectHandler1] {
             selectHandler1.select({"Button Product Id","Date"});
         });
@@ -259,7 +261,7 @@ int main() {
     std::cout<<"Select Handler created"<<std::endl;
 
     FilterHandler filterHandler1(&queue_select1, &queue_filter1);
-    for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 2; i++){
         threads.emplace_back([i, &filterHandler1] {
             filterHandler1.filter("Button Product Id", "!=", "0");
         });
@@ -267,10 +269,10 @@ int main() {
 
     std::cout<<"Filter Handler created"<<std::endl;
 
-    string dbPath = "mydatabase.db";
+    string dbPath = "./mydatabase.db";
     string tableName = "Table1";
-    FinalHandler finalHandler1(&queue_filter1, nullptr);
-    for (int i = 0; i < 10; i++){
+    FinalHandler finalHandler1(&queue_filter1, &queue_print1);
+    for (int i = 0; i < 1; i++){
         threads.emplace_back([i, &finalHandler1, &dbPath, &tableName] {
             finalHandler1.aggregate(dbPath, tableName, false,false,"", "", "", "");
         });
@@ -293,7 +295,9 @@ int main() {
     
     for(auto& t : threads){
         t.join();
+        std::cout<<"Thread joined"<<std::endl;
     }
+    std::cout<<"Threads joined"<<std::endl;
 
     // Open the database
     sqlite3* db = openDatabase(dbPath);
@@ -304,7 +308,6 @@ int main() {
         // Close the database
         sqlite3_close(db);
     }
-
 
 
     // //Question 2 - Número de produtos comprados por minuto
@@ -424,7 +427,7 @@ int main() {
     // SelectHandler selectHandler5(&queue_filter5, &queue_select5);
     // std::thread selectThread5([&selectHandler5] {
     //     selectHandler5.select({"Button Product Id"});
-    // });
+    // });e
 
     // FilterHandler filterHandler5_2(&queue_select5, &queue_filter5_2);
     // std::thread filterThread5_2([&filterHandler5_2]{
@@ -520,7 +523,7 @@ int main() {
 
 
     // //retrieve table from sqlite
-    // //sum FALTA Column and multiply the result by -1
+    // //sum FALTA Column
 
 
 
