@@ -21,7 +21,8 @@ bool EventBasedTrigger::isNewLogFile(const std::filesystem::path& folder, const 
     return processedFiles.find(filename) == processedFiles.end();
 }
 
-void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::path logFolder, ConsumerProducerQueue<std::string>& queue_files) {
+void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::path logFolder,
+                                                       std::vector<std::unique_ptr<ConsumerProducerQueue<std::string>>>& queue_files) {
     while (true) {
         if (std::filesystem::is_directory(logFolder)) {
             // Iterate through files in the log folder
@@ -40,7 +41,9 @@ void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::pa
 
                     // Process the new log file
                     processedFiles.insert(entry.path().filename().string());
-                    queue_files.push(entry.path().string());
+                    for(auto& queue: queue_files){
+                        queue->push(entry.path().string());
+                    }
                     // Release the lock and close the file
 
                 }

@@ -26,7 +26,7 @@ public:
     bool isNewLogFile(const std::filesystem::path& folder, const std::string& filename);
 
     void triggerOnApperanceOfNewLogFile(const std::filesystem::path logFolder,
-                                        ConsumerProducerQueue<std::string>& queue_files);
+                                        std::vector<std::unique_ptr<ConsumerProducerQueue<std::string>>>& queue_files);
 
 };
 
