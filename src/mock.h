@@ -20,7 +20,7 @@ std::string productData();
 std::string stockData(int);
 std::string orderData();
 
-void mockCSV(int);
+void mockCSV(const int numRecords = 1000);
 
 std::string generateLogAudit();
 std::string generateLogUserBehavior();
@@ -35,7 +35,7 @@ enum LogType {
 };
 
 void writeColumnNames(std::ofstream&, LogType);
-void mockLogFiles(int, int);
+void mockLogFiles(int, int, int);
 
 std::string createConsumerTable();
 void mockSqliteTable(int);

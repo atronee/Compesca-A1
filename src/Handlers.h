@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <ctime>
 #include <mutex>
+#include "DataFrameVersionManager.h"
 
 using std::vector;
 using std::string;
@@ -47,7 +48,7 @@ public:
     SortHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
     : Handler(queue_in, queue_out) {};
 
-    void sort(string column, string order);
+    void sort(string& column, string& order);
 };
 
 class printHandler : public Handler {
@@ -71,14 +72,20 @@ public:
 
     void join(DataFrame* df1, string main_column, string join_column);
 
+    void join(DataFrameVersionManager* dfvm, string main_column, string join_column);
+
 };
 
 class FinalHandler : public Handler {
+private:
+    static DataFrame* aggregate_sort(DataFrame* df, DataFrame* fileDF, string& column, string& order);
 public:
     FinalHandler(ConsumerProducerQueue<DataFrame*> *queue_in, ConsumerProducerQueue<DataFrame*> *queue_out)
     : Handler(queue_in, queue_out) {};
 
-    void aggregate();
+    void aggregate(string& filePath, string& table, bool sortFlag = false, bool groupFlag = false,
+                   string columnSort = "", string columnGroup = "", string groupOperation = "count",
+                   string sortOrder = "asc");
 };
 
 class DiffHandler : public Handler {
