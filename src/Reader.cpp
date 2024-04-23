@@ -26,6 +26,10 @@ void FileReader::read(char delimiter,int start, int & end,
             break;
         }
 
+        if (filename.find(filenameFormat) == std::string::npos) {
+            continue;
+        }
+
         int fd = open(filename.c_str(), O_RDONLY);
         if (fd == -1) {
             std::cerr << "Error opening CSV file: " << filename << std::endl;
@@ -133,9 +137,9 @@ void FileReader::read(char delimiter,int start, int & end,
                     if (filename.find(filenameFormat) != std::string::npos) {
                         queue_out.push(df);
                     }
-                    dataframes_mtx.lock();
-                    dataframes[std::filesystem::path(filename)].emplace_back(df);
-                    dataframes_mtx.unlock();
+//                    dataframes_mtx.lock();
+//                    dataframes[std::filesystem::path(filename)].emplace_back(df);
+//                    dataframes_mtx.unlock();
                     line_count = 0;
                     df = new DataFrame(column_order, types);
                 }
@@ -147,9 +151,9 @@ void FileReader::read(char delimiter,int start, int & end,
 
                 queue_out.push(df);
             }
-            dataframes_mtx.lock();
-            dataframes[std::filesystem::path(filename)].emplace_back(df);
-            dataframes_mtx.unlock();
+//            dataframes_mtx.lock();
+//            dataframes[std::filesystem::path(filename)].emplace_back(df);
+//            dataframes_mtx.unlock();
         }
 
         end = file.tellg();

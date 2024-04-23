@@ -89,7 +89,7 @@ size_t DataFrame::get_column_type(const std::string& column_name) {
      * returns the type of the data in the specified column. The column name should exist.
      */
     if (column_types.find(column_name) == column_types.end())
-        throw std::invalid_argument("get_column_type: Column name does not exist");
+        throw std::invalid_argument("get_column_type:"+ column_name+" Column name does not exist");
 
 
     return column_types[column_name];
@@ -101,7 +101,8 @@ void DataFrame::add_row(const std::vector<DataVariant>& row_data) {
      * The type of the data in each element should match the type of the corresponding column.
      */
     if (row_data.size() != column_order.size())
-        throw std::invalid_argument("Size of row data does not match number of columns");
+        throw std::invalid_argument("Size of row data ("+ std::to_string(row_data.size())+") does not match number of columns "
+        +std::to_string(column_order.size()));
 
     auto it = row_data.begin();
     for (size_t i = 0; i < row_data.size(); ++i, ++it) {

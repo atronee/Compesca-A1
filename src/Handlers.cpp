@@ -334,6 +334,7 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
             if (operation == "count") {
                 row_data.push_back((int) group.second.size());
             }
+
             new_df->add_row(row_data);
         }
     } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
@@ -440,6 +441,9 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
                         throw std::invalid_argument("Invalid column type");
                     }
                 }
+            }
+            if (operation == "count") {
+                row_data.push_back((int) group.second.size());
             }
             new_df->add_row(row_data);
         }
@@ -820,6 +824,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                                     row_data.emplace_back(tm);
                                 }
                             }
+                            std::cout<<row_data.size()<<std::endl;
+                            std::cout<<column_order.size()<<std::endl;
                             fileDF->add_row(row_data);
                         }
                     }
@@ -847,9 +853,9 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
             else if (groupFlag) {
                 DataFrame *new_df;
                 fileDF->concatenate(*df);
-                fileDF->print();
-                if(groupOperation == "count")
+                if(groupOperation == "count") {
                     new_df = groupBy(fileDF, columnGroup, "sum");
+                }
                 else
                     new_df = groupBy(fileDF, columnGroup, groupOperation);
                 delete fileDF;
