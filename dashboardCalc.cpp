@@ -217,66 +217,43 @@ int main() {
 
     std::cout<<"Mock files created"<<std::endl;
     //Question 1 - Número de produtos visualizados por minuto
-    ConsumerProducerQueue<std::string> queue_files1(15);
-    ConsumerProducerQueue<DataFrame *> queue_reader1(15);
-    ConsumerProducerQueue<DataFrame *> queue_select1(15);
-    ConsumerProducerQueue<DataFrame *> queue_filter1(15);
-    ConsumerProducerQueue<DataFrame *> queue_print1(15);
+    ConsumerProducerQueue<std::string> queue_files1(150);
+    ConsumerProducerQueue<DataFrame *> queue_reader1(150);
+    ConsumerProducerQueue<DataFrame *> queue_select1(150);
+    ConsumerProducerQueue<DataFrame *> queue_filter1(150);
+    ConsumerProducerQueue<DataFrame *> queue_print1(150);
 
     //vector of threads
     std::vector<std::thread> threads;
 
     std::cout<<"Queues created"<<std::endl;
 
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    queue_files1.push("STOP");
 
 
     EventBasedTrigger eventTrigger;
-    for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &eventTrigger, &queue_files1] {
-            eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files1);
-        });
-    }
-
+    eventTrigger.triggerOnApperanceOfNewLogFile("./logs", queue_files1);
     std::cout<<"Event Trigger created"<<std::endl;
 
     FileReader csvReader1;
     int end1 = 0;
-    for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &csvReader1, &queue_files1, &queue_reader1, &end1] {
-            csvReader1.read(',', 0, end1, queue_reader1, queue_files1, false, true, "user_behavior_logs");
-        });
-    }
+    csvReader1.read(',', 0, end1, queue_reader1, queue_files1, false, true, "user_behavior_logs");
 
     std::cout<<"Reader created"<<std::endl;
 
     SelectHandler selectHandler1(&queue_reader1, &queue_select1);
-    for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &selectHandler1] {
-            selectHandler1.select({"Button Product Id","Date"});
-        });
-    }
+    selectHandler1.select({"Button Product Id","Date"});
 
     std::cout<<"Select Handler created"<<std::endl;
 
     FilterHandler filterHandler1(&queue_select1, &queue_filter1);
-    for (int i = 0; i < 2; i++){
-        threads.emplace_back([i, &filterHandler1] {
-            filterHandler1.filter("Button Product Id", "!=", "0");
-        });
-    }
+    filterHandler1.filter("Button Product Id", "!=", "0");
 
     std::cout<<"Filter Handler created"<<std::endl;
 
     string dbPath = "./mydatabase.db";
     string tableName = "Table1";
     FinalHandler finalHandler1(&queue_filter1, &queue_print1);
-    for (int i = 0; i < 1; i++){
-        threads.emplace_back([i, &finalHandler1, &dbPath, &tableName] {
-            finalHandler1.aggregate(dbPath, tableName, false,false,"", "", "", "");
-        });
-    }
+    finalHandler1.aggregate(dbPath, tableName, false,false,"", "", "", "");
 
     std::cout<<"Final Handler created"<<std::endl;
 
@@ -309,221 +286,6 @@ int main() {
         sqlite3_close(db);
     }
 
-
-    // //Question 2 - Número de produtos comprados por minuto
-    // ConsumerProducerQueue<std::string> queue_files2(15);
-    // ConsumerProducerQueue<DataFrame *> queue_reader2(15);
-    // ConsumerProducerQueue<DataFrame *> queue_select2(15);
-    
-    // EventBasedTrigger eventTrigger2;
-    // std::thread eventTriggerThread2([&eventTrigger2, &queue_files2] {
-    //     eventTrigger2.triggerOnApperanceOfNewLogFile("./log", queue_files2);
-    // });
-
-    // FileReader csvReader2;
-
-    // int end2 = 0;
-    // std::thread readerThread2([&csvReader2, &queue_files2, &queue_reader2, &end2] {
-    //     csvReader2.read(',', 0, end2, queue_reader2, queue_files2, false, true, "user_behavior_logs");
-    // });
-
-    // SelectHandler selectHandler2(&queue_reader2, &queue_select2);
-    // std::thread selectThread2([&selectHandler2] {
-    //     selectHandler2.select({"QUANTIDADE","DATA DE COMPRA"});
-    // });
-
-    // string tableName2 = "Table2";
-
-    // FinalHandler finalHandler2(&queue_select2, nullptr);
-    // std::thread finalThread2([&finalHandler2, &dbPath, &tableName2] {
-    //     finalHandler2.aggregate(dbPath, tableName2, false,false,"", "", "", "");
-    // });
-
-    // //Question 3 - Número de usuários únicos visulizando cada produto por minuto.
-
-    // //Question 4 - Ranking dos produtos mais comprados na ultima hora.
-
-    // ConsumerProducerQueue<std::string> queue_files4(15);
-    // ConsumerProducerQueue<DataFrame *> queue_reader4(15);
-    // ConsumerProducerQueue<DataFrame *> queue_select4(15);
-    // ConsumerProducerQueue<DataFrame *> queue_filter4(15);
-    // ConsumerProducerQueue<DataFrame *> queue_groupby4(15);
-    // ConsumerProducerQueue<DataFrame *> queue_aggregate4(15);
-
-    // EventBasedTrigger eventTrigger4;
-    // std::thread eventTriggerThread4([&eventTrigger4, &queue_files4] {
-    //     eventTrigger4.triggerOnApperanceOfNewLogFile("./data", queue_files4);
-    // });
-
-    // FileReader csvReader4;
-
-    // int end4 = 0;
-    // std::thread readerThread4([&csvReader4, &queue_files4, &queue_reader4, &end4] {
-    //     csvReader4.read(',', 0, end4, queue_reader4, queue_files4, false, true, "order");
-    // });
-
-    // auto currentTime = getCurrentTimeMinusDeltaHours(1);
-    
-    // //convert tm to string
-    // string currentTimeString = convert_tm_to_string(currentTime);
-
-    // FilterHandler filterHandler4(&queue_reader4, &queue_filter4);
-    // std::thread filterThread4([&filterHandler4, &currentTimeString]{
-    //     filterHandler4.filter("DATA DE COMPRA", ">", currentTimeString);
-    // });
-
-    // SelectHandler selectHandler4(&queue_filter4, &queue_select4);
-    // std::thread selectThread4([&selectHandler4] {
-    //     selectHandler4.select({"ID PRODUTO","QUANTIDADE"});
-    // });
-
-    // GroupByHandler groupByHandler4(&queue_select4, &queue_groupby4);
-    // std::thread groupByThread4([&groupByHandler4] {
-    //     groupByHandler4.group_by("ID PRODUTO", "sum");
-    // });
-
-    // string tableName4 = "Table4";
-
-    // FinalHandler finalHandler4(&queue_groupby4, nullptr);
-    // std::thread finalThread4([&finalHandler4, &dbPath, &tableName4] {
-    //     finalHandler4.aggregate(dbPath, tableName4, true,false,"QUANTIDADE", "", "", "DESC");
-    // });
-
-    // //query sql para o ranking 
-
-
-    // //Question 5 - Ranking dos produtos mais visualizados na ultima hora.
-
-    // ConsumerProducerQueue<std::string> queue_files5(15);
-    // ConsumerProducerQueue<DataFrame *> queue_reader5(15);
-    // ConsumerProducerQueue<DataFrame *> queue_select5(15);
-    // ConsumerProducerQueue<DataFrame *> queue_filter5(15);
-    // ConsumerProducerQueue<DataFrame *> queue_filter5_2(15);
-    // ConsumerProducerQueue<DataFrame *> queue_groupby5(15);
-    // ConsumerProducerQueue<DataFrame *> queue_aggregate5(15);
-
-    // EventBasedTrigger eventTrigger5;
-    // std::thread eventTriggerThread5([&eventTrigger5, &queue_files5] {
-    //     eventTrigger5.triggerOnApperanceOfNewLogFile("./log", queue_files5);
-    // });
-
-    // FileReader csvReader5;
-
-    // int end5 = 0;
-    // std::thread readerThread5([&csvReader5, &queue_files5, &queue_reader5, &end5] {
-    //     csvReader5.read(',', 0, end5, queue_reader5, queue_files5, false, true, "user_behavior_logs");
-    // });
-
-    // auto currentTime5 = getCurrentTimeMinusDeltaHours(1);
-
-    // //convert tm to string
-    // string currentTimeString5 = convert_tm_to_string(currentTime5);
-
-    // FilterHandler filterHandler5(&queue_reader5, &queue_filter5);
-    // std::thread filterThread5([&filterHandler5, &currentTimeString5]{
-    //     filterHandler5.filter("Date", ">", currentTimeString5);
-    // });
-
-    // SelectHandler selectHandler5(&queue_filter5, &queue_select5);
-    // std::thread selectThread5([&selectHandler5] {
-    //     selectHandler5.select({"Button Product Id"});
-    // });e
-
-    // FilterHandler filterHandler5_2(&queue_select5, &queue_filter5_2);
-    // std::thread filterThread5_2([&filterHandler5_2]{
-    //     filterHandler5_2.filter("Button Product Id", "!=", "0");
-    // });
-
-    // GroupByHandler groupByHandler5(&queue_filter5_2, &queue_groupby5);
-    // std::thread groupByThread5([&groupByHandler5] {
-    //     groupByHandler5.group_by("Button Product Id", "count");
-    // });
-
-    // string tableName5 = "Table5";
-
-    // FinalHandler finalHandler5(&queue_groupby5, nullptr);
-    // std::thread finalThread5([&finalHandler5, &dbPath, &tableName5] {
-    //     finalHandler5.aggregate(dbPath, tableName5, true,false,"count", "", "", "DESC");
-    // });
-
-    // //query sql para o ranking
-
-    // //Question 6 - Quantidade média de visualizações de um produto por minuto.
-
-    // ConsumerProducerQueue<std::string> queue_files6(15);
-    // ConsumerProducerQueue<DataFrame *> queue_reader6(15);
-    // ConsumerProducerQueue<DataFrame *> queue_select6(15);
-    // ConsumerProducerQueue<DataFrame *> queue_filter6(15);
-    // ConsumerProducerQueue<DataFrame *> queue_groupby6(15);
-
-    // EventBasedTrigger eventTrigger6;
-    // std::thread eventTriggerThread6([&eventTrigger6, &queue_files6] {
-    //     eventTrigger6.triggerOnApperanceOfNewLogFile("./log", queue_files6);
-    // });
-
-    // //standby
-
-    // //Question 7 - Número de produtos vendidos por minuto.
-
-    // ConsumerProducerQueue<std::string> queue_files7(15);
-    // ConsumerProducerQueue<DataFrame *> queue_reader7(15);
-    // ConsumerProducerQueue<DataFrame *> queue_select7(15);
-    // ConsumerProducerQueue<DataFrame *> queue_filter7(15);
-    // ConsumerProducerQueue<DataFrame *> queue_groupby7(15);
-    // ConsumerProducerQueue<DataFrame *> queue_join7(15);
-    // ConsumerProducerQueue<DataFrame *> queue_diff7(15);
-
-    // EventBasedTrigger eventTrigger7;
-    // std::thread eventTriggerThread7([&eventTrigger7, &queue_files7] {
-    //     eventTrigger7.triggerOnApperanceOfNewLogFile("./data", queue_files7);
-    // });
-
-    // FileReader csvReader7;
-
-    // int end7 = 0;
-    // std::thread readerThread7([&csvReader7, &queue_files7, &queue_reader7, &end7] {
-    //     csvReader7.read(',', 0, end7, queue_reader7, queue_files7, false, true, "order");
-    // });
-
-    // SelectHandler selectHandler7(&queue_reader7, &queue_select7);
-    // std::thread selectThread7([&selectHandler7] {
-    //     selectHandler7.select({"ID PRODUTO","QUANTIDADE"});
-    // });
-
-    // GroupByHandler groupByHandler7(&queue_select7, &queue_groupby7);
-    // std::thread groupByThread7([&groupByHandler7] {
-    //     groupByHandler7.group_by("ID PRODUTO", "sum");
-    // });
-
-    // //substituir o dataframe pelo que vai estar no repositório
-    // DataFrame* df1 = new DataFrame();
-
-    // JoinHandler joinHandler7(&queue_groupby7, &queue_join7);
-    // std::thread joinThread7([&joinHandler7, &df1] {
-    //     joinHandler7.join(df1, "ID PRODUTO", "ID PRODUTO");
-    // });
-
-    // //diff handler
-    // DiffHandler diffHandler7(&queue_join7, &queue_diff7);
-    // std::thread diffThread7([&diffHandler7] {
-    //     diffHandler7.diff("QUANTIDADE", "QUANTIDADE_STOCK", "FALTA");
-    // });
-
-    // FilterHandler filterHandler7(&queue_diff7, &queue_filter7);
-    // std::thread filterThread7([&filterHandler7]{
-    //     filterHandler7.filter("FALTA", "<", "0");
-    // });
-
-    // string tableName7 = "Table7";
-
-    // FinalHandler finalHandler7(&queue_filter7, nullptr);
-    // std::thread finalThread7([&finalHandler7, &dbPath, &tableName7] {
-    //     finalHandler7.aggregate(dbPath, tableName7, false,false,"", "", "", "");
-    // });
-
-
-    // //retrieve table from sqlite
-    // //sum FALTA Column
 
 
 
