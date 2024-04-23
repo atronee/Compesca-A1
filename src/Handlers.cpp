@@ -814,22 +814,16 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 // Read data from SQLite file
                 sqlite3 *db;
                 sqlite3_stmt *stmt;
-
+                int fd = open(filePath.c_str(), O_RDWR);
+                if (fd == -1) {
+                    return ;
+                }
+                if (flock(fd, LOCK_SH) != 0) {
+                    close(fd);
+                    return;
+                }
                 if (sqlite3_open(filePath.c_str(), &db) == SQLITE_OK) {
                     // Get the file descriptor and apply a shared lock
-                    int fd = -1;
-                    sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
-                    if (fd == -1) {
-                        std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
-                        sqlite3_close(db);
-                        return;
-                    }
-                    if (flock(fd, LOCK_SH) != 0) {
-                        std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
-                        close(fd);
-                        sqlite3_close(db);
-                        return;
-                    }
 
                     std::string sql = "SELECT * FROM " + table;
                     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
@@ -853,9 +847,10 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                         }
                     }
                     sqlite3_finalize(stmt);
-                    flock(fd, LOCK_UN);
-                    close(fd);
+
                 }
+                flock(fd, LOCK_UN);
+                close(fd);
                 sqlite3_close(db);
             }
             if(sortFlag && groupFlag)

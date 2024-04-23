@@ -149,14 +149,14 @@ int callback2(void *data, int argc, char **argv, char **azColName)
 
 bool executeQuery2(const std::string &sql, std::string *dbPath)
 {
-//    int fd = open(dbPath->c_str(), O_RDWR);
-//    if (fd == -1) {
-//        return false;
-//    }
-//    if (flock(fd, LOCK_SH) != 0) {
-//        close(fd);
-//        return false;
-//    }
+    int fd = open(dbPath->c_str(), O_RDWR);
+    if (fd == -1) {
+        return false;
+    }
+    if (flock(fd, LOCK_SH) != 0) {
+        close(fd);
+        return false;
+    }
     sqlite3 *db = openDatabase(*dbPath);
     char *errorMessage = nullptr;
 
@@ -166,13 +166,13 @@ bool executeQuery2(const std::string &sql, std::string *dbPath)
         std::cerr << "SQL error: " << errorMessage << std::endl;
         sqlite3_free(errorMessage);
         sqlite3_close(db);
-//        flock(fd, LOCK_UN);
-//        close(fd);
+        flock(fd, LOCK_UN);
+        close(fd);
         return false;
     }
     sqlite3_close(db);
-//    flock(fd, LOCK_UN);
-//    close(fd);
+    flock(fd, LOCK_UN);
+    close(fd);
     return true;
 }
 
@@ -255,14 +255,14 @@ int callback4(void *data, int argc, char **argv, char **azColName) {
 bool executeQuery4(const std::string &sql, const std::string &dbPath, std::string &result) {
     sqlite3 *db;
     char *errorMessage = nullptr;
-//    int fd = open(dbPath.c_str(), O_RDWR);
-//    if (fd == -1) {
-//        return false;
-//    }
-//    if (flock(fd, LOCK_SH) != 0) {
-//        close(fd);
-//        return false;
-//    }
+    int fd = open(dbPath.c_str(), O_RDWR);
+    if (fd == -1) {
+        return false;
+    }
+    if (flock(fd, LOCK_SH) != 0) {
+        close(fd);
+        return false;
+    }
     db = openDatabase(dbPath);
 
     int rc = sqlite3_exec(db, sql.c_str(), callback4, &result, &errorMessage);
@@ -270,13 +270,13 @@ bool executeQuery4(const std::string &sql, const std::string &dbPath, std::strin
         std::cerr << "SQL error: " << errorMessage << std::endl;
         sqlite3_free(errorMessage);
         sqlite3_close(db);
-//        flock(fd, LOCK_UN);
-//        close(fd);
+        flock(fd, LOCK_UN);
+        close(fd);
         return false;
     }
     sqlite3_close(db);
-//    flock(fd, LOCK_UN);
-//    close(fd);
+    flock(fd, LOCK_UN);
+    close(fd);
     return true;
 }
 
@@ -315,14 +315,14 @@ int callback5(void *data, int argc, char **argv, char **azColName) {
 bool executeQuery5(const std::string &sql, const std::string &dbPath, std::string &result) {
     sqlite3 *db;
     char *errorMessage = nullptr;
-//    int fd = open(dbPath.c_str(), O_RDWR);
-//    if (fd == -1) {
-//        return false;
-//    }
-//    if (flock(fd, LOCK_SH) != 0) {
-//        close(fd);
-//        return false;
-//    }
+    int fd = open(dbPath.c_str(), O_RDWR);
+    if (fd == -1) {
+        return false;
+    }
+    if (flock(fd, LOCK_SH) != 0) {
+        close(fd);
+        return false;
+    }
     db = openDatabase(dbPath);
 
     int rc = sqlite3_exec(db, sql.c_str(), callback5, &result, &errorMessage);
@@ -330,13 +330,13 @@ bool executeQuery5(const std::string &sql, const std::string &dbPath, std::strin
         std::cerr << "SQL error: " << errorMessage << std::endl;
         sqlite3_free(errorMessage);
         sqlite3_close(db);
-//        flock(fd, LOCK_UN);
-//        close(fd);
+        flock(fd, LOCK_UN);
+        close(fd);
         return false;
     }
     sqlite3_close(db);
-//    flock(fd, LOCK_UN);
-//    close(fd);
+    flock(fd, LOCK_UN);
+    close(fd);
     return true;
 }
 
@@ -367,14 +367,14 @@ int callback7(void *data, int argc, char **argv, char **azColName) {
 bool executeQuery7(const std::string &sql, const std::string &dbPath, std::string &result) {
     sqlite3 *db;
     char *errorMessage = nullptr;
-//    int fd = open(dbPath.c_str(), O_RDWR);
-//    if (fd == -1) {
-//        return false;
-//    }
-//    if (flock(fd, LOCK_SH) != 0) {
-//        close(fd);
-//        return false;
-//    }
+    int fd = open(dbPath.c_str(), O_RDWR);
+    if (fd == -1) {
+        return false;
+    }
+    if (flock(fd, LOCK_SH) != 0) {
+        close(fd);
+        return false;
+    }
 
     db = openDatabase(dbPath);
     int rc = sqlite3_exec(db, sql.c_str(), callback7, &result, &errorMessage);
@@ -382,13 +382,13 @@ bool executeQuery7(const std::string &sql, const std::string &dbPath, std::strin
         std::cerr << "SQL error: " << errorMessage << std::endl;
         sqlite3_free(errorMessage);
         sqlite3_close(db);
-//        flock(fd, LOCK_UN);
-//        close(fd);
+        flock(fd, LOCK_UN);
+        close(fd);
         return false;
     }
     sqlite3_close(db);
-//    flock(fd, LOCK_UN);
-//    close(fd);
+    flock(fd, LOCK_UN);
+    close(fd);
     return true;
 }
 
@@ -478,7 +478,6 @@ void dashboard(string *data1, string *data2, string *data4, string *data5, strin
         if (data1 != nullptr)
         {
             std::cout << "Question 1 - Número de produtos visualizados por minutos" << std::endl;
-            mtx1.lock();
             std::cout << "Total number of records: " << data1[0] << std::endl;
             std::cout << "Difference in dates (minutes): " << data1[1] << std::endl;
             std::cout << "Ratio of records to time difference: " << data1[2] << std::endl;
