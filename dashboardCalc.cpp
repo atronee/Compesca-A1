@@ -99,6 +99,7 @@ bool executeQuery1(const std::string &sql, int &count, double &minutes, std::str
 
 void worker1(string *data, string dbPath, int &count, double &minutes, string sql)
 {
+    std::this_thread::sleep_for(std::chrono::seconds(20));
     while (true)
     {
         executeQuery1(sql, count, minutes, &dbPath);
@@ -106,7 +107,7 @@ void worker1(string *data, string dbPath, int &count, double &minutes, string sq
         data[1] = std::to_string(minutes);
         data[2] = std::to_string(count / minutes);
         // closedb
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(30));
     }
 }
 
@@ -141,6 +142,7 @@ bool executeQuery2(const std::string &sql, std::string *dbPath)
 
 void worker2(string *data, string dbPath, int &count, double &minutes, string sql)
 {
+    std::this_thread::sleep_for(std::chrono::seconds(20));
     while (true)
     {
         executeQuery2(sql, &dbPath);
@@ -148,7 +150,7 @@ void worker2(string *data, string dbPath, int &count, double &minutes, string sq
         data[1] = std::to_string(minutes);
         data[2] = std::to_string(count / minutes);
         // closedb
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(30));
     }
 }
 
@@ -515,7 +517,7 @@ void dashboard(string *data1, string *data2, string *data4, string *data5, strin
             std::cout << "Ratio of records to time difference: " << data7[2] << std::endl;
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        std::this_thread::sleep_for(std::chrono::seconds(30));
     }
 }
 
@@ -549,7 +551,7 @@ int main()
     data7[2] = "23.83";
 
     std::vector<std::unique_ptr<ConsumerProducerQueue<std::string>>> queue_files;
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 6; i++)
     {
         queue_files.push_back(std::make_unique<ConsumerProducerQueue<std::string>>(100));
     }
@@ -573,45 +575,45 @@ int main()
     ConsumerProducerQueue<DataFrame *> queue_select(100);
     ConsumerProducerQueue<DataFrame *> queue_filter(100);
 
-    // PIPELINE 1 --------------------------------------------------------------------------------------------
-    // FileReader csvReader1;
-    // int end = 0;
-    // for (int i = 0; i < 1; i++)
-    // {
-    //     (threads).emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end]
-    //                            { csvReader1.read(',', 0, end, queue_reader, *queue_files[0], true, 40, "user_behavior_logs"); });
-    // }
+     //PIPELINE 1 --------------------------------------------------------------------------------------------
+     FileReader csvReader1;
+     int end = 0;
+     for (int i = 0; i < 1; i++)
+     {
+         (threads).emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end]
+                                { csvReader1.read(',', 0, end, queue_reader, *queue_files[0], true, 40, "user_behavior_logs"); });
+     }
 
-    // SelectHandler selectHandler(&queue_reader, &queue_select);
-    // for (int i = 0; i < 1; i++)
-    // {
-    //     (threads).emplace_back([i, &selectHandler]
-    //                            { selectHandler.select({"Button Product Id", "Date"}); });
-    // }
+     SelectHandler selectHandler(&queue_reader, &queue_select);
+     for (int i = 0; i < 1; i++)
+     {
+         (threads).emplace_back([i, &selectHandler]
+                                { selectHandler.select({"Button Product Id", "Date"}); });
+     }
 
-    // FilterHandler filterHandler(&queue_select, &queue_filter);
-    // for (int i = 0; i < 1; i++)
-    // {
-    //     (threads).emplace_back([i, &filterHandler]
-    //                            { filterHandler.filter("Button Product Id", "!=", "0"); });
-    // }
+     FilterHandler filterHandler(&queue_select, &queue_filter);
+     for (int i = 0; i < 1; i++)
+     {
+         (threads).emplace_back([i, &filterHandler]
+                                { filterHandler.filter("Button Product Id", "!=", "0"); });
+     }
 
-    // // ao inves de salvar no database esse poderia ir só para o repositório e eu pego do repositório o df para terminar a pergunta
-    // string dbPath1 = "./mydatabase.db";
-    // string tableName = "Table1";
-    // FinalHandler finalHandler(&queue_filter, nullptr);
-    // for (int i = 0; i < 1; i++)
-    // {
-    //     (threads).emplace_back([i, &finalHandler, &dbPath1, &tableName]
-    //                            { finalHandler.aggregate(dbPath1, tableName); });
-    // }
+     // ao inves de salvar no database esse poderia ir só para o repositório e eu pego do repositório o df para terminar a pergunta
+     string dbPath1 = "./mydatabase.db";
+     string tableName = "Table1";
+     FinalHandler finalHandler(&queue_filter, nullptr);
+     for (int i = 0; i < 1; i++)
+     {
+         (threads).emplace_back([i, &finalHandler, &dbPath1, &tableName]
+                                { finalHandler.aggregate(dbPath1, tableName); });
+     }
 
-    // int count = 12;
-    // double minutes = 13;
-    // threads.emplace_back([&data1, &dbPath1, &count, &minutes]
-    //                      {
-    //                          std::string sql = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
-    //                          worker1(data1, dbPath1, count, minutes, sql); });
+     int count = 12;
+     double minutes = 13;
+     threads.emplace_back([&data1, &dbPath1, &count, &minutes]
+                          {
+                              std::string sql = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+                              worker1(data1, dbPath1, count, minutes, sql); });
     
         // PIPELINE 2 --------------------------------------------------------------------------------------------
 
@@ -642,6 +644,14 @@ int main()
                                    { finalHandler2.aggregate(dbPath2, tableName2); });
         }
 
+        int count2 = 12;
+        double minutes2 = 13;
+
+        threads.emplace_back([&data2, &dbPath2, &count2, &minutes2]
+                             {
+                                 std::string sql = "SELECT SUM(QUANTIDADE), (strftime('%s', MAX(DATA_DE_COMPRA)) - strftime('%s', MIN(DATA_DE_COMPRA))) / 60.0 AS DateDiffInMinutes FROM Table2;";
+                                 worker2(data2, dbPath2, count2, minutes2, sql); });
+
 
     //Question 4 - Ranking dos produtos mais comprados -----------------------------------------------------------
 
@@ -654,21 +664,21 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &csvReader4, &queue_files, &queue_reader4, &end4]
-                               { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[2], false, true, "user_behavior_logs"); });
+                               { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[2], false, true, "order"); });
     }
 
     SelectHandler selectHandler4(&queue_reader4, &queue_select4);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &selectHandler4]
-                               { selectHandler4.select({"Button Product Id"}); });
+                               { selectHandler4.select({ "ID PRODUTO", "QUANTIDADE"}); });
     }
 
     GroupByHandler groupByHandler4(&queue_select4, &queue_groupby4);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &groupByHandler4]
-                               { groupByHandler4.group_by("Button Product Id", "count"); });
+                               { groupByHandler4.group_by("ID PRODUTO", "sum"); });
     }
 
     string dbPath4 = "./mydatabase4.db";
@@ -677,14 +687,15 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler4, &dbPath4, &tableName4]
-                               { finalHandler4.aggregate(dbPath4, tableName4, false, true, "count", "", "count", "DESC"); });
+                               { finalHandler4.aggregate(dbPath4, tableName4, false, true, "", "ID PRODUTO", "sum", ""); });
     }
 
-    // Question 5 - Ranking dos produtos mais visualizados -----------------------------------------------------------
+      //Question 5 - Ranking dos produtos mais visualizados -----------------------------------------------------------
 
     ConsumerProducerQueue<DataFrame *> queue_reader5(100);
     ConsumerProducerQueue<DataFrame *> queue_select5(100);
     ConsumerProducerQueue<DataFrame *> queue_groupby5(100);
+    ConsumerProducerQueue<DataFrame *> queue_filter5(100);
     ConsumerProducerQueue<DataFrame *> queue_aggregate5(100);
 
     FileReader csvReader5;
@@ -702,9 +713,15 @@ int main()
                                { selectHandler5.select({"Button Product Id"}); });
     }
 
-    std::cout << "Select Handler created" << std::endl;
+    FilterHandler filterHandler5(&queue_select5, &queue_filter5);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &filterHandler5]
+                               { filterHandler5.filter("Button Product Id", "!=", "0"); });
+    }
 
-    GroupByHandler groupByHandler5(&queue_select5, &queue_groupby5);
+
+    GroupByHandler groupByHandler5(&queue_filter5, &queue_groupby5);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &groupByHandler5]
@@ -719,84 +736,86 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler5, &dbPath5, &tableName5]
-                                { finalHandler5.aggregate(dbPath5, tableName5, false, true, "", "", "count"); });
+                                { finalHandler5.aggregate(dbPath5, tableName5, false, true, "", "Button Product Id", "count"); });
     }
 
-    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]{
-        //  Call the dashboard function here
-        dashboard(data1, data2, data4, data5, data7);
-    });
 
-    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]
-                         {
-        //  Call the dashboard function here
-        dashboard(data1, data2, data4, data5, data7); });
 
-    std::cout << "got here" << std::endl;
-    for (auto &t : threads)
-    {
-        if (t.joinable())
-        {
-            t.join();
-        }
-    }
 
-    return 0;
 
-    // Question 7 - Número de usuários únicos visualizando cada produto por minuto ---------------------------------
+    // Question 7 - Numero de produtos sem estoque ---------------------------------
 
     ConsumerProducerQueue<DataFrame *> queue_reader7(100);
+    ConsumerProducerQueue<DataFrame *> queue_readerdfvm7(100);
     ConsumerProducerQueue<DataFrame *> queue_select7(100);
     ConsumerProducerQueue<DataFrame *> queue_groupby7(100);
+    ConsumerProducerQueue<DataFrame *> queue_aggregate7(100);
+    ConsumerProducerQueue<DataFrame *> queue_join7(100);
 
     FileReader csvReader7;
     int end7 = 0;
     for (int i = 0; i < 2; i++)
     {
-        (threads).emplace_back([i, &csvReader7, &queue_files, &queue_reader, &end7]
-                               { csvReader7.read(',', 0, end7, queue_reader, *queue_files[4], false, true, "user_behavior_logs"); });
+        (threads).emplace_back([i, &csvReader7, &queue_files, &queue_reader7, &end7]
+                               { csvReader7.read(',', 0, end7, queue_reader7, *queue_files[4], false, true, "order"); });
     }
 
     SelectHandler selectHandler7(&queue_reader7, &queue_select7);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &selectHandler7]
-                               { selectHandler7.select({"Button Product Id", "User Id"}); });
+                               { selectHandler7.select({"ID PRODUTO", "QUANTIDADE"}); });
     }
-
-    std::cout << "Select Handler created" << std::endl;
 
     GroupByHandler groupByHandler7(&queue_select7, &queue_groupby7);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &groupByHandler7]
-                               { groupByHandler7.group_by("Button Product Id", "count"); });
+                               { groupByHandler7.group_by("ID PRODUTO", "sum"); });
     }
 
-    std::cout << "GroupBy Handler created" << std::endl;
+    FileReader dfvm_reader7;
+    int endr7 = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &dfvm_reader7, &queue_files, &queue_readerdfvm7, &endr7]
+                               { dfvm_reader7.read(',', 0, endr7, queue_readerdfvm7, *queue_files[5], false, true, "stock"); });
+    }
 
-    string dbPath7 = "./mydatabase.db";
+    DataFrameVersionManager dfvm7(&queue_readerdfvm7);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &dfvm7]
+                               { dfvm7.storeFromQueue(); });
+    }
+    JoinHandler joinHandler7(&queue_groupby7, &queue_join7);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &joinHandler7, &dfvm7]
+                               { joinHandler7.join(&dfvm7,"ID PRODUTO", "ID PRODUTO"); });
+    }
+
+
+    string dbPath7 = "./mydatabase7.db";
     string tableName7 = "Table7";
-    FinalHandler finalHandler7(&queue_groupby7, nullptr);
+    FinalHandler finalHandler7(&queue_join7, nullptr);
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler7, &dbPath7, &tableName7]
-                               { finalHandler7.aggregate(dbPath7, tableName7, true, false, "count", "", "", "DESC"); });
+                               { finalHandler7.aggregate(dbPath7, tableName7, false, true, "", "ID PRODUTO", "sum", ""); });
     }
     string dbPath = "./mydatabase.db";
-    int count = 12;
-    double minutes = 13;
-    threads.emplace_back([&data1, &dbPath, &count, &minutes]
-                         {
-                             std::string sql = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
-                             worker1(data1, dbPath, count, minutes, sql);
-                         });
 
 
 
     // std::cout << "Num threads: " << threads.size() << std::endl;
     int i = 1;
     const auto interval = std::chrono::milliseconds(2000);
+
+    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]
+                         {
+                             //  Call the dashboard function here
+                             dashboard(data1, data2, data4, data5, data7); });
 
     // Open the database
     for (auto &t : threads)

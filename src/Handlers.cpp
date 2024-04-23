@@ -824,8 +824,6 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                                     row_data.emplace_back(tm);
                                 }
                             }
-                            std::cout<<row_data.size()<<std::endl;
-                            std::cout<<column_order.size()<<std::endl;
                             fileDF->add_row(row_data);
                         }
                     }
