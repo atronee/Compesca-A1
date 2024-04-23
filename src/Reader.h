@@ -11,9 +11,11 @@
 #include "ConsumerProducerQueue.h"
 #include <iostream>
 #include <filesystem>
+#include <mutex>
 
 class Reader { // Declaration of the base class Reader
 public:
+    std::mutex dataframes_mtx;
     std::unordered_map<std::filesystem::path, std::vector<DataFrame *>> dataframes;
 
     virtual void read(char delimiter, int start, int &end,
