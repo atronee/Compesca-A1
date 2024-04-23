@@ -303,7 +303,6 @@ void mockCSV(const int numRecords)
     flock(fd_product, LOCK_UN);
     close(fd_product);
 
-    std::cout << "Product data generated: " << productFilename << "\n";
 
     // Generate mock data for the stock
     std::string stockFilename = outputDir + "stock.csv";
@@ -336,8 +335,6 @@ void mockCSV(const int numRecords)
     stockFile.close();
     flock(fd_stock, LOCK_UN);
     close(fd_stock);
-
-    std::cout << "Stock data generated: " << stockFilename << "\n";
 
     // Generate mock data for the order
     std::string orderFilename = outputDir + "order.csv";
@@ -372,9 +369,6 @@ void mockCSV(const int numRecords)
     flock(fd_order, LOCK_UN);
     close(fd_order);
 
-    std::cout << "Order data generated: " << orderFilename << "\n";
-
-    std::cout << "Mock data generation complete.\n";
 }
 
 //DataCat mock data
@@ -554,12 +548,8 @@ void mockLogFiles(int filesPerType, int linesPerFile, int startFileIndex) {
             outputFile.close();
             flock(fd, LOCK_UN);
             close(fd);
-
-            std::cout << "Log file generated: " << filename << "\n";
         }
     }
-
-    std::cout << "Mock log file generation complete.\n";
 }
 
 // Sqlite Mock data

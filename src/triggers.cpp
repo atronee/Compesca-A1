@@ -32,7 +32,6 @@ void EventBasedTrigger::triggerOnApperanceOfNewLogFile(const std::filesystem::pa
             // check if file is not in the set of processed files and is a txt file
             if ((entry.path().extension() == ".txt" || entry.path().extension() == ".csv")&& isNewLogFile(logFolder, entry.path().filename().string())){
                 // Process the new log file
-                std::cout << "New log file detected: " << entry.path().filename() << std::endl;
                 processedFiles.insert(entry.path().filename().string());
                 queue_files.push(entry.path().string());
             }

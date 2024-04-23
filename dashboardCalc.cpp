@@ -109,7 +109,7 @@ void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, st
     ===========*/
     FileReader csvReader1;
     int end = 0;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 1; i++)
     {
         (*threads).emplace_back([i, &csvReader1, &queue_files, &queue_reader, &end]
                                 { csvReader1.read(',', 0, end, queue_reader, *queue_files, true, 3, "user_behavior_logs"); });
@@ -140,20 +140,21 @@ void pipeline1(string *data, ConsumerProducerQueue<std::string> *queue_files, st
     for (int i = 0; i < 1; i++)
     {
         (*threads).emplace_back([i, &finalHandler, &dbPath, &tableName]
-                                { finalHandler.aggregate(dbPath, tableName, false, false, "", "", "", ""); });
+                                { finalHandler.aggregate(dbPath, tableName); });
     }
 
-    // for(auto& t : threads){
+
+    // for(auto& t : *threads){
     //     t.join();
     //     std::cout<<"Thread joined"<<std::endl;
     // }
     // std::cout<<"Threads joined"<<std::endl;
 
-    // isso vai ser passado para o executeQuery e vai printar a resposta da pergunta
-    // possivelmente nesse novo modelo da main ter um while loop vamos guardar essa
-    // informação em uma variavel passada para a pipeline1 e depois printar no final
-    // da main a resposta de todas as perguntas, possivelmente em uma area completa que será o dashboard
-    // limpariamos o terminal antes de cada print.
+    // // isso vai ser passado para o executeQuery e vai printar a resposta da pergunta
+    // // possivelmente nesse novo modelo da main ter um while loop vamos guardar essa
+    // // informação em uma variavel passada para a pipeline1 e depois printar no final
+    // // da main a resposta de todas as perguntas, possivelmente em uma area completa que será o dashboard
+    // // limpariamos o terminal antes de cada print.
     // auto handleResults = [](int rowCount, double dateDiffMinutes)
     // {
     //     double ratio = rowCount / dateDiffMinutes;
@@ -398,6 +399,12 @@ int main()
         threads.emplace_back([i, &eventTrigger1, &queue_files1]
                              { eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1); });
     }
+    
+    // std::this_thread::sleep_for(std::chrono::seconds(2));
+    // for (int i = 0; i < 15; i++){
+    //     queue_files1.push("STOP");
+    // }
+
     // EventBasedTrigger eventTrigger2;
     // for (int i = 0; i < 1; i++)
     // {
@@ -446,8 +453,6 @@ int main()
     // everytime some of the variables are updated we should clean the terminal and print the new dashboard
     // dashboard(data1, data2, data4, data5, data7);
 
-    auto init_time = std::chrono::system_clock::now();
-
     for (auto &t : threads)
     {
         t.join();
@@ -475,106 +480,107 @@ int main()
     }
 
     std::vector<std::thread> loop_threads;
+    auto init_time = std::chrono::system_clock::now();
 
-    while (true)
-    {
-        // new data
-        // generate new data with mock following a trigger possibly wait 30 seconds and then add 100 new lines should be sufficient
+    // while (true)
+    // {
+    //     // new data
+    //     // generate new data with mock following a trigger possibly wait 30 seconds and then add 100 new lines should be sufficient
 
-        // pipeline1
-        EventBasedTrigger eventTrigger1;
-        for (int i = 0; i < 2; i++)
-        {
-            loop_threads.emplace_back([i, &eventTrigger1, &queue_files1]
-                                      { eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1); });
-        }
+    //     // pipeline1
+    //     EventBasedTrigger eventTrigger1;
+    //     for (int i = 0; i < 2; i++)
+    //     {
+    //         loop_threads.emplace_back([i, &eventTrigger1, &queue_files1]
+    //                                   { eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files1); });
+    //     }
 
-        // EventBasedTrigger eventTrigger2;
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     loop_threads.emplace_back([i, &eventTrigger2, &queue_files2]
-        //                               { eventTrigger2.triggerOnApperanceOfNewLogFile("./logs", queue_files2); });
-        // }
+    //     // EventBasedTrigger eventTrigger2;
+    //     // for (int i = 0; i < 5; i++)
+    //     // {
+    //     //     loop_threads.emplace_back([i, &eventTrigger2, &queue_files2]
+    //     //                               { eventTrigger2.triggerOnApperanceOfNewLogFile("./logs", queue_files2); });
+    //     // }
 
-        // EventBasedTrigger eventTrigger4;
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     loop_threads.emplace_back([i, &eventTrigger4, &queue_files4]
-        //                               { eventTrigger4.triggerOnApperanceOfNewLogFile("./logs", queue_files4); });
-        // }
+    //     // EventBasedTrigger eventTrigger4;
+    //     // for (int i = 0; i < 5; i++)
+    //     // {
+    //     //     loop_threads.emplace_back([i, &eventTrigger4, &queue_files4]
+    //     //                               { eventTrigger4.triggerOnApperanceOfNewLogFile("./logs", queue_files4); });
+    //     // }
 
-        // EventBasedTrigger eventTrigger5;
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     loop_threads.emplace_back([i, &eventTrigger5, &queue_files5]
-        //                               { eventTrigger5.triggerOnApperanceOfNewLogFile("./logs", queue_files5); });
-        // }
+    //     // EventBasedTrigger eventTrigger5;
+    //     // for (int i = 0; i < 5; i++)
+    //     // {
+    //     //     loop_threads.emplace_back([i, &eventTrigger5, &queue_files5]
+    //     //                               { eventTrigger5.triggerOnApperanceOfNewLogFile("./logs", queue_files5); });
+    //     // }
 
-        // EventBasedTrigger eventTrigger7;
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     loop_threads.emplace_back([i, &eventTrigger7, &queue_files7]
-        //                               { eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7); });
-        // }
+    //     // EventBasedTrigger eventTrigger7;
+    //     // for (int i = 0; i < 5; i++)
+    //     // {
+    //     //     loop_threads.emplace_back([i, &eventTrigger7, &queue_files7]
+    //     //                               { eventTrigger7.triggerOnApperanceOfNewLogFile("./logs", queue_files7); });
+    //     // }
 
-        // check if the time is greater than 10 seconds
-        auto current_time = std::chrono::system_clock::now();
-        auto diff = std::chrono::duration_cast<std::chrono::seconds>(current_time - init_time).count();
-        if (diff > 30)
-        {
-            string *data1;
-            pipeline1(data1, &queue_files1, &loop_threads); // this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
+    //     // check if the time is greater than 10 seconds
+    //     auto current_time = std::chrono::system_clock::now();
+    //     auto diff = std::chrono::duration_cast<std::chrono::seconds>(current_time - init_time).count();
+    //     if (diff > 30)
+    //     {
+    //         string *data1;
+    //         pipeline1(data1, &queue_files1, &loop_threads); // this should be associated with a trigger to run the pipeline 1 only when a trigger is activated
 
-            // // pipeline2
-            // string *data2;
-            // pipeline2(data2, &queue_files2, &loop_threads); // this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
+    //         // // pipeline2
+    //         // string *data2;
+    //         // pipeline2(data2, &queue_files2, &loop_threads); // this should be associated with a trigger to run the pipeline 2 only when a trigger is activated
 
-            // // pipeline4
-            // string *data4;
-            // pipeline4(data4, &queue_files4, &loop_threads); // this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
+    //         // // pipeline4
+    //         // string *data4;
+    //         // pipeline4(data4, &queue_files4, &loop_threads); // this should be associated with a trigger to run the pipeline 4 only when a trigger is activated
 
-            // // pipeline5
-            // string *data5;
-            // pipeline5(data5, &queue_files5, &loop_threads); // this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
+    //         // // pipeline5
+    //         // string *data5;
+    //         // pipeline5(data5, &queue_files5, &loop_threads); // this should be associated with a trigger to run the pipeline 5 only when a trigger is activated
 
-            // // pipeline7
-            // string *data7;
-            // pipeline7(data7, &queue_files7, &loop_threads); // this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
+    //         // // pipeline7
+    //         // string *data7;
+    //         // pipeline7(data7, &queue_files7, &loop_threads); // this should be associated with a trigger to run the pipeline 7 only when a trigger is activated
 
-            // // use datas to print the dashboard with the results of the pipelines
+    //         // // use datas to print the dashboard with the results of the pipelines
 
-            for (auto &thread : loop_threads)
-            {
-                thread.join();
-            }
+    //         for (auto &thread : loop_threads)
+    //         {
+    //             thread.join();
+    //         }
 
-            // // everytime some of the variables are updated we should clean the terminal and print the new dashboard
-            // dashboard(data1, data2, data4, data5, data7);
+    //         // // everytime some of the variables are updated we should clean the terminal and print the new dashboard
+    //         // dashboard(data1, data2, data4, data5, data7);
 
-            auto handleResults = [](int rowCount, double dateDiffMinutes)
-            {
-                double ratio = rowCount / dateDiffMinutes;
-                std::cout << "Total number of records: " << rowCount << std::endl;
-                std::cout << "Difference in dates (minutes): " << dateDiffMinutes << std::endl;
-                std::cout << "Ratio of records to time difference: " << ratio << std::endl;
-            };
+    //         auto handleResults = [](int rowCount, double dateDiffMinutes)
+    //         {
+    //             double ratio = rowCount / dateDiffMinutes;
+    //             std::cout << "Total number of records: " << rowCount << std::endl;
+    //             std::cout << "Difference in dates (minutes): " << dateDiffMinutes << std::endl;
+    //             std::cout << "Ratio of records to time difference: " << ratio << std::endl;
+    //         };
 
-            string dbPath = "./mydatabase.db";
-            // Open the database
-            sqlite3 *db = openDatabase(dbPath);
-            if (db != nullptr)
-            {
-                string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
-                executeQuery(db, query, handleResults);
+    //         string dbPath = "./mydatabase.db";
+    //         // Open the database
+    //         sqlite3 *db = openDatabase(dbPath);
+    //         if (db != nullptr)
+    //         {
+    //             string query = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+    //             executeQuery(db, query, handleResults);
 
-                //     // Close the database
-                sqlite3_close(db);
-            }
+    //             //     // Close the database
+    //             sqlite3_close(db);
+    //         }
 
-            init_time = std::chrono::system_clock::now();
-        }
-    }
-    return 0;
+    //         init_time = std::chrono::system_clock::now();
+    //     }
+    // }
+     return 0;
 }
 
 // std::cout<<"Mock files created"<<std::endl;
