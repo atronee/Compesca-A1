@@ -525,7 +525,6 @@ int main()
     }
 
 
-    string *data1;
     ConsumerProducerQueue<DataFrame *> queue_reader(100);
     ConsumerProducerQueue<DataFrame *> queue_select(100);
     ConsumerProducerQueue<DataFrame *> queue_filter(100);
@@ -636,14 +635,7 @@ int main()
                                 { finalHandler4.aggregate(dbPath4, tableName4, false, true, "count", "", "count", "DESC"); });
     }
 
-    std::cout<<"got here"<<std::endl;
-    for (auto &t : threads)
-    {
-        if(t.joinable()){
-            t.join();
-        }
-    }
-    return 0;
+
 
     // Question 5 - Ranking dos produtos mais visualizados -----------------------------------------------------------
 
@@ -684,10 +676,20 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler5, &dbPath5, &tableName5]
-                                { finalHandler5.aggregate(dbPath5, tableName5, true, false, "count", "", "", "DESC"); });
+                                { finalHandler5.aggregate(dbPath5, tableName5, false, true, "", "", "count"); });
     }
 
+    std::cout<<"got here"<<std::endl;
+    for (auto &t : threads)
+    {
+        if(t.joinable()){
+            t.join();
+        }
+    }
+    return 0;
+
     // Question 7 - Número de usuários únicos visualizando cada produto por minuto ---------------------------------
+
     ConsumerProducerQueue<DataFrame *> queue_reader7(100);
     ConsumerProducerQueue<DataFrame *> queue_select7(100);
     ConsumerProducerQueue<DataFrame *> queue_groupby7(100);
