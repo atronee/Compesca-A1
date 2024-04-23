@@ -42,7 +42,7 @@ void mock_files()
 {
     for (int i = 0; i < 1; i += 10)
     {
-        mockCSV();
+        mockCSV(i/10, 1000);
         mockLogFiles(10, 100, i);
     }
 }
@@ -280,6 +280,8 @@ void pipeline2(string *data, ConsumerProducerQueue<std::string> *queue_files, st
 
     // ainda preicso criar o sql dessa pipeline
 }
+
+
 
 void pipeline4(string *data, ConsumerProducerQueue<std::string> *queue_files, std::vector<std::thread> *threads)
 {
@@ -640,90 +642,90 @@ int main()
                                    { finalHandler2.aggregate(dbPath2, tableName2); });
         }
 
-        int count2 = 15;
-        double minutes2 = 14;
-        threads.emplace_back([&data2, &dbPath2, &count2, &minutes2]
-                             {
-                                 std::string sql = "SELECT SUM(QUANTIDADE), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table2;";
-                                 worker1(data2, dbPath2, count2, minutes2, sql); });
-    // // Question 4 - Ranking dos produtos mais comprados -----------------------------------------------------------
 
-    // ConsumerProducerQueue<DataFrame *> queue_reader4(100);
-    // ConsumerProducerQueue<DataFrame *> queue_select4(100);
-    // ConsumerProducerQueue<DataFrame *> queue_groupby4(100);
+    //Question 4 - Ranking dos produtos mais comprados -----------------------------------------------------------
 
-    // FileReader csvReader4;
-    // int end4 = 0;
-    // for (int i = 0; i < 2; i++)
-    // {
-    //     (threads).emplace_back([i, &csvReader4, &queue_files, &queue_reader4, &end4]
-    //                            { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[2], false, true, "user_behavior_logs"); });
-    // }
+    ConsumerProducerQueue<DataFrame *> queue_reader4(100);
+    ConsumerProducerQueue<DataFrame *> queue_select4(100);
+    ConsumerProducerQueue<DataFrame *> queue_groupby4(100);
 
-    // SelectHandler selectHandler4(&queue_reader4, &queue_select4);
-    // for (int i = 0; i < 2; i++)
-    // {
-    //     (threads).emplace_back([i, &selectHandler4]
-    //                            { selectHandler4.select({"Button Product Id"}); });
-    // }
+    FileReader csvReader4;
+    int end4 = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &csvReader4, &queue_files, &queue_reader4, &end4]
+                               { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[2], false, true, "user_behavior_logs"); });
+    }
 
-    // GroupByHandler groupByHandler4(&queue_select4, &queue_groupby4);
-    // for (int i = 0; i < 2; i++)
-    // {
-    //     (threads).emplace_back([i, &groupByHandler4]
-    //                            { groupByHandler4.group_by("Button Product Id", "count"); });
-    // }
+    SelectHandler selectHandler4(&queue_reader4, &queue_select4);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &selectHandler4]
+                               { selectHandler4.select({"Button Product Id"}); });
+    }
 
-    // string dbPath4 = "./mydatabase4.db";
-    // string tableName4 = "Table4";
-    // FinalHandler finalHandler4(&queue_groupby4, nullptr);
-    // for (int i = 0; i < 1; i++)
-    // {
-    //     (threads).emplace_back([i, &finalHandler4, &dbPath4, &tableName4]
-    //                            { finalHandler4.aggregate(dbPath4, tableName4, false, true, "count", "", "count", "DESC"); });
-    // }
+    GroupByHandler groupByHandler4(&queue_select4, &queue_groupby4);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &groupByHandler4]
+                               { groupByHandler4.group_by("Button Product Id", "count"); });
+    }
 
-    // // Question 5 - Ranking dos produtos mais visualizados -----------------------------------------------------------
+    string dbPath4 = "./mydatabase4.db";
+    string tableName4 = "Table4";
+    FinalHandler finalHandler4(&queue_groupby4, nullptr);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &finalHandler4, &dbPath4, &tableName4]
+                               { finalHandler4.aggregate(dbPath4, tableName4, false, true, "count", "", "count", "DESC"); });
+    }
 
-    // ConsumerProducerQueue<DataFrame *> queue_reader5(100);
-    // ConsumerProducerQueue<DataFrame *> queue_select5(100);
-    // ConsumerProducerQueue<DataFrame *> queue_groupby5(100);
-    // ConsumerProducerQueue<DataFrame *> queue_aggregate5(100);
+    // Question 5 - Ranking dos produtos mais visualizados -----------------------------------------------------------
 
-    // FileReader csvReader5;
-    // int end5 = 0;
-    // for (int i = 0; i < 2; i++)
-    // {
-    //     (threads).emplace_back([i, &csvReader5, &queue_files, &queue_reader5, &end5]
-    //                            { csvReader5.read(',', 0, end5, queue_reader5, *queue_files[3], false, true, "user_behavior_logs"); });
-    // }
+    ConsumerProducerQueue<DataFrame *> queue_reader5(100);
+    ConsumerProducerQueue<DataFrame *> queue_select5(100);
+    ConsumerProducerQueue<DataFrame *> queue_groupby5(100);
+    ConsumerProducerQueue<DataFrame *> queue_aggregate5(100);
 
-    // SelectHandler selectHandler5(&queue_reader5, &queue_select5);
-    // for (int i = 0; i < 2; i++)
-    // {
-    //     (threads).emplace_back([i, &selectHandler5]
-    //                            { selectHandler5.select({"Button Product Id"}); });
-    // }
+    FileReader csvReader5;
+    int end5 = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &csvReader5, &queue_files, &queue_reader5, &end5]
+                               { csvReader5.read(',', 0, end5, queue_reader5, *queue_files[3], false, true, "user_behavior_logs"); });
+    }
 
-    // std::cout << "Select Handler created" << std::endl;
+    SelectHandler selectHandler5(&queue_reader5, &queue_select5);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &selectHandler5]
+                               { selectHandler5.select({"Button Product Id"}); });
+    }
 
-    // GroupByHandler groupByHandler5(&queue_select5, &queue_groupby5);
-    // for (int i = 0; i < 2; i++)
-    // {
-    //     (threads).emplace_back([i, &groupByHandler5]
-    //                            { groupByHandler5.group_by("Button Product Id", "count"); });
-    // }
+    std::cout << "Select Handler created" << std::endl;
 
-    // std::cout << "GroupBy Handler created" << std::endl;
+    GroupByHandler groupByHandler5(&queue_select5, &queue_groupby5);
+    for (int i = 0; i < 2; i++)
+    {
+        (threads).emplace_back([i, &groupByHandler5]
+                               { groupByHandler5.group_by("Button Product Id", "count"); });
+    }
 
-    // string dbPath5 = "./mydatabase5.db";
-    // string tableName5 = "Table5";
-    // FinalHandler finalHandler5(&queue_groupby5, nullptr);
-    // for (int i = 0; i < 1; i++)
-    // {
-    //     (threads).emplace_back([i, &finalHandler5, &dbPath5, &tableName5]
-    //                            { finalHandler5.aggregate(dbPath5, tableName5, false, true, "", "", "count"); });
-    // }
+    std::cout << "GroupBy Handler created" << std::endl;
+
+    string dbPath5 = "./mydatabase5.db";
+    string tableName5 = "Table5";
+    FinalHandler finalHandler5(&queue_groupby5, nullptr);
+    for (int i = 0; i < 1; i++)
+    {
+        (threads).emplace_back([i, &finalHandler5, &dbPath5, &tableName5]
+                                { finalHandler5.aggregate(dbPath5, tableName5, false, true, "", "", "count"); });
+    }
+
+    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]{
+        //  Call the dashboard function here
+        dashboard(data1, data2, data4, data5, data7);
+    });
 
     threads.emplace_back([&data1, &data2, &data4, &data5, &data7]
                          {
@@ -738,6 +740,7 @@ int main()
             t.join();
         }
     }
+
     return 0;
 
     // Question 7 - Número de usuários únicos visualizando cada produto por minuto ---------------------------------
@@ -781,6 +784,15 @@ int main()
                                { finalHandler7.aggregate(dbPath7, tableName7, true, false, "count", "", "", "DESC"); });
     }
     string dbPath = "./mydatabase.db";
+    int count = 12;
+    double minutes = 13;
+    threads.emplace_back([&data1, &dbPath, &count, &minutes]
+                         {
+                             std::string sql = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
+                             worker1(data1, dbPath, count, minutes, sql);
+                         });
+
+
 
     // std::cout << "Num threads: " << threads.size() << std::endl;
     int i = 1;
