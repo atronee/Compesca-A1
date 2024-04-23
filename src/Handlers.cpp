@@ -250,6 +250,10 @@ void GroupByHandler::group_by(string column, string operation) {
         for (const auto& some_column : new_column_order) {
             new_column_types.push_back(&typeid(DF->get_column_type(some_column)));
         }
+        if (operation == "count") {
+            new_column_order.push_back("count");
+            new_column_types.push_back(&typeid(int));
+        }
         new_df = new DataFrame(new_column_order, new_column_types);
         for (const auto& group : groups) {
             vector<DataVariant> row_data;
