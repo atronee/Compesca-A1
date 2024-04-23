@@ -1,6 +1,7 @@
 
 #include "DataFrame.h"
 #include "ConsumerProducerQueue.h"
+#include <utility>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -745,19 +746,18 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
      * groupOperation: operation to perform on the grouped DataFrame
      * sortOrder: order to sort the DataFrame
      */
-    while(true) {
-        DataFrame* df = queue_in->pop();
+    while (true) {
+        DataFrame *df = queue_in->pop();
         if (df == nullptr) {
             break;
         }
-        if(!sortFlag && !groupFlag){
+        if (!sortFlag && !groupFlag) {
             write_to_sqlite(df, filePath, table);
-        }
-        else {
+        } else {
             std::unordered_map<string, std::size_t> column_types = df->get_column_types();
             vector<string> column_order = df->get_column_order();
             auto fileDF = new DataFrame();
-            for (const auto & i : column_order) {
+            for (const auto &i: column_order) {
                 if (column_types[i] == type_to_index[std::type_index(typeid(int))]) {
                     fileDF->add_column(i, vector<int>{});
                 } else if (column_types[i] == type_to_index[std::type_index(typeid(float))]) {
@@ -791,21 +791,51 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                         return;
                     }
 
+                    // Create table if it doesn't exist
+                    std::string sql = "CREATE TABLE IF NOT EXISTS " + table + " (";
+                    for (const auto &col: column_order) {
+                        if (column_types[col] == type_to_index[std::type_index(typeid(int))]) {
+                            sql += col + " INTEGER,";
+                        } else if (column_types[col] == type_to_index[std::type_index(typeid(float))]) {
+                            sql += col + " REAL,";
+                        } else if (column_types[col] == type_to_index[std::type_index(typeid(std::string))]) {
+                            sql += col + " TEXT,";
+                        } else {
+                            // For other data types, you can store them as BLOB or TEXT,
+                            // depending on how you want to handle them.
+                            sql += col + " TEXT,";
+
+                        }
+                        sql.pop_back();  // Remove the last comma
+                        sql += ");";
+                        char *errMsg;
+                        if (sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg) != SQLITE_OK) {
+                            std::cerr << "SQL error: " << errMsg << "\n";
+                            sqlite3_free(errMsg);
+                            sqlite3_close(db);
+                            return;
+                        }
+
                     std::string sql = "SELECT * FROM " + table;
                     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
 
                         while (sqlite3_step(stmt) == SQLITE_ROW) {
                             vector<DataVariant> row_data;
-                            for(int i = 0; i < column_order.size(); ++i) {
+                            for (int i = 0; i < column_order.size(); ++i) {
                                 if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(int))]) {
                                     row_data.emplace_back(sqlite3_column_int(stmt, i));
-                                } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(float))]) {
+                                } else if (column_types[column_order[i]] ==
+                                           type_to_index[std::type_index(typeid(float))]) {
                                     row_data.emplace_back(static_cast<float>(sqlite3_column_double(stmt, i)));
-                                } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(std::string))]) {
-                                    row_data.emplace_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i))));
-                                } else if (column_types[column_order[i]] == type_to_index[std::type_index(typeid(std::tm))]) {
+                                } else if (column_types[column_order[i]] ==
+                                           type_to_index[std::type_index(typeid(std::string))]) {
+                                    row_data.emplace_back(std::string(
+                                            reinterpret_cast<const char *>(sqlite3_column_text(stmt, i))));
+                                } else if (column_types[column_order[i]] ==
+                                           type_to_index[std::type_index(typeid(std::tm))]) {
                                     std::tm tm{};
-                                    strptime(reinterpret_cast<const char*>(sqlite3_column_text(stmt, i)), "%Y-%m-%d %H:%M:%S", &tm);
+                                    strptime(reinterpret_cast<const char *>(sqlite3_column_text(stmt, i)),
+                                             "%Y-%m-%d %H:%M:%S", &tm);
                                     row_data.emplace_back(tm);
                                 }
                             }
@@ -816,39 +846,37 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                     flock(fd, LOCK_UN);
                     close(fd);
                 }
-                sqlite3_close(db);
+                    sqlite3_close(db);
+                }
+                if (sortFlag && groupFlag) {
+                    DataFrame *new_df = groupBy(fileDF, columnGroup, groupOperation);
+                    delete fileDF;
+                    fileDF = new_df;
+                    ConsumerProducerQueue<DataFrame *> q_in(2);
+                    ConsumerProducerQueue<DataFrame *> q_out(2);
+                    SortHandler sh(&q_in, &q_out);
+                    q_in.push(fileDF);
+                    q_in.push(nullptr);
+                    sh.sort(columnGroup, sortOrder);
+                    delete fileDF;
+                    fileDF = q_out.pop();
+                } else if (groupFlag) {
+                    DataFrame *new_df = groupBy(fileDF, columnGroup, groupOperation);
+                    delete fileDF;
+                    fileDF = new_df;
+                } else {
+                    DataFrame *new_df = aggregate_sort(df, fileDF, columnSort, sortOrder);
+                    delete fileDF;
+                    fileDF = new_df;
+                }
+                write_to_sqlite(fileDF, filePath, table, true);
+                delete fileDF;
             }
-            if(sortFlag && groupFlag)
-            {
-                DataFrame *new_df = groupBy(fileDF, columnGroup, groupOperation);
-                delete fileDF;
-                fileDF = new_df;
-                ConsumerProducerQueue<DataFrame *> q_in(2);
-                ConsumerProducerQueue<DataFrame *> q_out(2);
-                SortHandler sh(&q_in, &q_out);
-                q_in.push(fileDF);
-                q_in.push(nullptr);
-                sh.sort(columnGroup, sortOrder);
-                delete fileDF;
-                fileDF = q_out.pop();
-            }
-
-            else if (groupFlag) {
-                DataFrame *new_df = groupBy(fileDF, columnGroup, groupOperation);
-                delete fileDF;
-                fileDF = new_df;
-            } else {
-                DataFrame *new_df = aggregate_sort(df, fileDF, columnSort, sortOrder);
-                delete fileDF;
-                fileDF = new_df;
-            }
-            write_to_sqlite(fileDF, filePath, table, true);
-            delete fileDF;
+            delete df;
         }
-        delete df;
+
+
     }
-
-
 }
 
 // void JoinHandler::join_float(DataFrame* df1, string main_column_name, string join_column_name){
@@ -1090,14 +1118,14 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
 //         // free the result df
 //     }
 // };
-    
 
-void JoinHandler::join(DataFrame* df1, string main_column_name, string join_column_name){
+
+void JoinHandler::join(DataFrame* df1, std::string main_column, std::string join_column){
     size_t type;
-    type = df1->get_column_type(main_column_name);
+    type = df1->get_column_type(main_column);
 
     if (type == 0) {
-        join_int(df1, main_column_name, join_column_name);
+        join_int(df1, main_column, std::move(join_column));
     }
     else{
         throw std::invalid_argument("The join only supports int columns");
@@ -1113,6 +1141,7 @@ void JoinHandler::join(DataFrame* df1, string main_column_name, string join_colu
     //     join_time(df1, main_column_name, join_column_name);
     // }
 }
+
 
 void JoinHandler::join(DataFrameVersionManager* dfvm, std::string main_column_name, std::string join_column_name){
 
