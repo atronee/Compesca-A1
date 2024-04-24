@@ -673,7 +673,7 @@ int main()
 
         threads.emplace_back([&data2, &dbPath2, &count2, &minutes2]
                              {
-                                 std::string sql = "SELECT SUM(QUANTIDADE), (strftime('%s', MAX(DATA_DE_COMPRA)) - strftime('%s', MIN(DATA_DE_COMPRA))) / 60.0 AS DateDiffInMinutes FROM Table2;";
+                                 std::string sql = "SELECT SUM(QUANTIDADE), (strftime('%s', MAX(DATA)) - strftime('%s', MIN(DATA))) / 60.0 AS DateDiffInMinutes FROM Table2;";
                                  worker2(data2, dbPath2, count2, minutes2, sql); });
     // PIPELINE 3 --------------------------------------------------------------------------------------------
 
