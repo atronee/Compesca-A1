@@ -49,10 +49,11 @@ string convert_tm_to_string(std::tm tm)
 
 void mock_files()
 {
-    for (int i = 0; i < 1; i += 10)
+    for (int i = 0; i < 100; i += 10)
     {
         mockCSV(i/10, 1000);
         mockLogFiles(10, 100, i);
+        std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }
 
@@ -90,7 +91,7 @@ static int callback1(void *data, int argc, char **argv, char **azColName)
 // Function to execute a SQL query and store results
 bool executeQuery1(const std::string &sql, int &count, double &minutes, std::string *dbPath)
 {
-    int fd = open(dbPath->c_str(), O_RDWR);
+    int fd = open(dbPath->c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         return false;
     }
@@ -149,7 +150,7 @@ int callback2(void *data, int argc, char **argv, char **azColName)
 
 bool executeQuery2(const std::string &sql, std::string *dbPath)
 {
-    int fd = open(dbPath->c_str(), O_RDWR);
+    int fd = open(dbPath->c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         return false;
     }
@@ -208,7 +209,7 @@ static int callback3(void *data, int argc, char **argv, char **azColName)
 
 bool executeQuery3(const std::string &sql, std::string &result, std::string *dbPath)
 {
-    int fd = open(dbPath->c_str(), O_RDWR);
+    int fd = open(dbPath->c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         return false;
     }
@@ -267,7 +268,7 @@ int callback4(void *data, int argc, char **argv, char **azColName) {
 bool executeQuery4(const std::string &sql, const std::string &dbPath, std::string &result) {
     sqlite3 *db;
     char *errorMessage = nullptr;
-    int fd = open(dbPath.c_str(), O_RDWR);
+    int fd = open(dbPath.c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         return false;
     }
@@ -327,7 +328,7 @@ int callback5(void *data, int argc, char **argv, char **azColName) {
 bool executeQuery5(const std::string &sql, const std::string &dbPath, std::string &result) {
     sqlite3 *db;
     char *errorMessage = nullptr;
-    int fd = open(dbPath.c_str(), O_RDWR);
+    int fd = open(dbPath.c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         return false;
     }
@@ -379,7 +380,7 @@ int callback7(void *data, int argc, char **argv, char **azColName) {
 bool executeQuery7(const std::string &sql, const std::string &dbPath, std::string &result) {
     sqlite3 *db;
     char *errorMessage = nullptr;
-    int fd = open(dbPath.c_str(), O_RDWR);
+    int fd = open(dbPath.c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         return false;
     }
@@ -542,6 +543,12 @@ void dashboard(string *data1, string *data2, string *data4, string *data5, strin
     }
 }
 
+
+//SELECT (CAST(SUBSTR(timediff(Max(event_datetime), MIN(event_datetime)), 11, 2) AS INTEGER) * 24 * 60) +
+//(CAST(SUBSTR(timediff(Max(event_datetime), MIN(event_datetime)), 14, 2) AS INTEGER) * 60) +
+//(CAST(SUBSTR(timediff(Max(event_datetime), MIN(event_datetime)), 17, 2) AS INTEGER)) AS minutes
+//FROM events;
+
 int main()
 {
 
@@ -569,10 +576,14 @@ int main()
         queue_files.push_back(std::make_unique<ConsumerProducerQueue<std::string>>(100));
     }
 
-    mock_files();
+    mockCSV(0, 1000);
+    mockLogFiles(10, 100, 0);
 
     // vector of threads
     std::vector<std::thread> threads;
+
+    threads.emplace_back(mock_files);
+
     EventBasedTrigger eventTrigger1;
     EventBasedTrigger eventTrigger2;
     for (int i = 0; i < 1; i++)
@@ -987,7 +998,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &diffHandler7]
-                               { diffHandler7.diff("QUANTIDADE", "QUANTIDADE_STOCK", "OUT_OF_STOCK"); });
+                               { diffHandler7.diff("QUANTIDADE_STOCK", "QUANTIDADE", "OUT_OF_STOCK"); });
     }
 
     FilterHandler filterHandler7(&queue_diff7, &queue_filter7);

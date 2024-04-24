@@ -15,7 +15,7 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         // creates a sqlite db
         sqlite3 *db;
         sqlite3_stmt *stmt;
-        int fd = open(filePath.c_str(), O_RDWR);
+        int fd = open(filePath.c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
         if (fd == -1) {
             return;
         }
