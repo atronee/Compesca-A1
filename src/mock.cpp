@@ -261,7 +261,7 @@ void mockCSV(int index, const int numRecords)
         return;
     }
 
-    consumerFile << "ID,NOME,SOBRENOME,ENDEREÇO,DATA DE NASCIMENTO,DATA DE CADASTRO\n";
+    consumerFile << "ID,NOME,SOBRENOME,ENDEREÇO,DATA_DE_NASCIMENTO,DATA_DE_CADASTRO\n";
 
     for (int record = 1; record <= numRecords; ++record) {
         std::string consumer = consumerData();
@@ -329,7 +329,7 @@ void mockCSV(int index, const int numRecords)
         return;
     }
 
-    stockFile << "ID PRODUTO,QUANTIDADE_STOCK\n";
+    stockFile << "ID_PRODUTO,QUANTIDADE_STOCK\n";
 
     for (int record = 1; record <= 7; ++record) {
         std::string stock = stockData(record);
@@ -362,7 +362,7 @@ void mockCSV(int index, const int numRecords)
     }
 
     //column names
-    orderFile << "ID USUARIO,ID PRODUTO,QUANTIDADE,DATA DE COMPRA,DATA DE PAGAMENTO,DATA DE ENVIO,DATA DE ENTREGA\n";
+    orderFile << "ID_USUARIO,ID_PRODUTO,QUANTIDADE,DATA_DE_COMPRA,DATA_DE_PAGAMENTO,DATA_DE_ENVIO,DATA_DE_ENTREGA\n";
 
     for (int record = 1; record <= numRecords; ++record) {
         std::string order = orderData();
@@ -453,16 +453,16 @@ std::string generateLogDebug()
 void writeColumnNames(std::ofstream& outputFile, LogType fileType) {
     switch (fileType) {
         case LOG_AUDIT:
-            outputFile << "Type,User Author Id,Action,Action Description,Text Content,Date\n";
+            outputFile << "Type,User_Author_Id,Action,Action_Description,Text_Content,Date\n";
             break;
         case LOG_USER_BEHAVIOR:
-            outputFile << "Type,User Author Id,Action,Button Product Id,Stimulus,Component,Text Content,Date\n";
+            outputFile << "Type,User_Author_Id,Action,Button_Product_Id,Stimulus,Component,Text_Content,Date\n";
             break;
         case LOG_FAILURE_NOTIFICATION:
-            outputFile << "Type,Component,Message,Severity,Text Content,Date\n";
+            outputFile << "Type,Component,Message,Severity,Text_Content,Date\n";
             break;
         case LOG_DEBUG:
-            outputFile << "Type,Message,Text Content,Date\n";
+            outputFile << "Type,Message,Text_Content,Date\n";
             break;
         default:
             break;
@@ -656,7 +656,7 @@ void mockRandomRequest(ConsumerProducerQueue<std::string> &queue, int interval)
         }
 
         // Write column names
-        outputFile << "Type,User Author Id,Action,Button Product Id,Stimulus,Component,Text Content,Date\n";
+        outputFile << "Type,User_Author_Id,Action,Button_Product_Id,Stimulus,Component,Text_Content,Date\n";
 
         // Write log messages
         for (int line = 1; line <= linesPerFile; ++line) {
