@@ -612,14 +612,14 @@ int main()
      for (int i = 0; i < 1; i++)
      {
          (threads).emplace_back([i, &selectHandler]
-                                { selectHandler.select({"Button Product Id", "Date"}); });
+                                { selectHandler.select({"Button_Product_Id", "Date"}); });
      }
 
      FilterHandler filterHandler(&queue_select, &queue_filter);
      for (int i = 0; i < 1; i++)
      {
          (threads).emplace_back([i, &filterHandler]
-                                { filterHandler.filter("Button Product Id", "!=", "0"); });
+                                { filterHandler.filter("Button_Product_Id", "!=", "0"); });
      }
 
      // ao inves de salvar no database esse poderia ir só para o repositório e eu pego do repositório o df para terminar a pergunta
@@ -656,7 +656,7 @@ int main()
         for (int i = 0; i < 2; i++)
         {
             (threads).emplace_back([i, &selectHandler2]
-                                   { selectHandler2.select({"QUANTIDADE", "DATA DE COMPRA"}); });
+                                   { selectHandler2.select({"QUANTIDADE", "DATA_DE_COMPRA"}); });
         }
 
         string dbPath2 = "./mydatabase2.db";
@@ -699,21 +699,21 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &selectHandler3]
-                               { selectHandler3.select({"Button Product Id"}); });
+                               { selectHandler3.select({"Button_Product_Id"}); });
     }
 
     FilterHandler filterHandler3(&queue_select3, &queue_filter3);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &filterHandler3]
-                               { filterHandler3.filter("Button Product Id", "!=", "0"); });
+                               { filterHandler3.filter("Button_Product_Id", "!=", "0"); });
     }
 
     GroupByHandler groupByHandler3(&queue_filter3, &queue_groupby3);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &groupByHandler3]
-                               { groupByHandler3.group_by("Button Product Id", "count"); });
+                               { groupByHandler3.group_by("Button_Product_Id", "count"); });
     }
 
     string dbPath3 = "./mydatabase3.db";
@@ -722,7 +722,7 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler3, &dbPath3, &tableName3]
-                               { finalHandler3.aggregate(dbPath3, tableName3, false, true, "", "Button Product Id", "count", ""); });
+                               { finalHandler3.aggregate(dbPath3, tableName3, false, true, "", "Button_Product_Id", "count", ""); });
     }
 
     //Auxiliar
@@ -772,14 +772,14 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &selectHandler4]
-                               { selectHandler4.select({ "ID PRODUTO", "QUANTIDADE"}); });
+                               { selectHandler4.select({ "ID_PRODUTO", "QUANTIDADE"}); });
     }
 
     GroupByHandler groupByHandler4(&queue_select4, &queue_groupby4);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &groupByHandler4]
-                               { groupByHandler4.group_by("ID PRODUTO", "sum"); });
+                               { groupByHandler4.group_by("ID_PRODUTO", "sum"); });
     }
 
     string dbPath4 = "./mydatabase4.db";
@@ -788,7 +788,7 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler4, &dbPath4, &tableName4]
-                               { finalHandler4.aggregate(dbPath4, tableName4, false, true, "", "ID PRODUTO", "sum", ""); });
+                               { finalHandler4.aggregate(dbPath4, tableName4, false, true, "", "ID_PRODUTO", "sum", ""); });
     }
 
 
@@ -818,14 +818,14 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &selectHandler5]
-                               { selectHandler5.select({"Button Product Id"}); });
+                               { selectHandler5.select({"Button_Product_Id"}); });
     }
 
     FilterHandler filterHandler5(&queue_select5, &queue_filter5);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &filterHandler5]
-                               { filterHandler5.filter("Button Product Id", "!=", "0"); });
+                               { filterHandler5.filter("Button_Product_Id", "!=", "0"); });
     }
 
 
@@ -833,7 +833,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &groupByHandler5]
-                               { groupByHandler5.group_by("Button Product Id", "count"); });
+                               { groupByHandler5.group_by("Button_Product_Id", "count"); });
     }
 
     std::cout << "GroupBy Handler created" << std::endl;
@@ -844,7 +844,7 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler5, &dbPath5, &tableName5]
-                                { finalHandler5.aggregate(dbPath5, tableName5, false, true, "", "Button Product Id", "count"); });
+                                { finalHandler5.aggregate(dbPath5, tableName5, false, true, "", "Button_Product_Id", "count"); });
     }
 
     threads.emplace_back([&data5, &dbPath5]
@@ -871,21 +871,21 @@ int main()
 //    for (int i = 0; i < 2; i++)
 //    {
 //        (threads).emplace_back([i, &selectHandler6]
-//                               { selectHandler6.select({"Button Product Id"}); });
+//                               { selectHandler6.select({"Button_Product_Id"}); });
 //    }
 //
 //    FilterHandler filterHandler6(&queue_select6, &queue_select6);
 //    for (int i = 0; i < 2; i++)
 //    {
 //        (threads).emplace_back([i, &filterHandler6]
-//                               { filterHandler6.filter("Button Product Id", "!=", "0"); });
+//                               { filterHandler6.filter("Button_Product_Id", "!=", "0"); });
 //    }
 //
 //    GroupByHandler groupByHandler6(&queue_select6, &queue_groupby6);
 //    for (int i = 0; i < 2; i++)
 //    {
 //        (threads).emplace_back([i, &groupByHandler6]
-//                               { groupByHandler6.group_by("Button Product Id", "count"); });
+//                               { groupByHandler6.group_by("Button_Product_Id", "count"); });
 //    }
 //
 //    string dbPath6 = "./mydatabase6.db";
@@ -894,7 +894,7 @@ int main()
 //    for (int i = 0; i < 1; i++)
 //    {
 //        (threads).emplace_back([i, &finalHandler6, &dbPath6, &tableName6]
-//                               { finalHandler6.aggregate(dbPath6, tableName6, false, true, "", "Button Product Id", "count", ""); });
+//                               { finalHandler6.aggregate(dbPath6, tableName6, false, true, "", "Button_Product_Id", "count", ""); });
 //    }
 
 ////Auxiliar
@@ -915,14 +915,14 @@ int main()
 //    for (int i = 0; i < 2; i++)
 //    {
 //        (threads).emplace_back([i, &selectHandler6_1]
-//                               { selectHandler6_1.select({"ID PRODUTO"});});
+//                               { selectHandler6_1.select({"ID_PRODUTO"});});
 //    }
 //
 //    GroupByHandler groupByHandler6_1(&queue_select6_1, &queue_groupby6_1);
 //    for (int i = 0; i < 2; i++)
 //    {
 //        (threads).emplace_back([i, &groupByHandler6_1]
-//                               { groupByHandler6_1.group_by("ID PRODUTO", "count"); });
+//                               { groupByHandler6_1.group_by("ID_PRODUTO", "count"); });
 //    }
 //
 //    string tableName6_1 = "Table6_1";
@@ -930,12 +930,12 @@ int main()
 //    for (int i = 0; i < 1; i++)
 //    {
 //        (threads).emplace_back([i, &finalHandler6_1, &dbPath6, &tableName6_1]
-//                               { finalHandler6_1.aggregate(dbPath6, tableName6_1, false, true, "", "ID PRODUTO", "count", ""); });
+//                               { finalHandler6_1.aggregate(dbPath6, tableName6_1, false, true, "", "ID_PRODUTO", "count", ""); });
 //    }
 //
 //    threads.emplace_back([&data6, &dbPath6]
 //                         {
-//                             std::string sql = "SELECT (Table6_1.count - Table6.count) / Table6_1.count AS NewValue FROM table1 INNER JOIN table2 ON Table6_1.ID PRODUTO = Table6.Button Product Id;";
+//                             std::string sql = "SELECT (Table6_1.count - Table6.count) / Table6_1.count AS NewValue FROM table1 INNER JOIN table2 ON Table6_1.ID_PRODUTO = Table6.Button_Product_Id;";
 //                             worker6(data6, dbPath6, sql); });
 
 
@@ -962,14 +962,14 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &selectHandler7]
-                               { selectHandler7.select({"ID PRODUTO", "QUANTIDADE"}); });
+                               { selectHandler7.select({"ID_PRODUTO", "QUANTIDADE"}); });
     }
 
     GroupByHandler groupByHandler7(&queue_select7, &queue_groupby7);
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &groupByHandler7]
-                               { groupByHandler7.group_by("ID PRODUTO", "sum"); });
+                               { groupByHandler7.group_by("ID_PRODUTO", "sum"); });
     }
 
     FileReader dfvm_reader7;
@@ -990,7 +990,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &joinHandler7, &dfvm7]
-                               { joinHandler7.join(&dfvm7,"ID PRODUTO", "ID PRODUTO"); });
+                               { joinHandler7.join(&dfvm7,"ID_PRODUTO", "ID_PRODUTO"); });
     }
 
 
@@ -1015,7 +1015,7 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         (threads).emplace_back([i, &finalHandler7, &dbPath7, &tableName7]
-                               { finalHandler7.aggregate(dbPath7, tableName7, false, true, "", "ID PRODUTO", "sum", ""); });
+                               { finalHandler7.aggregate(dbPath7, tableName7, false, true, "", "ID_PRODUTO", "sum", ""); });
     }
 
     threads.emplace_back([&data7, &dbPath7]
