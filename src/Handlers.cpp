@@ -163,6 +163,34 @@ void FilterHandler::filter(string column, string operation, string value) {
                         i --;
                     }
                 }
+            } else if (operation == "<") {
+                for (size_t i = 0; i < column_data.size(); ++i) {
+                    if (!(column_data[i] < value)) {
+                        df->remove_row(i);
+                        i --;
+                    }
+                }
+            } else if (operation == ">") {
+                for (size_t i = 0; i < column_data.size(); ++i) {
+                    if (!(column_data[i] > value)) {
+                        df->remove_row(i);
+                        i --;
+                    }
+                }
+            } else if (operation == "<=") {
+                for (size_t i = 0; i < column_data.size(); ++i) {
+                    if (!(column_data[i] <= value)) {
+                        df->remove_row(i);
+                        i --;
+                    }
+                }
+            } else if (operation == ">=") {
+                for (size_t i = 0; i < column_data.size(); ++i) {
+                    if (!(column_data[i] >= value)) {
+                        df->remove_row(i);
+                        i --;
+                    }
+                }
             } else {
                 throw std::invalid_argument("Invalid operation");
             }

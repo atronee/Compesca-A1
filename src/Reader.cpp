@@ -83,21 +83,21 @@ void FileReader::read(char delimiter,int start, int & end,
                             types.push_back(&typeid(float));
                             second_row_data.push_back(value);
                         } else {
-                            try {
-
-                                std::tm value = std::tm();
-                                std::istringstream ss(cell);
-                                ss >> std::get_time(&value, "%Y-%m-%d %H:%M:%S");
-                                if (ss.fail()) {
-                                    throw std::invalid_argument("Not a valid date");
-                                }
-
-                                types.push_back(&typeid(std::tm));
-                                second_row_data.push_back(value);
-                            } catch (...) {
+//                            try {
+//
+//                                std::tm value = std::tm();
+//                                std::istringstream ss(cell);
+//                                ss >> std::get_time(&value, "%Y-%m-%d %H:%M:%S");
+//                                if (ss.fail()) {
+//                                    throw std::invalid_argument("Not a valid date");
+//                                }
+//
+//                                types.push_back(&typeid(std::tm));
+//                                second_row_data.push_back(value);
+//                            } catch (...) {
                                 types.push_back(&typeid(std::string));
                                 second_row_data.push_back(cell);
-                            }
+//                            }
                         }
                     }
                 }
