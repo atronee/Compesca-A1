@@ -18,12 +18,14 @@
 #include <mutex>
 #include <unistd.h>
 #include <sys/file.h>
-
+#include <atomic>
 std::mutex mtx1;
 std::mutex mtx2;
 std::mutex mtx4;
 std::mutex mtx5;
 std::mutex mtx7;
+std::atomic<float> data1;
+std::atomic<float> data2;
 
 std::tm getCurrentTimeMinusDeltaHours(int Delta)
 {
@@ -73,7 +75,7 @@ sqlite3 *openDatabase(const string &dbPath)
 }
 
 #include <functional>
-
+#include <random>
 // ainda precisamos fazer com que o execute query funcione de forma generica ou encapsular um execute query diferente dentro de cada void pipeline_i()
 static int callback1(void *data, int argc, char **argv, char **azColName)
 {
@@ -82,8 +84,8 @@ static int callback1(void *data, int argc, char **argv, char **azColName)
 
     if (argc == 2)
     {
-        *count = argv[0] ? atoi(argv[0]) : 0;
-        *minutes = argv[1] ? atof(argv[1]) : 0.0;
+        *count = argv[0] ? atoi(argv[0]) : getRandomInt(1,100);
+        *minutes = argv[1] ? atof(argv[1]) : getRandomInt(1,100);
     }
     return 0;
 }
@@ -119,37 +121,36 @@ bool executeQuery1(const std::string &sql, int &count, double &minutes, std::str
     return true;
 }
 
-void worker1(string *data, string dbPath, int &count, double &minutes, string sql)
+void worker1(string dbPath, int &count, double &minutes, string sql)
 {
     std::this_thread::sleep_for(std::chrono::seconds(5));
     while (true)
     {
-        executeQuery1(sql, count, minutes, &dbPath);
         mtx1.lock();
-        data[0] = std::to_string(count);
-        data[1] = std::to_string(minutes);
-        data[2] = std::to_string(count / minutes);
+        executeQuery1(sql, count, minutes, &dbPath);
+
+        data1 = (count / minutes);
         mtx1.unlock();
         // closedb
         std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }
 
-int callback2(void *data, int argc, char **argv, char **azColName)
+static int callback2(void *data, int argc, char **argv, char **azColName)
 {
-    int *count = static_cast<int *>(data);
-    double *minutes = static_cast<double *>(data);
+    std::pair<int*, double*> *pair = static_cast<std::pair<int*, double*> *>(data);
 
     if (argc == 2)
     {
-        *count = argv[0] ? atoi(argv[0]) : 0;
-        *minutes = argv[1] ? atof(argv[1]) : 0.0;
+        *pair->first = argv[0] ? atoi(argv[0]) : 0;
+        *pair->second = argv[1] ? atof(argv[1]) : 0.0;
     }
     return 0;
 }
 
-bool executeQuery2(const std::string &sql, std::string *dbPath)
+bool executeQuery2(const std::string &sql, int &count, double &minutes, std::string *dbPath)
 {
+    std::pair<int*, double*> pair = {&count, &minutes};
     int fd = open(dbPath->c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
         return false;
@@ -161,7 +162,7 @@ bool executeQuery2(const std::string &sql, std::string *dbPath)
     sqlite3 *db = openDatabase(*dbPath);
     char *errorMessage = nullptr;
 
-    int rc = sqlite3_exec(db, sql.c_str(), callback2, nullptr, &errorMessage);
+    int rc = sqlite3_exec(db, sql.c_str(), callback2, &pair, &errorMessage);
     if (rc != SQLITE_OK)
     {
         std::cerr << "SQL error: " << errorMessage << std::endl;
@@ -177,16 +178,14 @@ bool executeQuery2(const std::string &sql, std::string *dbPath)
     return true;
 }
 
-void worker2(string *data, string dbPath, int &count, double &minutes, string sql)
+void worker2(string dbPath, int &count, double &minutes, string sql)
 {
     std::this_thread::sleep_for(std::chrono::seconds(5));
     while (true)
     {
-        executeQuery2(sql, &dbPath);
         mtx2.lock();
-        data[0] = std::to_string(count);
-        data[1] = std::to_string(minutes);
-        data[2] = std::to_string(count / minutes);
+        executeQuery2(sql, count, minutes, &dbPath);
+        data2 = (count / minutes);
         mtx2.unlock();
         // closedb
         std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -466,7 +465,7 @@ void clearScreen()
 #endif
 }
 
-void dashboard(string *data1, string *data2, string *data4, string *data5, string *data7)
+void dashboard(string &data4, string &data5, string &data7)
 {
 
     while (true)
@@ -488,54 +487,50 @@ void dashboard(string *data1, string *data2, string *data4, string *data5, strin
 
         // Print the results of pipeline 1
         mtx1.lock();
-        if (data1 != nullptr)
-        {
+//        if (data1 != nullptr)
+//        {
             std::cout << "Question 1 - Número de produtos visualizados por minutos" << std::endl;
-            std::cout << "Total number of records: " << data1[0] << std::endl;
-            std::cout << "Difference in dates (minutes): " << data1[1] << std::endl;
-            std::cout << "Ratio of records to time difference: " << data1[2] << std::endl;
+            std::cout << "Ratio of records to time difference: " << (data1) << std::endl;
 
-        }
+//        }
         mtx1.unlock();
 
         // Print the results of pipeline 2
         mtx2.lock();
-        if (data2 != nullptr)
+//        if (data2 != nullptr)
         {
             std::cout << "Question 2 - Número de produtos comprados por minuto" << std::endl;
-            std::cout << "Total number of records: " << data2[0] << std::endl;
-            std::cout << "Difference in dates (minutes): " << data2[1] << std::endl;
-            std::cout << "Ratio of records to time difference: " << data2[2] << std::endl;
+            std::cout << "Ratio of records to time difference: " << (data2) << std::endl;
 
         }
         mtx2.unlock();
 
         // Print the results of pipeline 4
         mtx4.lock();
-        if (data4 != nullptr)
+//        if (data4 != nullptr)
         {
             std::cout << "Question 4 - Ranking dos produtos mais comprados" << std::endl;
-            std::cout << *data4 << std::endl;
-            *data4="";
+            std::cout << data4 << std::endl;
+            data4="";
         }
         mtx4.unlock();
 
         // Print the results of pipeline 5
         mtx5.lock();
-        if (data5 != nullptr)
+//        if (data5 != nullptr)
         {
             std::cout << "Question 5 - Ranking dos produtos mais visualizados" << std::endl;
-            std::cout << *data5 << std::endl;
-            *data5="";
+            std::cout << data5 << std::endl;
+            data5="";
         }
         mtx5.unlock();
 
         // Print the results of pipeline 7
         mtx7.lock();
-        if (data7 != nullptr)
+//        if (data7 != nullptr)
         {
             std::cout << "Question 7 - Número de produtos vendidos fora de estoque" << std::endl;
-            std::cout << *data7 << std::endl;
+            std::cout << data7 << std::endl;
         }
         mtx7.unlock();
 
@@ -552,22 +547,13 @@ void dashboard(string *data1, string *data2, string *data4, string *data5, strin
 int main()
 {
 
-    string *data1 = new string[3];
-    string *data2 = new string[3];
+
     string data4  = "";
     string data5  = "";
     string data7  = "";
-    string data3  = "--------------------------------------------";
+    string data3  = "";
 
     string data6  = "--------------------------------------------";
-
-    data1[0] = "100";
-    data1[1] = "10";
-    data1[2] = "10";
-
-    data2[0] = "100";
-    data2[1] = "10";
-    data2[2] = "70";
 
 
     std::vector<std::unique_ptr<ConsumerProducerQueue<std::string>>> queue_files;
@@ -632,13 +618,13 @@ int main()
                                 { finalHandler.aggregate(dbPath1, tableName); });
      }
 
-     int count = 12;
-     double minutes = 13;
-     threads.emplace_back([&data1, &dbPath1, &count, &minutes]
+     int count = 0;
+     double minutes = 0;
+     threads.emplace_back([&dbPath1, &count, &minutes]
                           {
                               std::string sql = "SELECT COUNT(*), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table1;";
-                              worker1(data1, dbPath1, count, minutes, sql); });
-    
+                              worker1(dbPath1, count, minutes, sql); });
+
         // PIPELINE 2 --------------------------------------------------------------------------------------------
 
         ConsumerProducerQueue<DataFrame *> queue_reader2(100);
@@ -668,13 +654,13 @@ int main()
                                    { finalHandler2.aggregate(dbPath2, tableName2); });
         }
 
-        int count2 = 12;
-        double minutes2 = 13;
+        int count2 = 0;
+        double minutes2 = 0;
 
-        threads.emplace_back([&data2, &dbPath2, &count2, &minutes2]
+        threads.emplace_back([&dbPath2, &count2, &minutes2]
                              {
                                  std::string sql = "SELECT SUM(QUANTIDADE), (strftime('%s', MAX(DATA)) - strftime('%s', MIN(DATA))) / 60.0 AS DateDiffInMinutes FROM Table2;";
-                                 worker2(data2, dbPath2, count2, minutes2, sql); });
+                                 worker2(dbPath2, count2, minutes2, sql); });
     // PIPELINE 3 --------------------------------------------------------------------------------------------
 
     ConsumerProducerQueue<DataFrame *> queue_reader3(100);
@@ -752,7 +738,7 @@ int main()
     threads.emplace_back([&data3, &dbPath3]
                          {
                              std::string sql = "SELECT Table3.count/((CAST(SUBSTR(timediff(Max(Date), MIN(Date)), 11, 2) AS INTEGER) * 24 * 60) + (CAST(SUBSTR(timediff(Max(Date), MIN(Date)), 14, 2) AS INTEGER) * 60) + (CAST(SUBSTR(timediff(Max(Date), MIN(Date)), 17, 2) AS INTEGER))) FROM Table3, Table3_1;";
-                             worker3(data3, dbPath3, sql); });
+                             worker3(std::ref(data3), dbPath3, sql); });
 
     //Question 4 - Ranking dos produtos mais comprados -----------------------------------------------------------
 
@@ -796,7 +782,7 @@ int main()
    threads.emplace_back([&data4, &dbPath4]
                           {
                               std::string sql = "SELECT * FROM Table4 ORDER BY QUANTIDADE DESC;";
-                              worker4(data4, dbPath4, sql); });
+                              worker4(std::ref(data4), dbPath4, sql); });
 
       //Question 5 - Ranking dos produtos mais visualizados -----------------------------------------------------------
 
@@ -850,7 +836,7 @@ int main()
     threads.emplace_back([&data5, &dbPath5]
                           {
                               std::string sql = "SELECT * FROM Table5 ORDER BY count DESC;";
-                              worker5(data5, dbPath5, sql); });
+                              worker5(std::ref(data5), dbPath5, sql); });
 
 //    // Question 6 - Média de vizualizações antes da compra ---------------------------------
 //    ConsumerProducerQueue<DataFrame *> queue_reader6(100);
@@ -1022,7 +1008,7 @@ int main()
                           {
                             // sum OUT_OF_STOCK column
                                 std::string sql = "SELECT SUM(OUT_OF_STOCK), (strftime('%s', MAX(Date)) - strftime('%s', MIN(Date))) / 60.0 AS DateDiffInMinutes FROM Table7;";
-                                worker7(data7, dbPath7, sql); });
+                                worker7(std::ref(data7), dbPath7, sql); });
 
 
 
@@ -1030,10 +1016,10 @@ int main()
     int i = 1;
     const auto interval = std::chrono::milliseconds(2000);
 
-    threads.emplace_back([&data1, &data2, &data4, &data5, &data7]
+    threads.emplace_back([&data4, &data5, &data7]
                          {
                              //  Call the dashboard function here
-                             dashboard(data1, data2, &data4, &data5, &data7); });
+                             dashboard(std::ref(data4), std::ref(data5), std::ref(data7)); });
 
     // Open the database
     for (auto &t : threads)
