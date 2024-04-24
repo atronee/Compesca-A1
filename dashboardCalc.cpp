@@ -1005,7 +1005,7 @@ int main()
     for (int i = 0; i < 2; i++)
     {
         (threads).emplace_back([i, &filterHandler7]
-                               { filterHandler7.filter("OUT_OF_STOCK", "<", "0"); });
+                               { filterHandler7.filter("OUT_OF_STOCK", ">", "0"); });
     }
 
 

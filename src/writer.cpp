@@ -50,10 +50,7 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
             } else if (column_types[col] == type_to_index[std::type_index(typeid(std::string))]) {
                 sql_create += col + " TEXT,";
             } else {
-                // For other data types, you can store them as BLOB or TEXT,
-                // depending on how you want to handle them.
                 sql_create += col + " TEXT,";
-
             }
         }
         sql_create.pop_back();  // Remove the last comma
