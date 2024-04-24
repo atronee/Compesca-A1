@@ -208,6 +208,14 @@ static int callback3(void *data, int argc, char **argv, char **azColName)
 
 bool executeQuery3(const std::string &sql, std::string &result, std::string *dbPath)
 {
+    int fd = open(dbPath->c_str(), O_RDWR);
+    if (fd == -1) {
+        return false;
+    }
+    if (flock(fd, LOCK_SH) != 0) {
+        close(fd);
+        return false;
+    }
     sqlite3 *db = openDatabase(*dbPath);
     char *errorMessage = nullptr;
     int rc = sqlite3_exec(db, sql.c_str(), callback3, &result, &errorMessage);
@@ -216,9 +224,13 @@ bool executeQuery3(const std::string &sql, std::string &result, std::string *dbP
         std::cerr << "SQL error: " << errorMessage << std::endl;
         sqlite3_free(errorMessage);
         sqlite3_close(db);
+        flock(fd, LOCK_UN);
+        close(fd);
         return false;
     }
     sqlite3_close(db);
+    flock(fd, LOCK_UN);
+    close(fd);
     return true;
 }
 
