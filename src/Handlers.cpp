@@ -1299,118 +1299,118 @@ void DiffHandler::diff(string column1, string column2, string new_column) {
     }
 }
 
-DataFrame* groupBy2Cols(DataFrame* DF, const string& column1, const string& column2) {
-    DataFrame* new_df;
-    vector<string> column_order = DF->get_column_order();
-    if(DF->get_column_type(column1) == type_to_index[std::type_index(typeid(int))] && DF->get_column_type(column2) == type_to_index[std::type_index(typeid(int))]){
-        vector<int> column1_data = DF->get_column<int>(column1);
-        vector<int> column2_data = DF->get_column<int>(column2);
-        std::unordered_map<std::pair<int, int>, int> group_map;
-        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
-            group_map[std::make_pair(column1_data[i], column2_data[i])]++;
-        }
-        vector<int> new_column1_data;
-        vector<int> new_column2_data;
-        vector<int> new_column3_data;
-        for (const auto& [key, value] : group_map) {
-            new_column1_data.push_back(key.first);
-            new_column2_data.push_back(key.second);
-            new_column3_data.push_back(value);
-        }
-        vector<const std::type_info *> types;
-        for (const auto& col_name : column_order) {
-            types.push_back(&typeid(DF->get_column_type(col_name)));
-        }
-        new_df = new DataFrame(column_order, types);
-        new_df->add_column(column1, new_column1_data);
-        new_df->add_column(column2, new_column2_data);
-        new_df->add_column("count", new_column3_data);
-    } else if(DF->get_column_type(column1) == type_to_index[std::type_index(typeid(float))] && DF->get_column_type(column2) == type_to_index[std::type_index(typeid(float))]){
-        vector<float> column1_data = DF->get_column<float>(column1);
-        vector<float> column2_data = DF->get_column<float>(column2);
-        std::unordered_map<std::pair<float, float>, int> group_map;
-        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
-            group_map[std::make_pair(column1_data[i], column2_data[i])]++;
-        }
-        vector<float> new_column1_data;
-        vector<float> new_column2_data;
-        vector<int> new_column3_data;
-        for (const auto& [key, value] : group_map) {
-            new_column1_data.push_back(key.first);
-            new_column2_data.push_back(key.second);
-            new_column3_data.push_back(value);
-        }
-        vector<const std::type_info *> types;
-        for (const auto& col_name : column_order) {
-            types.push_back(&typeid(DF->get_column_type(col_name)));
-        }
-        new_df = new DataFrame(column_order, types);
-        new_df->add_column(column1, new_column1_data);
-        new_df->add_column(column2, new_column2_data);
-        new_df->add_column("count", new_column3_data);
-    } else if(DF->get_column_type(column1) == type_to_index[std::type_index(typeid(std::string))] && DF->get_column_type(column2) == type_to_index[std::type_index(typeid(std::string))]){
-        vector<string> column1_data = DF->get_column<string>(column1);
-        vector<string> column2_data = DF->get_column<string>(column2);
-        std::unordered_map<std::pair<string, string>, int> group_map;
-        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
-            group_map[std::make_pair(column1_data[i], column2_data[i])]++;
-        }
-        vector<string> new_column1_data;
-        vector<string> new_column2_data;
-        vector<int> new_column3_data;
-        for (const auto& [key, value] : group_map) {
-            new_column1_data.push_back(key.first);
-            new_column2_data.push_back(key.second);
-            new_column3_data.push_back(value);
-        }
-        vector<const std::type_info *> types;
-        for (const auto& col_name : column_order) {
-            types.push_back(&typeid(DF->get_column_type(col_name)));
-        }
-        new_df = new DataFrame(column_order, types);
-        new_df->add_column(column1, new_column1_data);
-        new_df->add_column(column2, new_column2_data);
-        new_df->add_column("count", new_column3_data);
-    } else if(DF->get_column_type(column1) == type_to_index[std::type_index(typeid(std::tm))] && DF->get_column_type(column2) == type_to_index[std::type_index(typeid(std::tm))]){
-        vector<std::tm> column1_data = DF->get_column<std::tm>(column1);
-        vector<std::tm> column2_data = DF->get_column<std::tm>(column2);
-        std::unordered_map<std::pair<std::tm, std::tm>, int> group_map;
-        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
-            group_map[std::make_pair(column1_data[i], column2_data[i])]++;
-        }
-        vector<std::tm> new_column1_data;
-        vector<std::tm> new_column2_data;
-        vector<int> new_column3_data;
-        for (const auto& [key, value] : group_map) {
-            new_column1_data.push_back(key.first);
-            new_column2_data.push_back(key.second);
-            new_column3_data.push_back(value);
-        }
-        vector<const std::type_info *> types;
-        for (const auto& col_name : column_order) {
-            types.push_back(&typeid(DF->get_column_type(col_name)));
-        }
-        new_df = new DataFrame(column_order, types);
-        new_df->add_column(column1, new_column1_data);
-        new_df->add_column(column2, new_column2_data);
-        new_df->add_column("count", new_column3_data);
-    } else {
-        throw std::invalid_argument("Invalid column type");
-    }
-    return new_df;
-}
+//DataFrame* groupBy2Cols(DataFrame* DF, const string& column1, const string& column2) {
+//    DataFrame* new_df;
+//    vector<string> column_order = DF->get_column_order();
+//    if(DF->get_column_type(column1) == type_to_index[std::type_index(typeid(int))] && DF->get_column_type(column2) == type_to_index[std::type_index(typeid(int))]){
+//        vector<int> column1_data = DF->get_column<int>(column1);
+//        vector<int> column2_data = DF->get_column<int>(column2);
+//        std::unordered_map<std::pair<int, int>, int> group_map;
+//        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
+//            group_map[std::make_pair(column1_data[i], column2_data[i])]++;
+//        }
+//        vector<int> new_column1_data;
+//        vector<int> new_column2_data;
+//        vector<int> new_column3_data;
+//        for (const auto& [key, value] : group_map) {
+//            new_column1_data.push_back(key.first);
+//            new_column2_data.push_back(key.second);
+//            new_column3_data.push_back(value);
+//        }
+//        vector<const std::type_info *> types;
+//        for (const auto& col_name : column_order) {
+//            types.push_back(&typeid(DF->get_column_type(col_name)));
+//        }
+//        new_df = new DataFrame(column_order, types);
+//        new_df->add_column(column1, new_column1_data);
+//        new_df->add_column(column2, new_column2_data);
+//        new_df->add_column("count", new_column3_data);
+//    } else if(DF->get_column_type(column1) == type_to_index[std::type_index(typeid(float))] && DF->get_column_type(column2) == type_to_index[std::type_index(typeid(float))]){
+//        vector<float> column1_data = DF->get_column<float>(column1);
+//        vector<float> column2_data = DF->get_column<float>(column2);
+//        std::unordered_map<std::pair<float, float>, int> group_map;
+//        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
+//            group_map[std::make_pair(column1_data[i], column2_data[i])]++;
+//        }
+//        vector<float> new_column1_data;
+//        vector<float> new_column2_data;
+//        vector<int> new_column3_data;
+//        for (const auto& [key, value] : group_map) {
+//            new_column1_data.push_back(key.first);
+//            new_column2_data.push_back(key.second);
+//            new_column3_data.push_back(value);
+//        }
+//        vector<const std::type_info *> types;
+//        for (const auto& col_name : column_order) {
+//            types.push_back(&typeid(DF->get_column_type(col_name)));
+//        }
+//        new_df = new DataFrame(column_order, types);
+//        new_df->add_column(column1, new_column1_data);
+//        new_df->add_column(column2, new_column2_data);
+//        new_df->add_column("count", new_column3_data);
+//    } else if(DF->get_column_type(column1) == type_to_index[std::type_index(typeid(std::string))] && DF->get_column_type(column2) == type_to_index[std::type_index(typeid(std::string))]){
+//        vector<string> column1_data = DF->get_column<string>(column1);
+//        vector<string> column2_data = DF->get_column<string>(column2);
+//        std::unordered_map<std::pair<string, string>, int> group_map;
+//        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
+//            group_map[std::make_pair(column1_data[i], column2_data[i])]++;
+//        }
+//        vector<string> new_column1_data;
+//        vector<string> new_column2_data;
+//        vector<int> new_column3_data;
+//        for (const auto& [key, value] : group_map) {
+//            new_column1_data.push_back(key.first);
+//            new_column2_data.push_back(key.second);
+//            new_column3_data.push_back(value);
+//        }
+//        vector<const std::type_info *> types;
+//        for (const auto& col_name : column_order) {
+//            types.push_back(&typeid(DF->get_column_type(col_name)));
+//        }
+//        new_df = new DataFrame(column_order, types);
+//        new_df->add_column(column1, new_column1_data);
+//        new_df->add_column(column2, new_column2_data);
+//        new_df->add_column("count", new_column3_data);
+//    } else if(DF->get_column_type(column1) == type_to_index[std::type_index(typeid(std::tm))] && DF->get_column_type(column2) == type_to_index[std::type_index(typeid(std::tm))]){
+//        vector<std::tm> column1_data = DF->get_column<std::tm>(column1);
+//        vector<std::tm> column2_data = DF->get_column<std::tm>(column2);
+//        std::unordered_map<std::pair<std::tm, std::tm>, int> group_map;
+//        for (size_t i = 0; i < DF->get_number_of_rows(); ++i) {
+//            group_map[std::make_pair(column1_data[i], column2_data[i])]++;
+//        }
+//        vector<std::tm> new_column1_data;
+//        vector<std::tm> new_column2_data;
+//        vector<int> new_column3_data;
+//        for (const auto& [key, value] : group_map) {
+//            new_column1_data.push_back(key.first);
+//            new_column2_data.push_back(key.second);
+//            new_column3_data.push_back(value);
+//        }
+//        vector<const std::type_info *> types;
+//        for (const auto& col_name : column_order) {
+//            types.push_back(&typeid(DF->get_column_type(col_name)));
+//        }
+//        new_df = new DataFrame(column_order, types);
+//        new_df->add_column(column1, new_column1_data);
+//        new_df->add_column(column2, new_column2_data);
+//        new_df->add_column("count", new_column3_data);
+//    } else {
+//        throw std::invalid_argument("Invalid column type");
+//    }
+//    return new_df;
+//}
 
 
-void UniqueHandler::unique(string column1, string column2) {
-    while (true) {
-        DataFrame* df = queue_in->pop();
-        if (df == nullptr) {
-            queue_out->push(nullptr);
-            break;
-        }
-
-        // group by the 2 columns and add the count
-        DataFrame* new_df = groupBy2Cols(df, column1, column2);
-        queue_out->push(new_df);
-    }
-}
+//void UniqueHandler::unique(string column1, string column2) {
+//    while (true) {
+//        DataFrame* df = queue_in->pop();
+//        if (df == nullptr) {
+//            queue_out->push(nullptr);
+//            break;
+//        }
+//
+//        // group by the 2 columns and add the count
+//        DataFrame* new_df = groupBy2Cols(df, column1, column2);
+//        queue_out->push(new_df);
+//    }
+//}

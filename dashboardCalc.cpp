@@ -21,6 +21,7 @@
 #include <atomic>
 std::mutex mtx1;
 std::mutex mtx2;
+std::mutex mtx3;
 std::mutex mtx4;
 std::mutex mtx5;
 std::mutex mtx7;
@@ -69,8 +70,6 @@ sqlite3 *openDatabase(const string &dbPath)
         sqlite3_close(db);
         return nullptr;
     }
-    else
-        std::cout << "Opened database successfully" << std::endl;
     return db;
 }
 
@@ -239,7 +238,9 @@ void worker3(std::string &result, std::string dbPath, std::string &sql)
     std::this_thread::sleep_for(std::chrono::seconds(5));
     while (true)
     {
+        mtx3.lock();
         executeQuery3(sql, result, &dbPath);
+        mtx3.unlock();
         std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }
@@ -465,7 +466,7 @@ void clearScreen()
 #endif
 }
 
-void dashboard(string &data4, string &data5, string &data7)
+void dashboard(string &data3, string &data4, string &data5, string &data7)
 {
 
     while (true)
@@ -504,6 +505,16 @@ void dashboard(string &data4, string &data5, string &data7)
 
         }
         mtx2.unlock();
+
+        // Print the results of pipeline 3
+        mtx3.lock();
+//        if (data3 != nullptr)
+        {
+            std::cout << "Question 3 - Número de usuários únicos visualizando cada produto por minuto." << std::endl;
+            std::cout << data3 << std::endl;
+            data3="";
+        }
+        mtx3.unlock();
 
         // Print the results of pipeline 4
         mtx4.lock();
@@ -1016,10 +1027,10 @@ int main()
     int i = 1;
     const auto interval = std::chrono::milliseconds(2000);
 
-    threads.emplace_back([&data4, &data5, &data7]
+    threads.emplace_back([&data3,&data4, &data5, &data7]
                          {
                              //  Call the dashboard function here
-                             dashboard(std::ref(data4), std::ref(data5), std::ref(data7)); });
+                             dashboard(std::ref(data3),std::ref(data4), std::ref(data5), std::ref(data7)); });
 
     // Open the database
     for (auto &t : threads)
