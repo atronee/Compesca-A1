@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <sys/file.h>
 #include <fcntl.h>
+#include <sstream>  // for std::stringstream
+#include <iomanip>  // for std::put_time
 
 void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::string& table, bool deleteFlag)
 {
@@ -13,12 +15,19 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         // creates a sqlite db
         sqlite3 *db;
         sqlite3_stmt *stmt;
+        int fd = open(filePath.c_str(), O_RDWR| O_CREAT, S_IRUSR | S_IWUSR);
+        if (fd == -1) {
+            return;
+        }
+        if (flock(fd, LOCK_EX) != 0) {
+            close(fd);
+            return;
+        }
         // Open the SQLite database
         if (sqlite3_open(filePath.c_str(), &db) != SQLITE_OK) {
             std::cerr << "Error opening SQLite database: " << sqlite3_errmsg(db) << "\n";
             return;
         }
-
         std::string sql = "INSERT INTO " + table + " VALUES (";
         for (size_t i = 0; i < fileDF->get_column_order().size(); ++i) {
             sql += (i > 0 ? ", ?" : "?");
@@ -26,7 +35,7 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         sql += ")";
 
         // Get the file descriptor and apply a lock
-        int fd = -1;
+
 
         std::vector<std::string> column_order = fileDF->get_column_order();
         std::unordered_map<std::string, size_t> column_types = fileDF->get_column_types();
@@ -41,26 +50,12 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
             } else if (column_types[col] == type_to_index[std::type_index(typeid(std::string))]) {
                 sql_create += col + " TEXT,";
             } else {
-                // For other data types, you can store them as BLOB or TEXT,
-                // depending on how you want to handle them.
                 sql_create += col + " TEXT,";
-
             }
         }
         sql_create.pop_back();  // Remove the last comma
         sql_create += ");";
-        sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
-        if (fd == -1) {
-            std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
-            sqlite3_close(db);
-            return;
-        }
-        if (flock(fd, LOCK_EX) != 0) {
-            std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
-            close(fd);
-            sqlite3_close(db);
-            return;
-        }
+
 
 
             char *errMsg;
@@ -93,16 +88,21 @@ void write_to_sqlite(DataFrame* fileDF, const std::string& filePath, const std::
         for (size_t i = 0; i < fileDF->get_number_of_rows(); ++i) {
             // Bind the values to the SQL statement
             for (size_t j = 0; j < fileDF->get_column_order().size(); ++j) {
-                const DataVariant& value = fileDF->get_row(i)[j];
-                if (auto intPtr = std::get_if<int>(&value)) {
-                    sqlite3_bind_int(stmt, j + 1, *intPtr);
-                } else if (auto floatPtr = std::get_if<float>(&value)) {
-                    sqlite3_bind_double(stmt, j + 1, *floatPtr);
-                } else if (auto strPtr = std::get_if<std::string>(&value)) {
-                    sqlite3_bind_text(stmt, j + 1, strPtr->c_str(), -1, SQLITE_TRANSIENT);
-                } else if (auto tmPtr = std::get_if<std::tm>(&value)) {
-                    std::string timeStr = std::asctime(tmPtr);
-                    sqlite3_bind_text(stmt, j + 1, timeStr.c_str(), -1, SQLITE_TRANSIENT);
+                if (column_types[column_order[j]] == type_to_index[std::type_index(typeid(int))]) {
+                    sqlite3_bind_int(stmt, j + 1, fileDF->get_value<int>(column_order[j], i));
+                } else if (column_types[column_order[j]] == type_to_index[std::type_index(typeid(float))]) {
+                    sqlite3_bind_double(stmt, j + 1, fileDF->get_value<float>(column_order[j], i));
+                } else if (column_types[column_order[j]] == type_to_index[std::type_index(typeid(std::string))]) {
+                    sqlite3_bind_text(stmt, j + 1, fileDF->get_value<std::string>(column_order[j], i).c_str(), -1, SQLITE_STATIC);
+                } else if (column_types[column_order[j]] == type_to_index[std::type_index(typeid(std::tm))]) {
+                    std::tm time = fileDF->get_value<std::tm>(column_order[j], i);
+                    std::stringstream ss;
+                    ss << std::put_time(&time, "%Y-%m-%d %H:%M:%S");
+                    std::string time_str = ss.str();
+                    sqlite3_bind_text(stmt, j + 1, time_str.c_str(), -1, SQLITE_STATIC);
+                }
+                else{
+                    std::cout<<"Wrong data type"<<std::endl;
                 }
             }
 

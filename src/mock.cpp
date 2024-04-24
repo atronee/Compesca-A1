@@ -224,7 +224,7 @@ std::string orderData()
 }
 
 
-void mockCSV(const int numRecords)
+void mockCSV(int index, const int numRecords)
 {
     // Seed the random number generator
     srand(static_cast<unsigned int>(time(nullptr)));
@@ -232,11 +232,16 @@ void mockCSV(const int numRecords)
     // Output directory path
     const std::string outputDir = "data/";
 
+    // Deletes any existing files in the output directory if it exists
+    if (std::filesystem::exists(outputDir)) {
+        std::filesystem::remove_all(outputDir);
+    }
+
     // Create the output directory if it doesn't exist
     std::filesystem::create_directory(outputDir);
 
     // Generate mock data for the consumer
-    std::string consumerFilename = outputDir + "consumer.csv";
+    std::string consumerFilename = outputDir + "consumer" + std::to_string(index) + ".csv";
 
     // Open the output file with POSIX open
     int fd_consumer = open(consumerFilename.c_str(), O_WRONLY | O_CREAT, 0644);
@@ -256,7 +261,7 @@ void mockCSV(const int numRecords)
         return;
     }
 
-    consumerFile << "ID,NOME,SOBRENOME,ENDEREÇO,DATA DE NASCIMENTO,DATA DE CADASTRO\n";
+    consumerFile << "ID,NOME,SOBRENOME,ENDEREÇO,DATA_DE_NASCIMENTO,DATA_DE_CADASTRO\n";
 
     for (int record = 1; record <= numRecords; ++record) {
         std::string consumer = consumerData();
@@ -272,7 +277,7 @@ void mockCSV(const int numRecords)
     std::cout << "Consumer data generated: " << consumerFilename << "\n";
 
     // Generate mock data for the product
-    std::string productFilename = outputDir + "product.csv";
+    std::string productFilename = outputDir + "product" + std::to_string(index) + ".csv";
 
     // Open the output file with POSIX open
     int fd_product = open(productFilename.c_str(), O_WRONLY | O_CREAT, 0644);
@@ -303,10 +308,9 @@ void mockCSV(const int numRecords)
     flock(fd_product, LOCK_UN);
     close(fd_product);
 
-    std::cout << "Product data generated: " << productFilename << "\n";
 
     // Generate mock data for the stock
-    std::string stockFilename = outputDir + "stock.csv";
+    std::string stockFilename = outputDir + "stock" + std::to_string(index) + ".csv";
 
     // Open the output file with POSIX open
     int fd_stock = open(stockFilename.c_str(), O_WRONLY | O_CREAT, 0644);
@@ -325,7 +329,7 @@ void mockCSV(const int numRecords)
         return;
     }
 
-    stockFile << "ID PRODUTO,QUANTIDADE_STOCK\n";
+    stockFile << "ID_PRODUTO,QUANTIDADE_STOCK\n";
 
     for (int record = 1; record <= 7; ++record) {
         std::string stock = stockData(record);
@@ -337,10 +341,8 @@ void mockCSV(const int numRecords)
     flock(fd_stock, LOCK_UN);
     close(fd_stock);
 
-    std::cout << "Stock data generated: " << stockFilename << "\n";
-
     // Generate mock data for the order
-    std::string orderFilename = outputDir + "order.csv";
+    std::string orderFilename = outputDir + "order" + std::to_string(index) + ".csv";
 
     // Open the output file with POSIX open
     int fd_order = open(orderFilename.c_str(), O_WRONLY | O_CREAT, 0644);
@@ -360,7 +362,7 @@ void mockCSV(const int numRecords)
     }
 
     //column names
-    orderFile << "ID USUARIO,ID PRODUTO,QUANTIDADE,DATA DE COMPRA,DATA DE PAGAMENTO,DATA DE ENVIO,DATA DE ENTREGA\n";
+    orderFile << "ID_USUARIO,ID_PRODUTO,QUANTIDADE,DATA_DE_COMPRA,DATA_DE_PAGAMENTO,DATA_DE_ENVIO,DATA_DE_ENTREGA\n";
 
     for (int record = 1; record <= numRecords; ++record) {
         std::string order = orderData();
@@ -372,9 +374,6 @@ void mockCSV(const int numRecords)
     flock(fd_order, LOCK_UN);
     close(fd_order);
 
-    std::cout << "Order data generated: " << orderFilename << "\n";
-
-    std::cout << "Mock data generation complete.\n";
 }
 
 //DataCat mock data
@@ -454,16 +453,16 @@ std::string generateLogDebug()
 void writeColumnNames(std::ofstream& outputFile, LogType fileType) {
     switch (fileType) {
         case LOG_AUDIT:
-            outputFile << "Type,User Author Id,Action,Action Description,Text Content,Date\n";
+            outputFile << "Type,User_Author_Id,Action,Action_Description,Text_Content,Date\n";
             break;
         case LOG_USER_BEHAVIOR:
-            outputFile << "Type,User Author Id,Action,Button Product Id,Stimulus,Component,Text Content,Date\n";
+            outputFile << "Type,User_Author_Id,Action,Button_Product_Id,Stimulus,Component,Text_Content,Date\n";
             break;
         case LOG_FAILURE_NOTIFICATION:
-            outputFile << "Type,Component,Message,Severity,Text Content,Date\n";
+            outputFile << "Type,Component,Message,Severity,Text_Content,Date\n";
             break;
         case LOG_DEBUG:
-            outputFile << "Type,Message,Text Content,Date\n";
+            outputFile << "Type,Message,Text_Content,Date\n";
             break;
         default:
             break;
@@ -554,12 +553,8 @@ void mockLogFiles(int filesPerType, int linesPerFile, int startFileIndex) {
             outputFile.close();
             flock(fd, LOCK_UN);
             close(fd);
-
-            std::cout << "Log file generated: " << filename << "\n";
         }
     }
-
-    std::cout << "Mock log file generation complete.\n";
 }
 
 // Sqlite Mock data
@@ -661,7 +656,7 @@ void mockRandomRequest(ConsumerProducerQueue<std::string> &queue, int interval)
         }
 
         // Write column names
-        outputFile << "Type,User Author Id,Action,Button Product Id,Stimulus,Component,Text Content,Date\n";
+        outputFile << "Type,User_Author_Id,Action,Button_Product_Id,Stimulus,Component,Text_Content,Date\n";
 
         // Write log messages
         for (int line = 1; line <= linesPerFile; ++line) {

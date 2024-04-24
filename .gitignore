@@ -51,7 +51,9 @@ _deps
 /.vscode
 
 # Pasta de Logs
-/src/logs
+/logs
 
 #Pasta clion
 /.idea
+
+/data

@@ -21,10 +21,12 @@ void FileReader::read(char delimiter,int start, int & end,
     while (true) {
         std::string filename = queue_in.pop();
         if (filename == "STOP") {
+
             queue_out.push(nullptr);
             break;
         }
-        if (filename.find(filenameFormat) != 0) {
+
+        if (filename.find(filenameFormat) == std::string::npos) {
             continue;
         }
 
@@ -70,27 +72,32 @@ void FileReader::read(char delimiter,int start, int & end,
                     std::stringstream ss(second_line);
                     std::string cell;
                     while (std::getline(ss, cell, delimiter)) {
-                        try {
+                        if (cell.find_first_not_of("0123456789") == std::string::npos) {
                             int value = std::stoi(cell);
+
                             types.push_back(&typeid(int));
                             second_row_data.push_back(value);
-                        } catch (...) {
-                            try {
-                                float value = std::stof(cell);
-                                types.push_back(&typeid(float));
-                                second_row_data.push_back(value);
-                            } catch (...) {
-                                try{
-                                    std::tm value = std::tm();
-                                    std::istringstream ss(cell);
-                                    ss >> std::get_time(&value, "%Y-%m-%d %H:%M:%S");
-                                    types.push_back(&typeid(std::tm));
-                                    second_row_data.push_back(value);
-                                } catch (...) {
-                                    types.push_back(&typeid(std::string));
-                                    second_row_data.push_back(cell);
-                                }
-                            }
+                        } else if (cell.find_first_not_of("0123456789.") == std::string::npos) {
+                            float value = std::stof(cell);
+
+                            types.push_back(&typeid(float));
+                            second_row_data.push_back(value);
+                        } else {
+//                            try {
+//
+//                                std::tm value = std::tm();
+//                                std::istringstream ss(cell);
+//                                ss >> std::get_time(&value, "%Y-%m-%d %H:%M:%S");
+//                                if (ss.fail()) {
+//                                    throw std::invalid_argument("Not a valid date");
+//                                }
+//
+//                                types.push_back(&typeid(std::tm));
+//                                second_row_data.push_back(value);
+//                            } catch (...) {
+                                types.push_back(&typeid(std::string));
+                                second_row_data.push_back(cell);
+//                            }
                         }
                     }
                 }
@@ -99,6 +106,7 @@ void FileReader::read(char delimiter,int start, int & end,
                 header = false;
             }
             else {
+
                 for (size_t i = 0; i < row.size(); ++i) {
                     if (i < types.size() && types[i] != nullptr) {
                         if (*types[i] == typeid(int)) {
@@ -126,23 +134,26 @@ void FileReader::read(char delimiter,int start, int & end,
                 line_count++;
 
                 if (line_count == block_size && read_in_blocks) {
-                    if (filename.find(filenameFormat) == 0) {
+                    if (filename.find(filenameFormat) != std::string::npos) {
                         queue_out.push(df);
                     }
-                    queue_out.push(df);
-                    dataframes[std::filesystem::path(filename)].emplace_back(df);
-
+//                    dataframes_mtx.lock();
+//                    dataframes[std::filesystem::path(filename)].emplace_back(df);
+//                    dataframes_mtx.unlock();
                     line_count = 0;
                     df = new DataFrame(column_order, types);
                 }
             }
         }
 
-        if (df != nullptr && !df->get_number_of_rows()) {
-            if (filename.find(filenameFormat) == 0) {
+        if (df != nullptr && df->get_number_of_rows()) {
+            if (filename.find(filenameFormat) != std::string::npos) {
+
                 queue_out.push(df);
             }
-            dataframes[std::filesystem::path(filename)].emplace_back(df);
+//            dataframes_mtx.lock();
+//            dataframes[std::filesystem::path(filename)].emplace_back(df);
+//            dataframes_mtx.unlock();
         }
 
         end = file.tellg();

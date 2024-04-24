@@ -9,7 +9,7 @@
 #include "Handlers.h"
 #include <any>
 #include <iostream>
-#include <sqlite3.h>
+#include "../libs/sqlite3.h"
 #include <fstream>
 #include <sys/file.h>
 #include <fcntl.h>
@@ -29,6 +29,10 @@ void SelectHandler::select(vector<string> columns) {
             queue_out->push(nullptr);
             break;
         }
+        if (!df->get_number_of_rows()){
+            delete df;
+            continue;
+        }
         // select the columns
         auto df_cols = df->get_column_order();
         for (auto column : df_cols) {
@@ -47,46 +51,50 @@ void FilterHandler::filter(string column, string operation, string value) {
             queue_out->push(nullptr);
             break;
         }
+        if (!df->get_number_of_rows()){
+            delete df;
+            continue;
+        }
         if (df->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
             vector<int> column_data = df->get_column<int>(column);
             if (operation == "==") {
                 for (size_t i = 0; i < df->get_number_of_rows(); ++i) {
-                    if (!(column_data[i] == std::stoi(value))) {
+                    if (!(column_data[i] == std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == "!=") {
                 for (size_t i = 0; i < df->get_number_of_rows(); ++i) {
-                    if (!(column_data[i] != std::stoi(value))) {
+                    if (!(column_data[i] != std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == "<") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (!(column_data[i] < std::stoi(value))) {
+                    if (!(column_data[i] < std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == ">") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (!(column_data[i] > std::stoi(value))) {
+                    if (!(column_data[i] > std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == "<=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (!(column_data[i] <= std::stoi(value))) {
+                    if (!(column_data[i] <= std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
                 }
             } else if (operation == ">=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
-                    if (!(column_data[i] >= std::stoi(value))) {
+                    if (!(column_data[i] >= std::stoi(value))&&i < df->get_number_of_rows()) {
                         df->remove_row(i);
                         i --;
                     }
@@ -153,6 +161,34 @@ void FilterHandler::filter(string column, string operation, string value) {
             } else if (operation == "!=") {
                 for (size_t i = 0; i < column_data.size(); ++i) {
                     if (!(column_data[i] != value)) {
+                        df->remove_row(i);
+                        i --;
+                    }
+                }
+            } else if (operation == "<") {
+                for (size_t i = 0; i < column_data.size(); ++i) {
+                    if (!(column_data[i] < value)) {
+                        df->remove_row(i);
+                        i --;
+                    }
+                }
+            } else if (operation == ">") {
+                for (size_t i = 0; i < column_data.size(); ++i) {
+                    if (!(column_data[i] > value)) {
+                        df->remove_row(i);
+                        i --;
+                    }
+                }
+            } else if (operation == "<=") {
+                for (size_t i = 0; i < column_data.size(); ++i) {
+                    if (!(column_data[i] <= value)) {
+                        df->remove_row(i);
+                        i --;
+                    }
+                }
+            } else if (operation == ">=") {
+                for (size_t i = 0; i < column_data.size(); ++i) {
+                    if (!(column_data[i] >= value)) {
                         df->remove_row(i);
                         i --;
                     }
@@ -333,6 +369,10 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
                     }
                 }
             }
+            if (operation == "count") {
+                row_data.push_back((int) group.second.size());
+            }
+
             new_df->add_row(row_data);
         }
     } else if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(float))]) {
@@ -345,6 +385,10 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
         vector<size_t> new_column_types;
         for (const auto &some_column: new_column_order) {
             new_column_types.push_back(DF->get_column_type(some_column));
+        }
+        if (operation == "count") {
+            new_column_order.push_back("count");
+            new_column_types.push_back(type_to_index[std::type_index(typeid(int))]);
         }
         new_df = new DataFrame(new_column_order, new_column_types);
         for (const auto &group: groups) {
@@ -436,6 +480,9 @@ DataFrame* groupBy(DataFrame* DF, const string& column , const string& operation
                     }
                 }
             }
+            if (operation == "count") {
+                row_data.push_back((int) group.second.size());
+            }
             new_df->add_row(row_data);
         }
     }
@@ -453,6 +500,10 @@ void GroupByHandler::group_by(string column, string operation) {
         if (DF == nullptr) {
             queue_out->push(nullptr);
             break;
+        }
+        if (!DF->get_number_of_rows()){
+            delete DF;
+            continue;
         }
 
         DataFrame *new_df = groupBy(DF, column, operation);
@@ -492,6 +543,14 @@ void SortHandler::sort(string& column, string& order) {
     while (true) {
         DataFrame *new_df;
         DataFrame *DF = queue_in->pop();
+        if (DF == nullptr) {
+            queue_out->push(nullptr);
+            break;
+        }
+        if (!DF->get_number_of_rows()){
+            delete DF;
+            continue;
+        }
         // sort all rows by column
         if (DF->get_column_type(column) == type_to_index[std::type_index(typeid(int))]) {
             vector<int> column_data = DF->get_column<int>(column);
@@ -756,6 +815,11 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
         if (df == nullptr) {
             break;
         }
+        if (!df->get_number_of_rows()){
+            delete df;
+            continue;
+        }
+
         if(!sortFlag && !groupFlag){
             write_to_sqlite(df, filePath, table, false);
         }
@@ -780,22 +844,16 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 // Read data from SQLite file
                 sqlite3 *db;
                 sqlite3_stmt *stmt;
-
+                int fd = open(filePath.c_str(), O_RDWR);
+                if (fd == -1) {
+                    return ;
+                }
+                if (flock(fd, LOCK_SH) != 0) {
+                    close(fd);
+                    return;
+                }
                 if (sqlite3_open(filePath.c_str(), &db) == SQLITE_OK) {
                     // Get the file descriptor and apply a shared lock
-                    int fd = -1;
-                    sqlite3_file_control(db, nullptr, SQLITE_FCNTL_PERSIST_WAL, &fd);
-                    if (fd == -1) {
-                        std::cerr << "Error getting file descriptor: " << sqlite3_errmsg(db) << "\n";
-                        sqlite3_close(db);
-                        return;
-                    }
-                    if (flock(fd, LOCK_SH) != 0) {
-                        std::cerr << "Error locking file: " << sqlite3_errmsg(db) << "\n";
-                        close(fd);
-                        sqlite3_close(db);
-                        return;
-                    }
 
                     std::string sql = "SELECT * FROM " + table;
                     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
@@ -819,9 +877,10 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                         }
                     }
                     sqlite3_finalize(stmt);
-                    flock(fd, LOCK_UN);
-                    close(fd);
+
                 }
+                flock(fd, LOCK_UN);
+                close(fd);
                 sqlite3_close(db);
             }
             if(sortFlag && groupFlag)
@@ -840,7 +899,13 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
             }
 
             else if (groupFlag) {
-                DataFrame *new_df = groupBy(fileDF, columnGroup, groupOperation);
+                DataFrame *new_df;
+                fileDF->concatenate(*df);
+                if(groupOperation == "count") {
+                    new_df = groupBy(fileDF, columnGroup, "sum");
+                }
+                else
+                    new_df = groupBy(fileDF, columnGroup, groupOperation);
                 delete fileDF;
                 fileDF = new_df;
             } else {
