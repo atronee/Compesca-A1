@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package log;
+
+service LogService {
+  rpc LogUserBehavior (LogMessage) returns (LogResponse) {}
+}
+
+message LogMessage {
+  int32 user_author_id = 1;
+  string action = 2;
+  int32 button_product_id = 3;
+  string stimulus = 4;
+  string component = 5;
+  string text_content = 6;
+  string date = 7;
+}
+
+message LogResponse {
+  string response = 1;
+}
