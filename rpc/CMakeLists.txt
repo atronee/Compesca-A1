@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 project(ProtoBufExample)
 
-set(CMAKE_CXX_STANDARD 11)
-
 # Find required protobuf package
 option(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)
@@ -57,6 +55,14 @@ add_library(rg_grpc_proto
   ${rg_proto_srcs}
   ${rg_proto_hdrs})
 target_link_libraries(rg_grpc_proto
+  ${_REFLECTION}
+  ${_GRPC_GRPCPP}
+  ${_PROTOBUF_LIBPROTOBUF})
+
+#Tartets mock server
+add_executable(mock_server mock_server.cpp)
+target_link_libraries(mock_server
+  rg_grpc_proto
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
