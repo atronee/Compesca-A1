@@ -26,6 +26,7 @@ public:
             std::cout << "Stimulus" << message.stimulus() << std::endl;
             std::cout << "Text content: " << message.text_content() << std::endl;
             std::cout << "Date: " << message.date() << std::endl;
+            std::cout << "--------------------------------------------" << std::endl;
         }
         response->set_response("User behavior logged successfully");
         return Status::OK;
