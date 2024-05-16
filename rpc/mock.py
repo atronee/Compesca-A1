@@ -12,7 +12,7 @@ def generate_random_date(min_year, max_year):
 
     return datetime.datetime(year, month, day, hour, minute, second)
 
-def generateLogUserBehavior():
+def generateLogUserBehavior() -> dict[str, any]:
     actions = ["click", "hover", "scroll", "drag"]
     components = ["button", "input", "table", "form"]
     stimuli = ["User clicked on a button", "User hovered over an input field",
@@ -26,5 +26,4 @@ def generateLogUserBehavior():
     date = generate_random_date(2022, 2023)
     buttonProductId = random.randint(1, 7) if action == "click" else 0
     
-    log_message = f"{user_author_id},{action},{buttonProductId},{stimulus},{component},{text_content},{date.isoformat()}"
-    return log_message
+    return {"user_author_id": user_author_id, "action": action, "button_product_id": buttonProductId, "stimulus": stimulus, "component": component, "text_content": text_content, "date": date}

@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package log;
+package log_service;
 
 service LogService {
-  rpc LogUserBehavior (LogMessage) returns (LogResponse) {}
+  rpc LogUserBehavior (stream LogMessage) returns (LogResponse) {}
 }
 
 message LogMessage {

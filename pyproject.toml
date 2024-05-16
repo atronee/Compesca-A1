@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "compesca-a1"
+version = "0.1.0"
+description = ""
+authors = ["Vinícius Sousa <vinicius.antunes@proton.me>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+grpcio = "1.63.0"
+grpcio-tools = "1.63.0"
+protobuf = "5.26.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
