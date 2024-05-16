@@ -23,10 +23,22 @@ Certifique-se de ter os seguintes requisitos instalados em sua máquina:
 - Biblioteca _thread_ do C++
 - Biblioteca _sqlite3_ do C++
   - Para instalar a biblioteca _sqlite3_ no Linux, execute o comando ```sudo apt install libsqlite3-dev```
+- Biblioteca grpc++ do C++
+  - Para instalar a biblioteca grpc++ no Linux ou macOS, siga o tutorial em https://grpc.io/docs/languages/cpp/quickstart/
+- Biblioteca _protobuf_ do C++
+  - Instalar o grpc++ também instala o protobuf
+- Bibliotecas grpcio e grpcio-tools do Python
+  - Provemos um requirements.txt para instalar as bibliotecas necessárias. Para instalar, execute ```pip install -r requirements.txt```
+  - Também disponibilizamos um pyproject.toml e poetry.lock para instalar as dependências com o Poetry. Para instalar, execute ```poetry install```
 
 ## Como usar
 
 1. Clone o repositório do Data Plumber em sua máquina local: ```git clone https://github.com/atronee/Compesca-A1.git```
-2. No diretório do projeto, compile e execute o código-fonte de sua escolha:
+2. Instale as [dependências](#pré-requisitos) do projeto.
+3. No diretório do projeto, compile e execute o código-fonte de sua escolha:
     - Para criar arquivos de _mock_, execute ```make test_mock```;
-    - Para visualizar o dashboard, execute ```make Dashboard```.
+    - Para visualizar o dashboard, execute ```make Dashboard```;
+    - Para executar o servidor gRPC, execute ```make mock_server```.
+    - Para executar o cliente gRPC, primeiro execute o comando
+        ```python -m grpc_tools.protoc -I./rpc --python_out=./rpc --pyi_out=./rpc --grpc_python_out=./rpc ./rpc/contract.proto```
+    e depois execute ```python rpc/client.py```.
