@@ -57,3 +57,8 @@ _deps
 /.idea
 
 /data
+
+# Files genereated by contract.proto
+contract_pb2.py
+contract_pb2_grpc.py
+contract_pb2.pyi
