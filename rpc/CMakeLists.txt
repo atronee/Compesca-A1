@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(ProtoBufExample)
-
+set(CMAKE_CXX_STANDARD 20)
+set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "Propagate CXX_STANDARD from parent project")
 # Find required protobuf package
 option(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)
