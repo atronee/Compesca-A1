@@ -9,15 +9,15 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::ServerReader;
-using log_service::LogService;
-using log_service::LogMessage;
-using log_service::LogResponse;
+using data_service::DataService;
+using data_service::Response;
+using data_service::LogUserBehaviorMessage;
 
-class MockServer final : public LogService::Service {
+class MockServer final : public DataService::Service {
 public:
-    Status LogUserBehavior(grpc::ServerContext* context, ServerReader<LogMessage>* reader,
-                           LogResponse* response) override {
-        LogMessage message;
+    Status LogUserBehavior(grpc::ServerContext* context, ServerReader<LogUserBehaviorMessage>* reader,
+                           Response* response) override {
+        LogUserBehaviorMessage message;
         while (reader->Read(&message)) {
             std::cout << "Received logged user behavior: "<< std::endl;
             std::cout << "User ID: " << message.user_author_id() << std::endl;

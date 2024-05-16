@@ -10,11 +10,11 @@ import contract_pb2_grpc
 import mock
 
 
-def guide_log_message(stub, num_messages: int):
+def log_user_behavior_messages(stub, num_messages: int):
     log_message = []
     for _ in range(num_messages):
         message = (mock.generateLogUserBehavior())
-        log_message.append(contract_pb2.LogMessage(user_author_id=message["user_author_id"],
+        log_message.append(contract_pb2.LogUserBehaviorMessage(user_author_id=message["user_author_id"],
                                                    action=message["action"],
                                                    button_product_id=message["button_product_id"],
                                                    stimulus=message["stimulus"],
@@ -29,8 +29,8 @@ def guide_log_message(stub, num_messages: int):
 
 def run():
     with grpc.insecure_channel('localhost:50051') as channel:
-        stub = contract_pb2_grpc.LogServiceStub(channel)
-        guide_log_message(stub, 10)
+        stub = contract_pb2_grpc.DataServiceStub(channel)
+        log_user_behavior_messages(stub, 10)
 
 if __name__ == "__main__":
     logging.basicConfig()
