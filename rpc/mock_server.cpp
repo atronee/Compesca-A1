@@ -4,19 +4,20 @@
 #include <grpcpp/server_context.h>
 #include "contract.grpc.pb.h"
 
+#include "../src/ConsumerProducerQueue.h"
+#include "../src/DataFrame.h"
+
 using grpc::Status;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::ServerReader;
-using data_service::DataService;
-using data_service::Response;
-using data_service::LogUserBehaviorMessage;
+using namespace data_service;
 
 class MockServer final : public DataService::Service {
 public:
-    Status LogUserBehavior(grpc::ServerContext* context, ServerReader<LogUserBehaviorMessage>* reader,
-                           Response* response) override {
+    Status LogUserBehavior(ServerContext* context, ServerReader<LogUserBehaviorMessage>* reader,
+                           Response* response, Consumer) override {
         LogUserBehaviorMessage message;
         while (reader->Read(&message)) {
             std::cout << "Received logged user behavior: "<< std::endl;
@@ -29,6 +30,20 @@ public:
             std::cout << "--------------------------------------------" << std::endl;
         }
         response->set_response("User behavior logged successfully");
+        return Status::OK;
+    }
+
+    Status LogAudit (ServerContext* context, ServerReader<LogAuditMessage>* reader,
+                     Response* response) override {
+        LogAuditMessage message;
+        while (reader->Read(&message)) {
+            std::cout << "Received audit log: "<< std::endl;
+            std::cout << "User ID: " << message.user_author_id() << std::endl;
+            std::cout << "Action: " << message.action() << std::endl;
+            std::cout << "Date: " << message.date() << std::endl;
+            std::cout << "--------------------------------------------" << std::endl;
+        }
+        response->set_response("Audit log received successfully");
         return Status::OK;
     }
 };
