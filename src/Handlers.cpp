@@ -821,13 +821,23 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
         if(!sortFlag && !groupFlag){
             write_to_sqlite(df, filePath, table, false);
             // write to file the current time with fstream
+            int f_time = open("temposExec.txt", O_RDWR);
+            if (f_time == -1) {
+                return ;
+            }
+            if (flock(f_time, LOCK_SH) != 0) {
+                close(f_time);
+                return;
+            }
             std::ofstream MyFile;
             MyFile.open("temposExec.txt");
-            long long secCount = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-            secCount = secCount - df->get_creation_time();
-            MyFile << "Tempo de execução: " << secCount << "ms" << std::endl;
-            std::cout << "Tempo de execução: " << secCount << "ms" << std::endl;
+            auto endTime = std::time(nullptr);
+            auto timeDuration = duration<double, milliseconds>(endTime - df->get_creation_time());
+            MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
+            std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
             MyFile.close();
+            flock(f_time, LOCK_UN);
+            close(f_time);
         }
         else {
             std::unordered_map<string, std::size_t> column_types = df->get_column_types();
@@ -903,13 +913,23 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 delete fileDF;
                 fileDF = q_out.pop();
                 // write to file the current time with fstream
+                int f_time = open("temposExec.txt", O_RDWR);
+                if (f_time == -1) {
+                    return ;
+                }
+                if (flock(f_time, LOCK_SH) != 0) {
+                    close(f_time);
+                    return;
+                }
                 std::ofstream MyFile;
                 MyFile.open("temposExec.txt");
-                long long secCount = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-                secCount = secCount - df->get_creation_time();
-                MyFile << "Tempo de execução: " << secCount << "ms" << std::endl;
-                std::cout << "Tempo de execução: " << secCount << "ms" << std::endl;
+                auto endTime = std::time(nullptr);
+                auto timeDuration = duration<double, milliseconds>(endTime - df->get_creation_time());
+                MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
+                std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
+                flock(f_time, LOCK_UN);
+                close(f_time);
             }
 
             else if (groupFlag) {
@@ -923,25 +943,45 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 delete fileDF;
                 fileDF = new_df;
                 // write to file the current time with fstream
+                int f_time = open("temposExec.txt", O_RDWR);
+                if (f_time == -1) {
+                    return ;
+                }
+                if (flock(f_time, LOCK_SH) != 0) {
+                    close(f_time);
+                    return;
+                }
                 std::ofstream MyFile;
                 MyFile.open("temposExec.txt");
-                long long secCount = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-                secCount = secCount - df->get_creation_time();
-                MyFile << "Tempo de execução: " << secCount << "ms" << std::endl;
-                std::cout << "Tempo de execução: " << secCount << "ms" << std::endl;
+                auto endTime = std::time(nullptr);
+                auto timeDuration = duration<double, milliseconds>(endTime - df->get_creation_time());
+                MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
+                std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
+                flock(f_time, LOCK_UN);
+                close(f_time);
             } else {
                 DataFrame *new_df = aggregate_sort(df, fileDF, columnSort, sortOrder);
                 delete fileDF;
                 fileDF = new_df;
                 // write to file the current time with fstream
+                int f_time = open("temposExec.txt", O_RDWR);
+                if (f_time == -1) {
+                    return ;
+                }
+                if (flock(f_time, LOCK_SH) != 0) {
+                    close(f_time);
+                    return;
+                }
                 std::ofstream MyFile;
                 MyFile.open("temposExec.txt");
-                long long secCount = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-                secCount = secCount - df->get_creation_time();
-                MyFile << "Tempo de execução: " << secCount << "ms" << std::endl;
-                std::cout << "Tempo de execução: " << secCount << "ms" << std::endl;
+                auto endTime = std::time(nullptr);
+                auto timeDuration = duration<double, milliseconds>(endTime - df->get_creation_time());
+                MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
+                std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
+                flock(f_time, LOCK_UN);
+                close(f_time);
             }
             write_to_sqlite(fileDF, filePath, table, true);
             delete fileDF;
