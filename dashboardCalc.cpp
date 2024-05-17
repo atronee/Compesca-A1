@@ -149,7 +149,7 @@ int main()
     std::vector<std::thread> threads;
 
     //Start mock server
-    MockServer service = MockServer();
+    MockServer service = MockServer(10000);
     threads.emplace_back([&service]
                          { RunServer(service); });
     auto &queueOrderData = service.queueOrderData;
@@ -164,54 +164,44 @@ int main()
                          {
                              distributeDataFrames(queueOrderData, queue_reader4);
                          });
-    threads.emplace_back([&queue_reader4]
-                         {
-                             auto df = queue_reader4[0]->pop();
-                                while (df != nullptr)
-                                {
-                                    df->print();
+    SelectHandler selectHandler4(queue_reader4[0].get(), &queue_select4);
+    for (int i = 0; i < 12; i++)
+    {
+        (threads).emplace_back([i, &selectHandler4]
+                               { selectHandler4.select({ "product_id", "quantity"}); });
+    }
 
-                                    df = queue_reader4[0]->pop();
-                                }
-                         });
-//    SelectHandler selectHandler4(queue_reader4[0].get(), &queue_select4);
-//    for (int i = 0; i < 12; i++)
-//    {
-//        (threads).emplace_back([i, &selectHandler4]
-//                               { selectHandler4.select({ "product_id", "quantity"}); });
-//    }
-//
-//    GroupByHandler groupByHandler4(&queue_select4, &queue_groupby4);
-//    for (int i = 0; i < 12; i++)
-//    {
-//        (threads).emplace_back([i, &groupByHandler4]
-//                               { groupByHandler4.group_by("product_id", "sum"); });
-//    }
-//
-//    string dbPath4 = "./mydatabase4.db";
-//    string tableName4 = "Table4";
-//    FinalHandler finalHandler4(&queue_groupby4, nullptr);
-//    for (int i = 0; i < 11; i++)
-//    {
-//        (threads).emplace_back([i, &finalHandler4, &dbPath4, &tableName4]
-//                               { finalHandler4.aggregate(dbPath4, tableName4, false, true,
-//                                                         "", "product_id", "sum", ""); });
-//    }
-//
-//
-//
-//   threads.emplace_back([&data4, &dbPath4]
-//                          {
-//                              std::string sql = "SELECT * FROM Table4 ORDER BY quantity DESC;";
-//                              worker4(std::ref(data4), dbPath4, sql); });
-//
-//
-//    threads.emplace_back([&data4]
-//                         {
-//                             //  Call the dashboard function here
-//                             dashboard(std::ref(data4)); });
-//
-//    // Open the database
+    GroupByHandler groupByHandler4(&queue_select4, &queue_groupby4);
+    for (int i = 0; i < 12; i++)
+    {
+        (threads).emplace_back([i, &groupByHandler4]
+                               { groupByHandler4.group_by("product_id", "sum"); });
+    }
+
+    string dbPath4 = "./mydatabase4.db";
+    string tableName4 = "Table4";
+    FinalHandler finalHandler4(&queue_groupby4, nullptr);
+    for (int i = 0; i < 11; i++)
+    {
+        (threads).emplace_back([i, &finalHandler4, &dbPath4, &tableName4]
+                               { finalHandler4.aggregate(dbPath4, tableName4, false, true,
+                                                         "", "product_id", "sum", ""); });
+    }
+
+
+
+   threads.emplace_back([&data4, &dbPath4]
+                          {
+                              std::string sql = "SELECT * FROM Table4 ORDER BY quantity DESC;";
+                              worker4(std::ref(data4), dbPath4, sql); });
+
+
+    threads.emplace_back([&data4]
+                         {
+                             //  Call the dashboard function here
+                             dashboard(std::ref(data4)); });
+
+    // Open the database
     for (auto &t : threads)
     {
         if (t.joinable())
