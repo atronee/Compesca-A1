@@ -10,12 +10,31 @@
 #include "../src/ConsumerProducerQueue.h"
 #include "../src/DataFrame.h"
 
+#include <vector>
+#include <memory>  // For std::unique_ptr
+
 using grpc::Status;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::ServerReader;
 using namespace data_service;
+
+void distributeDataFrames(
+    ConsumerProducerQueue<DataFrame>& sourceQueue,
+    std::vector<std::unique_ptr<ConsumerProducerQueue<std::unique_ptr<DataFrame>>>>& destinationQueues)
+{
+    while (true) {
+        DataFrame df = sourceQueue.pop();  // Blocks if the queue is empty, and pops a DataFrame object
+
+        // Make a copy of the DataFrame and push it to each destination queue
+        for (auto& queue : destinationQueues) {
+            auto dfCopy = std::make_unique<DataFrame>(df);  // Deep copy the DataFrame
+            queue->push(std::move(dfCopy));  // Push the copy as a pointer to the destination queue
+        }
+    }
+}
+
 
 class MockServer final : public DataService::Service {
 private:

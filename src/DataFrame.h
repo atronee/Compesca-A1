@@ -39,6 +39,40 @@ private:
 public:
     DataFrame() : n_rows(0), creation_time(std::time(nullptr)) {};
 
+    // Copy constructor
+    DataFrame(const DataFrame& other)
+        : column_types(other.column_types), column_order(other.column_order), n_rows(other.n_rows), creation_time(other.creation_time) {
+        for (const auto& pair : other.data) {
+            std::vector<DataVariant> copiedColumn;
+            copiedColumn.reserve(pair.second.size());
+            for (const auto& item : pair.second) {
+                copiedColumn.push_back(item);  // Copy each DataVariant
+            }
+            data[pair.first] = copiedColumn;
+        }
+    }
+
+    // Copy assignment operator
+    DataFrame& operator=(const DataFrame& other) {
+        if (this != &other) {  // Check for self-assignment
+            data.clear();  // Clear current data
+            column_types = other.column_types;
+            column_order = other.column_order;
+            n_rows = other.n_rows;
+            creation_time = other.creation_time;
+            
+            for (const auto& pair : other.data) {
+                std::vector<DataVariant> copiedColumn;
+                copiedColumn.reserve(pair.second.size());
+                for (const auto& item : pair.second) {
+                    copiedColumn.push_back(item);  // Copy each DataVariant
+                }
+                data[pair.first] = copiedColumn;
+            }
+        }
+        return *this;
+    }
+
     DataFrame(const std::vector<std::string>& column_names, std::vector< const std::type_info*>& column_types);
 
     DataFrame(const std::vector<std::string>& column_names, std::unordered_map<std::string, std::size_t>& column_types);
