@@ -122,15 +122,7 @@ def run(_):
     with grpc.insecure_channel('localhost:50051') as channel:
         for _ in range(num_messages):
             stub = contract_pb2_grpc.DataServiceStub(channel)
-            log_user_behavior_messages(stub, size_messages)
-            log_audit_messages(stub, size_messages)
-            log_failure_notification_messages(stub, size_messages)
-            log_debug_messages(stub, size_messages)
-            consumer_messages(stub, size_messages)
             order_messages(stub, size_messages)
-            product_messages(stub, size_messages)
-            stock_messages(stub, size_messages)
-
 if __name__ == "__main__":
     logging.basicConfig()
     with multiprocessing.Pool(num_processes) as pool:

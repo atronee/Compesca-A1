@@ -830,11 +830,10 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 return;
             }
             std::ofstream MyFile;
-            MyFile.open("temposExec.txt");
+            MyFile.open("temposExec.txt", std::ios::app);
             auto endTime = high_resolution_clock::now();
             const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
             MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
-            std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
             MyFile.close();
             flock(f_time, LOCK_UN);
             close(f_time);
@@ -922,11 +921,10 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                     return;
                 }
                 std::ofstream MyFile;
-                MyFile.open("temposExec.txt");
+                MyFile.open("temposExec.txt", std::ios::app);
                 auto endTime = high_resolution_clock::now();
                 const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
-                std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
                 flock(f_time, LOCK_UN);
                 close(f_time);
@@ -952,11 +950,10 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                     return;
                 }
                 std::ofstream MyFile;
-                MyFile.open("temposExec.txt");
+                MyFile.open("temposExec.txt", std::ios::app);
                 auto endTime = high_resolution_clock::now();
                 const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
-                std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
                 flock(f_time, LOCK_UN);
                 close(f_time);
@@ -964,6 +961,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 DataFrame *new_df = aggregate_sort(df, fileDF, columnSort, sortOrder);
                 delete fileDF;
                 fileDF = new_df;
+                // get current time to calculate the time the dataframe took to be processed
+                auto endTime = high_resolution_clock::now();
                 // write to file the current time with fstream
                 int f_time = open("temposExec.txt", O_RDWR);
                 if (f_time == -1) {
@@ -974,11 +973,9 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                     return;
                 }
                 std::ofstream MyFile;
-                MyFile.open("temposExec.txt");
-                auto endTime = high_resolution_clock::now();
+                MyFile.open("temposExec.txt", std::ios::app);
                 const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
-                std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
                 flock(f_time, LOCK_UN);
                 close(f_time);
