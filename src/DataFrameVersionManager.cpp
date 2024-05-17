@@ -11,13 +11,13 @@
 #include <condition_variable>
 
 void DataFrameVersionManager::storeVersion(std::unique_ptr<DataFrame> df) {
-    std::time_t time = df->get_creation_time();
+    std::chrono::time_point<std::chrono::high_resolution_clock> time = df->get_creation_time();
     std::lock_guard<std::mutex> lock(mtx);
     versions[time] = std::move(df);
     cv.notify_all();  // Notify all waiting threads that a dataframe has been added
 }
 
-DataFrame* DataFrameVersionManager::getVersionBefore(std::time_t time){
+DataFrame* DataFrameVersionManager::getVersionBefore(std::chrono::time_point<std::chrono::high_resolution_clock> time){
     std::unique_lock<std::mutex> lock(mtx);
     cv.wait(lock, [this]{ return !versions.empty(); });  // Wait until versions is not empty
     auto it = versions.upper_bound(time);

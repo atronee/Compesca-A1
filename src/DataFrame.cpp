@@ -15,7 +15,7 @@
 
 
 DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<const std::type_info*>& column_types) :
-    n_rows(0), creation_time(std::time(nullptr)) {
+    n_rows(0), creation_time(std::chrono::high_resolution_clock::now()) {
     /*
      * Constructor to create a DataFrame with the specified column names and types.
      */
@@ -34,7 +34,7 @@ DataFrame::DataFrame(const std::vector<std::string>& column_names, std::vector<c
 }
 
 DataFrame::DataFrame(const std::vector<std::string>& column_names, std::unordered_map<std::string, std::size_t>& column_types)
-    : n_rows(0), creation_time(std::time(nullptr)), column_types(column_types){
+    : n_rows(0), creation_time(std::chrono::high_resolution_clock::now()), column_types(column_types){
     /*
      * Constructor to create a DataFrame with the specified column names and types.
      */
@@ -51,7 +51,7 @@ DataFrame::DataFrame(const std::vector<std::string>& column_names, std::unordere
 }
 
 DataFrame::DataFrame(const std::vector<std::string> &column_names, std::vector<size_t> &column_types) :
-        n_rows(0), creation_time(std::time(nullptr)) {
+        n_rows(0), creation_time(std::chrono::high_resolution_clock::now()) {
     /*
      * Constructor to create a DataFrame with the specified column names and types.
      */
