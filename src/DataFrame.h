@@ -9,6 +9,7 @@
 #include <typeindex>
 #include <ctime>
 #include <iostream>
+#include <chrono>
 
 using DataVariant = std::variant<int, float, std::string, std::tm>;
 
@@ -35,9 +36,9 @@ private:
     std::unordered_map<std::string, size_t> column_types;
     std::vector<std::string> column_order;
     int n_rows;
-    std::time_t creation_time;
+    std::chrono::time_point<std::chrono::high_resolution_clock> creation_time;
 public:
-    DataFrame() : n_rows(0), creation_time(std::time(nullptr)) {};
+    DataFrame() : n_rows(0), creation_time(std::chrono::high_resolution_clock::now()) {};
 
     // Copy constructor
     DataFrame(const DataFrame& other)
@@ -103,11 +104,11 @@ public:
 
     int sum_column(const std::string& column_name);
 
-    std::time_t get_creation_time() const {
+    std::chrono::time_point<std::chrono::high_resolution_clock> get_creation_time() const {
         return creation_time;
     }
 
-    void set_creation_time(std::time_t time) {
+    void set_creation_time(std::chrono::time_point<std::chrono::high_resolution_clock> time) {
         creation_time = time;
     }
 

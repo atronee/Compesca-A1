@@ -831,8 +831,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
             }
             std::ofstream MyFile;
             MyFile.open("temposExec.txt");
-            auto endTime = std::time(nullptr);
-            auto timeDuration = duration<double, milliseconds>(endTime - df->get_creation_time());
+            auto endTime = high_resolution_clock::now();
+            const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
             MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
             std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
             MyFile.close();
@@ -923,8 +923,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 }
                 std::ofstream MyFile;
                 MyFile.open("temposExec.txt");
-                auto endTime = std::time(nullptr);
-                auto timeDuration = duration<double, milliseconds>(endTime - df->get_creation_time());
+                auto endTime = high_resolution_clock::now();
+                const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
@@ -953,8 +953,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 }
                 std::ofstream MyFile;
                 MyFile.open("temposExec.txt");
-                auto endTime = std::time(nullptr);
-                auto timeDuration = duration<double, milliseconds>(endTime - df->get_creation_time());
+                auto endTime = high_resolution_clock::now();
+                const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
@@ -975,8 +975,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 }
                 std::ofstream MyFile;
                 MyFile.open("temposExec.txt");
-                auto endTime = std::time(nullptr);
-                auto timeDuration = duration<double, milliseconds>(endTime - df->get_creation_time());
+                auto endTime = high_resolution_clock::now();
+                const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 std::cout << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
                 MyFile.close();
