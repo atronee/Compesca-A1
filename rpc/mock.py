@@ -39,7 +39,7 @@ def product_data():
 
     return {"product_id": product_id, "name": name, "image": image, "price": price, "description": description}
 
-def stock_data(product_id):
+def stock_data(product_id = -1):
     if product_id not in stock_dict:
         quantity = fake.random_int(min=1, max=1000)
         stock_dict[product_id] = quantity

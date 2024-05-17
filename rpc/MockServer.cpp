@@ -7,7 +7,8 @@
 #include <vector>
 #include <typeinfo>
 #include "contract.grpc.pb.h"
-
+#include <iostream>
+#include <variant>
 #include "../src/ConsumerProducerQueue.h"
 #include "../src/DataFrame.h"
 
@@ -31,7 +32,7 @@ Status MockServer::LogAudit (ServerContext* context, ServerReader<LogAuditMessag
 
     int i = 0;
     while (reader->Read(&message)) {
-        dataFrame.add_row({message.user_author_id(), message.action(),
+        dataFrame.add_row(std::vector<DataVariant>{message.user_author_id(), message.action(),
                            message.action_description(), message.text_content(), message.date()});
         i++;
         if (i == max_dataFrame_size) {
@@ -60,8 +61,9 @@ Status MockServer::LogUserBehavior(ServerContext* context, ServerReader<LogUserB
 
     int i = 0;
     while (reader->Read(&message)) {
-        dataFrame.add_row({message.user_author_id(), message.action(), message.button_product_id(),
-                           message.stimulus(), message.text_content(), message.date()});
+        auto row_data = std::vector<DataVariant>{message.user_author_id(), message.action(), message.button_product_id(),
+                           message.component(),message.stimulus(), message.text_content(), message.date()};
+        dataFrame.add_row(row_data);
         i++;
         if (i == max_dataFrame_size) {
             queueLogUserBehavior.push(dataFrame);
