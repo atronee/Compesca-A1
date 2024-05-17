@@ -118,7 +118,7 @@ size_messages = 100
 num_messages = 10_000
 num_processes = 10
 
-def run():
+def run(_):
     with grpc.insecure_channel('localhost:50051') as channel:
         for _ in range(num_messages):
             stub = contract_pb2_grpc.DataServiceStub(channel)
