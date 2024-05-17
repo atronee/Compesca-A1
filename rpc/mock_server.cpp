@@ -17,7 +17,7 @@ using namespace data_service;
 class MockServer final : public DataService::Service {
 public:
     Status LogUserBehavior(ServerContext* context, ServerReader<LogUserBehaviorMessage>* reader,
-                           Response* response, Consumer) override {
+                           Response* response) override {
         LogUserBehaviorMessage message;
         while (reader->Read(&message)) {
             std::cout << "Received logged user behavior: "<< std::endl;

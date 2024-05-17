@@ -39,16 +39,3 @@ public:
 };
 
 #endif // READER_H               // End of header guard
-
-//class SQLiteReader : public Reader {  // Declaration of the derived class SQLiteReader, inheriting from Reader
-//public:
-//    void read(char delimiter, int start, int & end,
-//              ConsumerProducerQueue<DataFrame*>& queue_out, ConsumerProducerQueue<std::string>& queue_in,
-//              bool read_in_blocks, int block_size, std::string filenameFormat) override;
-//    // Implementation of the read function for reading SQLite files
-//    // Parameters: filename - name of the SQLite file to read from
-//    //             types - vector of type_info pointers specifying the types of data to read
-//    //             delimiter - character used as a delimiter in the SQLite file (default: ',')
-//    //             queue - reference to the queue to store the data
-//    //             read_in_blocks - flag to indicate whether to read data in blocks or not (default: true)
-//};

@@ -416,45 +416,6 @@ void worker7(std::string &data, const std::string &dbPath, const std::string &sq
     }
 }
 
-//static int callback6(void *data, int argc, char **argv, char **azColName)
-//{
-//    std::string *resultStr = static_cast<std::string *>(data);
-//    if (argc == 2 && argv[0] && argv[1])
-//    {
-//        int countCompra = atof(argv[0]);
-//        int countVizualizations = atof(argv[1]);
-//        int newValue = (countCompra - countVizualizations) / countCompra;
-//        *resultStr += std::to_string(newValue); // New column value
-//        *resultStr += "\n"; // New line
-//    }
-//    return 0;
-//}
-//bool executeQuery6(const std::string &sql, std::string &result, std::string *dbPath)
-//{
-//    sqlite3 *db = openDatabase(*dbPath);
-//    char *errorMessage = nullptr;
-//    int rc = sqlite3_exec(db, sql.c_str(), callback6, &result, &errorMessage);
-//    if (rc != SQLITE_OK)
-//    {
-//        std::cerr << "SQL error: " << errorMessage << std::endl;
-//        sqlite3_free(errorMessage);
-//        sqlite3_close(db);
-//        return false;
-//    }
-//    sqlite3_close(db);
-//    return true;
-//}
-//
-//void worker6(std::string &result, std::string dbPath, std::string &sql)
-//{
-//    std::this_thread::sleep_for(std::chrono::seconds(5));
-//
-//    while (true)
-//    {
-//        executeQuery6(sql, result, &dbPath);
-//        std::this_thread::sleep_for(std::chrono::seconds(10));
-//    }
-//}
 
 void clearScreen()
 {
@@ -498,7 +459,6 @@ void dashboard(string &data3, string &data4, string &data5, string &data7)
 
         // Print the results of pipeline 2
         mtx2.lock();
-//        if (data2 != nullptr)
         {
             std::cout << "Question 2 - Número de produtos comprados por minuto" << std::endl;
             std::cout << "Ratio of records to time difference: " << (data2) << std::endl;
@@ -508,7 +468,6 @@ void dashboard(string &data3, string &data4, string &data5, string &data7)
 
         // Print the results of pipeline 3
         mtx3.lock();
-//        if (data3 != nullptr)
         {
             std::cout << "Question 3 - Número de usuários únicos visualizando cada produto por minuto." << std::endl;
             std::cout << data3 << std::endl;
@@ -518,7 +477,6 @@ void dashboard(string &data3, string &data4, string &data5, string &data7)
 
         // Print the results of pipeline 4
         mtx4.lock();
-//        if (data4 != nullptr)
         {
             std::cout << "Question 4 - Ranking dos produtos mais comprados" << std::endl;
             std::cout << data4 << std::endl;
@@ -528,7 +486,6 @@ void dashboard(string &data3, string &data4, string &data5, string &data7)
 
         // Print the results of pipeline 5
         mtx5.lock();
-//        if (data5 != nullptr)
         {
             std::cout << "Question 5 - Ranking dos produtos mais visualizados" << std::endl;
             std::cout << data5 << std::endl;
@@ -538,7 +495,6 @@ void dashboard(string &data3, string &data4, string &data5, string &data7)
 
         // Print the results of pipeline 7
         mtx7.lock();
-//        if (data7 != nullptr)
         {
             std::cout << "Question 7 - Número de produtos vendidos fora de estoque" << std::endl;
             std::cout << data7 << std::endl;
@@ -549,11 +505,6 @@ void dashboard(string &data3, string &data4, string &data5, string &data7)
     }
 }
 
-
-//SELECT (CAST(SUBSTR(timediff(Max(event_datetime), MIN(event_datetime)), 11, 2) AS INTEGER) * 24 * 60) +
-//(CAST(SUBSTR(timediff(Max(event_datetime), MIN(event_datetime)), 14, 2) AS INTEGER) * 60) +
-//(CAST(SUBSTR(timediff(Max(event_datetime), MIN(event_datetime)), 17, 2) AS INTEGER)) AS minutes
-//FROM events;
 
 int main()
 {
@@ -848,93 +799,6 @@ int main()
                           {
                               std::string sql = "SELECT * FROM Table5 ORDER BY count DESC;";
                               worker5(std::ref(data5), dbPath5, sql); });
-
-//    // Question 6 - Média de vizualizações antes da compra ---------------------------------
-//    ConsumerProducerQueue<DataFrame *> queue_reader6(100);
-//    ConsumerProducerQueue<DataFrame *> queue_select6(100);
-//    ConsumerProducerQueue<DataFrame *> queue_filter6(100);
-//    ConsumerProducerQueue<DataFrame *> queue_groupby6(100);
-//
-//
-//    FileReader csvReader6;
-//    int end6 = 0;
-//    for (int i = 0; i < 2; i++)
-//    {
-//        (threads).emplace_back([i, &csvReader6, &queue_files, &queue_reader6, &end6]
-//                               { csvReader6.read(',', 0, end6, queue_reader6, *queue_files[6], false, true, "order"); });
-//    }
-//
-//    SelectHandler selectHandler6(&queue_reader6, &queue_select6);
-//    for (int i = 0; i < 2; i++)
-//    {
-//        (threads).emplace_back([i, &selectHandler6]
-//                               { selectHandler6.select({"Button_Product_Id"}); });
-//    }
-//
-//    FilterHandler filterHandler6(&queue_select6, &queue_select6);
-//    for (int i = 0; i < 2; i++)
-//    {
-//        (threads).emplace_back([i, &filterHandler6]
-//                               { filterHandler6.filter("Button_Product_Id", "!=", "0"); });
-//    }
-//
-//    GroupByHandler groupByHandler6(&queue_select6, &queue_groupby6);
-//    for (int i = 0; i < 2; i++)
-//    {
-//        (threads).emplace_back([i, &groupByHandler6]
-//                               { groupByHandler6.group_by("Button_Product_Id", "count"); });
-//    }
-//
-//    string dbPath6 = "./mydatabase6.db";
-//    string tableName6 = "Table6";
-//    FinalHandler finalHandler6(&queue_groupby6, nullptr);
-//    for (int i = 0; i < 1; i++)
-//    {
-//        (threads).emplace_back([i, &finalHandler6, &dbPath6, &tableName6]
-//                               { finalHandler6.aggregate(dbPath6, tableName6, false, true, "", "Button_Product_Id", "count", ""); });
-//    }
-
-////Auxiliar
-//
-//    ConsumerProducerQueue<DataFrame *> queue_reader6_1(100);
-//    ConsumerProducerQueue<DataFrame *> queue_select6_1(100);
-//    ConsumerProducerQueue<DataFrame *> queue_groupby6_1(100);
-//
-//    FileReader csvReader6_1;
-//    int end6_1 = 0;
-//    for (int i = 0; i < 2; i++)
-//    {
-//        (threads).emplace_back([i, &csvReader6_1, &queue_files, &queue_reader6_1, &end6_1]
-//                               { csvReader6_1.read(',', 0, end6_1, queue_reader6_1, *queue_files[7], false, true, "order"); });
-//    }
-//
-//    SelectHandler selectHandler6_1(&queue_reader6_1, &queue_select6_1);
-//    for (int i = 0; i < 2; i++)
-//    {
-//        (threads).emplace_back([i, &selectHandler6_1]
-//                               { selectHandler6_1.select({"ID_PRODUTO"});});
-//    }
-//
-//    GroupByHandler groupByHandler6_1(&queue_select6_1, &queue_groupby6_1);
-//    for (int i = 0; i < 2; i++)
-//    {
-//        (threads).emplace_back([i, &groupByHandler6_1]
-//                               { groupByHandler6_1.group_by("ID_PRODUTO", "count"); });
-//    }
-//
-//    string tableName6_1 = "Table6_1";
-//    FinalHandler finalHandler6_1(&queue_groupby6_1, nullptr);
-//    for (int i = 0; i < 1; i++)
-//    {
-//        (threads).emplace_back([i, &finalHandler6_1, &dbPath6, &tableName6_1]
-//                               { finalHandler6_1.aggregate(dbPath6, tableName6_1, false, true, "", "ID_PRODUTO", "count", ""); });
-//    }
-//
-//    threads.emplace_back([&data6, &dbPath6]
-//                         {
-//                             std::string sql = "SELECT (Table6_1.count - Table6.count) / Table6_1.count AS NewValue FROM table1 INNER JOIN table2 ON Table6_1.ID_PRODUTO = Table6.Button_Product_Id;";
-//                             worker6(data6, dbPath6, sql); });
-
 
     // Question 7 - Numero de produtos sem estoque ---------------------------------
 
