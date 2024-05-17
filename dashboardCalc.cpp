@@ -2,6 +2,7 @@
 #include "src/ConsumerProducerQueue.h"
 #include "src/Handlers.h"
 #include "src/Reader.h"
+#include "rpc/MockServer.h"
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -142,66 +143,40 @@ void dashboard(string &data4)
 
 int main()
 {
-
-
     string data4  = "";
-
-
-    std::vector<std::unique_ptr<ConsumerProducerQueue<std::string>>> queue_files;
-    for (int i = 0; i < 9; i++)
-    {
-        queue_files.push_back(std::make_unique<ConsumerProducerQueue<std::string>>(100));
-    }
-
-    mockCSV(0, 1000);
-    mockLogFiles(10, 100, 0);
 
     // vector of threads
     std::vector<std::thread> threads;
 
-    threads.emplace_back(mock_files);
-
-    EventBasedTrigger eventTrigger1;
-    EventBasedTrigger eventTrigger2;
-    for (int i = 0; i < 1; i++)
-    
-    {
-        threads.emplace_back([i, &eventTrigger1, &queue_files]
-                             { eventTrigger1.triggerOnApperanceOfNewLogFile("./logs", queue_files); });
-        threads.emplace_back([i, &eventTrigger1, &queue_files]
-                             { eventTrigger1.triggerOnApperanceOfNewLogFile("./data", queue_files); });
-    }
-
-    ConsumerProducerQueue<DataFrame *> queue_reader(100);
-    ConsumerProducerQueue<DataFrame *> queue_select(100);
-    ConsumerProducerQueue<DataFrame *> queue_filter(100);
-
+    //Start mock server
+    MockServer service = MockServer();
+    threads.emplace_back([&service]
+                         { RunServer(service); });
+    auto &queueOrderData = service.queueOrderData;
     //Question 4 - Ranking dos produtos mais comprados -----------------------------------------------------------
 
-    ConsumerProducerQueue<DataFrame *> queue_reader4(100);
+    vector<std::unique_ptr<ConsumerProducerQueue<DataFrame *>>> queue_reader4;
+    queue_reader4.push_back(std::make_unique<ConsumerProducerQueue<DataFrame*>>(100));
     ConsumerProducerQueue<DataFrame *> queue_select4(100);
     ConsumerProducerQueue<DataFrame *> queue_groupby4(100);
 
-    FileReader csvReader4;
-    int end4 = 0;
-    for (int i = 0; i < 12; i++)
-    {
-        (threads).emplace_back([i, &csvReader4, &queue_files, &queue_reader4, &end4]
-                               { csvReader4.read(',', 0, end4, queue_reader4, *queue_files[4], false, true, "order"); });
-    }
+    threads.emplace_back([&queueOrderData, &queue_reader4]
+                         {
+                             distributeDataFrames(queueOrderData, queue_reader4);
+                         });
 
-    SelectHandler selectHandler4(&queue_reader4, &queue_select4);
+    SelectHandler selectHandler4(queue_reader4[0].get(), &queue_select4);
     for (int i = 0; i < 12; i++)
     {
         (threads).emplace_back([i, &selectHandler4]
-                               { selectHandler4.select({ "ID_PRODUTO", "QUANTIDADE"}); });
+                               { selectHandler4.select({ "product_id", "quantity"}); });
     }
 
     GroupByHandler groupByHandler4(&queue_select4, &queue_groupby4);
     for (int i = 0; i < 12; i++)
     {
         (threads).emplace_back([i, &groupByHandler4]
-                               { groupByHandler4.group_by("ID_PRODUTO", "sum"); });
+                               { groupByHandler4.group_by("product_id", "sum"); });
     }
 
     string dbPath4 = "./mydatabase4.db";
@@ -210,14 +185,15 @@ int main()
     for (int i = 0; i < 11; i++)
     {
         (threads).emplace_back([i, &finalHandler4, &dbPath4, &tableName4]
-                               { finalHandler4.aggregate(dbPath4, tableName4, false, true, "", "ID_PRODUTO", "sum", ""); });
+                               { finalHandler4.aggregate(dbPath4, tableName4, false, true,
+                                                         "", "product_id", "sum", ""); });
     }
 
 
 
    threads.emplace_back([&data4, &dbPath4]
                           {
-                              std::string sql = "SELECT * FROM Table4 ORDER BY QUANTIDADE DESC;";
+                              std::string sql = "SELECT * FROM Table4 ORDER BY quantity DESC;";
                               worker4(std::ref(data4), dbPath4, sql); });
 
 

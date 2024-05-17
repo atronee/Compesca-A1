@@ -62,13 +62,6 @@ target_link_libraries(rg_grpc_proto
         ${_GRPC_GRPCPP}
         ${_PROTOBUF_LIBPROTOBUF})
 
-add_executable(mock_server rpc/mock_server.cpp)
-target_link_libraries(mock_server
-        rg_grpc_proto
-        ${_REFLECTION}
-        ${_GRPC_GRPCPP}
-        ${_PROTOBUF_LIBPROTOBUF})
-
 find_package(SQLite3)
 add_executable(Compesca_A1
         src/mock.cpp
@@ -89,7 +82,13 @@ add_executable(Compesca_A1
         src/DataFrameVersionManager.h
         src/writer.cpp
         src/writer.h
+        rpc/MockServer.cpp
+        rpc/MockServer.h
 )
-target_link_libraries(Compesca_A1 SQLite::SQLite3)
+target_link_libraries(Compesca_A1 SQLite::SQLite3
+        rg_grpc_proto
+        ${_REFLECTION}
+        ${_GRPC_GRPCPP}
+        ${_PROTOBUF_LIBPROTOBUF})
 
 

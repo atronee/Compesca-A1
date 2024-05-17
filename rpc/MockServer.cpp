@@ -244,14 +244,32 @@ Status MockServer::OrderData(grpc::ServerContext *context, ServerReader<data_ser
     return Status::OK;
 }
 
-void RunServer() {
-std::string server_address("0.0.0.0:50051");
-MockServer service;
+void RunServer(MockServer& service) {
 
-ServerBuilder builder;
-builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-builder.RegisterService(&service);
-std::unique_ptr<Server> server(builder.BuildAndStart());
-std::cout << "Server listening on " << server_address << std::endl;
-server->Wait();
+    std::string server_address("0.0.0.0:50051");
+
+    ServerBuilder builder;
+    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    builder.RegisterService(&service);
+    std::unique_ptr<Server> server(builder.BuildAndStart());
+    std::cout << "Server listening on " << server_address << std::endl;
+    server->Wait();
+}
+
+void distributeDataFrames(
+        ConsumerProducerQueue<DataFrame>& sourceQueue,
+        std::vector<std::unique_ptr<ConsumerProducerQueue<DataFrame*>>>& destinationQueues)
+{
+    // This function is a thread that pops DataFrames from a source queue and pushes them to multiple destination queues.
+    //The source queue comes from the gRPC server.
+    while (true) {
+        DataFrame df = sourceQueue.pop();  // Blocks if the queue is empty, and pops a DataFrame object
+
+        // Make a copy of the DataFrame and push it to each destination queue
+        for (auto& queue : destinationQueues) {
+            auto dfCopy = std::make_unique<DataFrame>(df);  // Deep copy the DataFrame
+            // Push the copy as a pointer to the destination queue
+            queue->push(dfCopy.release());
+        }
+    }
 }
