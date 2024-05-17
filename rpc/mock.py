@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 
 fake = Faker()
 
+stock_dict = dict()
+
 # Utils
 def generate_random_date(min_year=1900, max_year=datetime.now().year):
     start = datetime(min_year, 1, 1, 0, 0, 0)
@@ -38,7 +40,11 @@ def product_data():
     return {"product_id": product_id, "name": name, "image": image, "price": price, "description": description}
 
 def stock_data(product_id):
-    quantity = fake.random_int(min=1, max=1000)
+    if product_id not in stock_dict:
+        quantity = fake.random_int(min=1, max=1000)
+        stock_dict[product_id] = quantity
+    else:
+        quantity = stock_dict[product_id]
     return {"product_id": product_id, "quantity": quantity}
 
 def order_data():
@@ -46,10 +52,16 @@ def order_data():
     product_id = fake.random_int(min=1, max=7)
     quantity = fake.random_int(min=1, max=10)
 
-    purchase_date = generate_random_date(2019, datetime.now().year)
-    payment_date = generate_random_date(2019, datetime.now().year)
-    shipping_date = generate_random_date(2019, datetime.now().year)
-    delivery_date = generate_random_date(2019, datetime.now().year)
+    # get 4 random dates
+    four_dates = [generate_random_date(2019, datetime.now().year) for _ in range(4)]
+
+    # sort the dates
+    four_dates.sort()
+
+    purchase_date = four_dates[0]
+    payment_date = four_dates[1]
+    shipping_date = four_dates[2]
+    delivery_date = four_dates[3]
 
     return {"user_id": user_id, "product_id": product_id, "quantity": quantity, 
             "purchase_date": purchase_date, "payment_date": payment_date, 
