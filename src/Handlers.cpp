@@ -825,7 +825,7 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
             if (f_time == -1) {
                 return ;
             }
-            if (flock(f_time, LOCK_SH) != 0) {
+            if (flock(f_time, LOCK_EX) != 0) {
                 close(f_time);
                 return;
             }
@@ -916,7 +916,7 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 if (f_time == -1) {
                     return ;
                 }
-                if (flock(f_time, LOCK_SH) != 0) {
+                if (flock(f_time, LOCK_EX) != 0) {
                     close(f_time);
                     return;
                 }
@@ -945,7 +945,7 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 if (f_time == -1) {
                     return ;
                 }
-                if (flock(f_time, LOCK_SH) != 0) {
+                if (flock(f_time, LOCK_EX) != 0) {
                     close(f_time);
                     return;
                 }
@@ -968,7 +968,7 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 if (f_time == -1) {
                     return ;
                 }
-                if (flock(f_time, LOCK_SH) != 0) {
+                if (flock(f_time, LOCK_EX) != 0) {
                     close(f_time);
                     return;
                 }
