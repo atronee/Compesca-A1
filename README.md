@@ -35,10 +35,12 @@ Certifique-se de ter os seguintes requisitos instalados em sua máquina:
 
 1. Clone o repositório do Data Plumber em sua máquina local: ```git clone https://github.com/atronee/Compesca-A1.git```
 2. Instale as [dependências](#pré-requisitos) do projeto.
-3. No diretório do projeto, compile e execute o código-fonte de sua escolha:
-    - Para criar arquivos de _mock_, execute ```make test_mock```;
-    - Para visualizar o dashboard, execute ```make Dashboard```;
-    - Para executar o servidor gRPC, execute ```make mock_server```.
-    - Para executar o cliente gRPC, primeiro execute o comando
+3. No diretório do projeto, compile o código fonte usando cmake:
+    - ```mkdir cmake-build```
+    - ```cd cmake-build```
+    - ```cmake ..```
+    - ```make```
+4. Execute o programa gerado: ```./data_plumber```
+5. Para executar o cliente gRPC, execute o comando 
         ```python -m grpc_tools.protoc -I./rpc --python_out=./rpc --pyi_out=./rpc --grpc_python_out=./rpc ./rpc/contract.proto```
     e depois execute ```python rpc/client.py```.
