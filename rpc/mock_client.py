@@ -114,22 +114,24 @@ def stock_messages(stub, num_messages: int):
     response = stub.StockData(iter(log_message))
     print("LogMessage client received: " + response.response)
 
-num_messages = 100
+size_messages = 100
+num_messages = 10_000
 num_processes = 10
 
 def run():
     with grpc.insecure_channel('localhost:50051') as channel:
-        for _ in range(10_000):
+        for _ in range(num_messages):
             stub = contract_pb2_grpc.DataServiceStub(channel)
-            log_user_behavior_messages(stub, num_messages)
-            log_audit_messages(stub, num_messages)
-            log_failure_notification_messages(stub, num_messages)
-            log_debug_messages(stub, num_messages)
-            consumer_messages(stub, num_messages)
-            order_messages(stub, num_messages)
-            product_messages(stub, num_messages)
-            stock_messages(stub, num_messages)
+            log_user_behavior_messages(stub, size_messages)
+            log_audit_messages(stub, size_messages)
+            log_failure_notification_messages(stub, size_messages)
+            log_debug_messages(stub, size_messages)
+            consumer_messages(stub, size_messages)
+            order_messages(stub, size_messages)
+            product_messages(stub, size_messages)
+            stock_messages(stub, size_messages)
 
 if __name__ == "__main__":
     logging.basicConfig()
-    run()
+    with multiprocessing.Pool(num_processes) as pool:
+        pool.map(run, range(num_processes))

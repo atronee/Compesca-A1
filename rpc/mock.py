@@ -9,6 +9,9 @@ fake = Faker()
 
 stock_dict = dict()
 
+# controls the range of random numbers generated
+your_computer_id = 0
+
 # Utils
 def generate_random_date(min_year=1900, max_year=datetime.now().year):
     start = datetime(min_year, 1, 1, 0, 0, 0)
@@ -23,15 +26,15 @@ def consumer_data():
     surname = names.get_last_name()
     city = fake.city()
 
-    user_id = fake.random_int(min=1, max=1000)
+    user_id = fake.random_int(min = 1+ your_computer_id*1000, max = 1000+your_computer_id*1000)
 
-    born_date = generate_random_date(1950, 2000)
+    born_date = generate_random_date(1950, 1960 + your_computer_id*10)
     register_date = generate_random_date(2019, 2021)
     return {"user_id": user_id, "name": name, "surname": surname, 
             "city": city, "born_date": born_date, "register_date": register_date}
 
 def product_data():
-    product_id = fake.random_int(min=1, max=7)
+    product_id = fake.random_int(min = 1+your_computer_id*10, max = 10+your_computer_id*10)
     name = fake.catch_phrase()
     image = f"{name.replace(' ', '_').lower()}.jpg"
     description = fake.sentence(nb_words=15)
@@ -48,8 +51,8 @@ def stock_data(product_id = -1):
     return {"product_id": product_id, "quantity": quantity}
 
 def order_data():
-    user_id = fake.random_int(min=1, max=1000)
-    product_id = fake.random_int(min=1, max=7)
+    user_id = fake.random_int(min=1+your_computer_id*1000, max=1000+your_computer_id*1000)
+    product_id = fake.random_int(min=1+ your_computer_id*10, max=10+your_computer_id*10)
     quantity = fake.random_int(min=1, max=10)
 
     # get 4 random dates
@@ -76,7 +79,7 @@ def generateLogUserBehavior():
                "User scrolled through a table", "User dragged a form element"]
 
     action = random.choice(actions)
-    user_author_id = fake.random_int(min=1, max=1000)
+    user_author_id = fake.random_int(min=1+your_computer_id*1000, max=1000+your_computer_id*1000)
     stimulus = random.choice(stimuli)
     component = random.choice(components)
     text_content = fake.text(max_nb_chars=50)
