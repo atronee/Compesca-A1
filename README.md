@@ -43,4 +43,4 @@ Certifique-se de ter os seguintes requisitos instalados em sua máquina:
 4. Execute o programa gerado: ```./data_plumber```
 5. Para executar o cliente gRPC, execute o comando 
         ```python -m grpc_tools.protoc -I./rpc --python_out=./rpc --pyi_out=./rpc --grpc_python_out=./rpc ./rpc/contract.proto```
-    e depois execute ```python rpc/client.py```.
+    e depois execute ```python rpc/mock_client.py```.
