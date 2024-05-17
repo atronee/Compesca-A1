@@ -45,6 +45,7 @@ _deps
 # Pasta do cmake
 /cmake-build-debug
 /cmake-build-default
+/cmake-build
 /build
 
 # Pasta do VSCode

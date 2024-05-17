@@ -1,3 +1,7 @@
+Faker==25.2.0
 grpcio==1.63.0
 grpcio-tools==1.63.0
+names==0.3.0
 protobuf==5.26.1
+python-dateutil==2.9.0.post0
+six==1.16.0

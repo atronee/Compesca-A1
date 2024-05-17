@@ -1,21 +1,84 @@
 syntax = "proto3";
 
-package log_service;
+package data_service;
 
-service LogService {
-  rpc LogUserBehavior (stream LogMessage) returns (LogResponse) {}
+
+
+service DataService {
+    rpc LogUserBehavior (stream LogUserBehaviorMessage) returns (Response) {}
+    rpc LogAudit (stream LogAuditMessage) returns (Response) {}
+    rpc LogFailureNotification (stream LogFailureNotificationMessage) returns (Response) {}
+    rpc LogDebug (stream LogDebugMessage) returns (Response) {}
+    rpc ConsumerData (stream ConsumerDataMessage) returns (Response) {}
+    rpc ProductData (stream ProductDataMessage) returns (Response) {}
+    rpc StockData (stream StockDataMessage) returns (Response) {}
+    rpc OrderData (stream OrderDataMessage) returns (Response) {}
 }
 
-message LogMessage {
-  int32 user_author_id = 1;
-  string action = 2;
-  int32 button_product_id = 3;
-  string stimulus = 4;
-  string component = 5;
-  string text_content = 6;
-  string date = 7;
+message Response {
+    string response = 1;
 }
 
-message LogResponse {
-  string response = 1;
+message LogUserBehaviorMessage {
+    int32 user_author_id = 1;
+    string action = 2;
+    int32 button_product_id = 3;
+    string stimulus = 4;
+    string component = 5;
+    string text_content = 6;
+    string date = 7;
+}
+
+message LogAuditMessage {
+    int32 user_author_id = 1;
+    string action = 2;
+    string action_description = 3;
+    string text_content = 4;
+    string date = 5;
+}
+
+message LogFailureNotificationMessage {
+    string component = 1;
+    string severity = 2;
+    string message = 3;
+    string text_content = 4;
+    string date = 5;
+}
+
+message LogDebugMessage {
+    string message = 1;
+    string text_content = 2;
+    string date = 3;
+}
+
+message ConsumerDataMessage {
+    int32 user_id = 1;
+    string name = 2;
+    string surname = 3;
+    string city = 4;
+    string born_date = 5;
+    string register_date = 6;
+}
+
+message ProductDataMessage {
+    int32 product_id = 1;
+    string name = 2;
+    string image = 3;
+    int32 price = 4;
+    string description = 5;
+}
+
+message StockDataMessage {
+    int32 product_id = 1;
+    int32 quantity = 2;
+}
+
+message OrderDataMessage {
+    int32 user_id = 1;
+    int32 product_id = 2;
+    int32 quantity = 3;
+    string purchase_date = 4;
+    string payment_date = 5;
+    string shipping_date = 6;
+    string delivery_date = 7;
 }
