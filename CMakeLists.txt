@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(Compesca_A1)
+project(data_plumber)
 
 set(CMAKE_CXX_STANDARD 20)
 set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "Propagate CXX_STANDARD from parent project")
@@ -63,7 +63,7 @@ target_link_libraries(rg_grpc_proto
         ${_PROTOBUF_LIBPROTOBUF})
 
 find_package(SQLite3)
-add_executable(Compesca_A1
+add_executable(data_plumber
         src/mock.cpp
         src/mock.h
         src/DataFrame.h
@@ -85,7 +85,7 @@ add_executable(Compesca_A1
         rpc/MockServer.cpp
         rpc/MockServer.h
 )
-target_link_libraries(Compesca_A1 SQLite::SQLite3
+target_link_libraries(data_plumber SQLite::SQLite3
         rg_grpc_proto
         ${_REFLECTION}
         ${_GRPC_GRPCPP}
