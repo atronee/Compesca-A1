@@ -11,6 +11,7 @@
 #include <iostream>
 #include "../libs/sqlite3.h"
 #include <fstream>
+#include <chrono>
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -21,6 +22,7 @@
 
 using std::vector;
 using std::string;
+using namespace std::chrono;
 
 void SelectHandler::select(vector<string> columns) {
     while(true) {
@@ -818,6 +820,14 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
 
         if(!sortFlag && !groupFlag){
             write_to_sqlite(df, filePath, table, false);
+            // write to file the current time with fstream
+            std::ofstream MyFile;
+            MyFile.open("temposExec.txt");
+            long long secCount = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+            secCount = secCount - df->get_creation_time();
+            MyFile << "Tempo de execução: " << secCount << "ms" << std::endl;
+            std::cout << "Tempo de execução: " << secCount << "ms" << std::endl;
+            MyFile.close();
         }
         else {
             std::unordered_map<string, std::size_t> column_types = df->get_column_types();
@@ -892,6 +902,14 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 sh.sort(columnGroup, sortOrder);
                 delete fileDF;
                 fileDF = q_out.pop();
+                // write to file the current time with fstream
+                std::ofstream MyFile;
+                MyFile.open("temposExec.txt");
+                long long secCount = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+                secCount = secCount - df->get_creation_time();
+                MyFile << "Tempo de execução: " << secCount << "ms" << std::endl;
+                std::cout << "Tempo de execução: " << secCount << "ms" << std::endl;
+                MyFile.close();
             }
 
             else if (groupFlag) {
@@ -904,10 +922,26 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                     new_df = groupBy(fileDF, columnGroup, groupOperation);
                 delete fileDF;
                 fileDF = new_df;
+                // write to file the current time with fstream
+                std::ofstream MyFile;
+                MyFile.open("temposExec.txt");
+                long long secCount = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+                secCount = secCount - df->get_creation_time();
+                MyFile << "Tempo de execução: " << secCount << "ms" << std::endl;
+                std::cout << "Tempo de execução: " << secCount << "ms" << std::endl;
+                MyFile.close();
             } else {
                 DataFrame *new_df = aggregate_sort(df, fileDF, columnSort, sortOrder);
                 delete fileDF;
                 fileDF = new_df;
+                // write to file the current time with fstream
+                std::ofstream MyFile;
+                MyFile.open("temposExec.txt");
+                long long secCount = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+                secCount = secCount - df->get_creation_time();
+                MyFile << "Tempo de execução: " << secCount << "ms" << std::endl;
+                std::cout << "Tempo de execução: " << secCount << "ms" << std::endl;
+                MyFile.close();
             }
             write_to_sqlite(fileDF, filePath, table, true);
             delete fileDF;
