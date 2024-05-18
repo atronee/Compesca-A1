@@ -12,6 +12,7 @@
 #include "../libs/sqlite3.h"
 #include <fstream>
 #include <chrono>
+#include <format>
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -834,7 +835,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
             auto endTime = high_resolution_clock::now();
             const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
             MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
-            MyFile << "Momento de criação: " << std::chrono::system_clock::to_time_t(df->get_creation_time()) << std::endl;
+            std::string creation_time = std::format("{:%Y-%m-%d %H:%M:%S}", df->get_creation_time());
+            MyFile << "Momento de criação: " << creation_time << std::endl;
             MyFile.close();
             flock(f_time, LOCK_UN);
             close(f_time);
@@ -926,7 +928,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 auto endTime = high_resolution_clock::now();
                 const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
-                MyFile << "Momento de criação: " << std::chrono::system_clock::to_time_t(df->get_creation_time()) << std::endl;
+                std::string creation_time = std::format("{:%Y-%m-%d %H:%M:%S}", df->get_creation_time());
+                MyFile << "Momento de criação: " << creation_time << std::endl;
                 MyFile.close();
                 flock(f_time, LOCK_UN);
                 close(f_time);
@@ -956,7 +959,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 auto endTime = high_resolution_clock::now();
                 const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
-                MyFile << "Momento de criação: " << std::chrono::system_clock::to_time_t(df->get_creation_time()) << std::endl;
+                std::string creation_time = std::format("{:%Y-%m-%d %H:%M:%S}", df->get_creation_time());
+                MyFile << "Momento de criação: " << creation_time << std::endl;
                 MyFile.close();
                 flock(f_time, LOCK_UN);
                 close(f_time);
@@ -979,7 +983,8 @@ void FinalHandler::aggregate(string& filePath, string& table, bool sortFlag, boo
                 MyFile.open("temposExec.txt", std::ios::app);
                 const std::chrono::duration<double> timeDuration = (endTime - df->get_creation_time());
                 MyFile << "Tempo de execução: " << timeDuration.count() << "ms" << std::endl;
-                MyFile << "Momento de criação: " << std::chrono::system_clock::to_time_t(df->get_creation_time()) << std::endl;
+                std::string creation_time = std::format("{:%Y-%m-%d %H:%M:%S}", df->get_creation_time());
+                MyFile << "Momento de criação: " << creation_time << std::endl;
                 MyFile.close();
                 flock(f_time, LOCK_UN);
                 close(f_time);
